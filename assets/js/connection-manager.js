@@ -9,7 +9,7 @@ class ConnectionManager {
       online: navigator.onLine,
       tailscale: false,
       serverAvailable: false,
-      connectionType: this.getConnectionType(),
+      connectionType: 'unknown', // Sera mis à jour dans init()
       lastCheck: null,
       autoMode: true
     };
@@ -24,6 +24,9 @@ class ConnectionManager {
   
   async init() {
     console.log('[ConnectionManager] Initialisation...');
+    
+    // Initialiser le type de connexion
+    this.state.connectionType = this.detectConnectionType();
     
     // Configurer les listeners
     this.setupEventListeners();
@@ -72,7 +75,7 @@ class ConnectionManager {
     }
   }
   
-  getConnectionType() {
+  detectConnectionType() {
     if (!navigator.onLine) return 'offline';
     
     if ('connection' in navigator) {
@@ -115,7 +118,7 @@ class ConnectionManager {
     this.state.serverAvailable = await this.checkServer();
     
     // 4. Mettre à jour le type de connexion
-    this.state.connectionType = this.getConnectionType();
+    this.state.connectionType = this.detectConnectionType();
     
     // 5. Timestamp
     this.state.lastCheck = Date.now();
@@ -248,7 +251,7 @@ class ConnectionManager {
   
   handleConnectionChange() {
     const oldType = this.state.connectionType;
-    const newType = this.getConnectionType();
+    const newType = this.detectConnectionType();
     
     if (oldType !== newType) {
       console.log(`[ConnectionManager] Connexion changée: ${oldType} → ${newType}`);

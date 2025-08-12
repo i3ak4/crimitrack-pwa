@@ -225,6 +225,36 @@ class OfflineManager {
     }
   }
   
+  async getQueue() {
+    try {
+      const queueData = await this.getFromStore('syncQueue');
+      return queueData || [];
+    } catch (error) {
+      console.error('[OfflineManager] Erreur récupération queue:', error);
+      return [];
+    }
+  }
+  
+  async saveQueue(queue) {
+    try {
+      // Vider d'abord le store syncQueue
+      const tx = this.db.transaction(['syncQueue'], 'readwrite');
+      await new Promise((resolve, reject) => {
+        const clearRequest = tx.objectStore('syncQueue').clear();
+        clearRequest.onsuccess = () => resolve();
+        clearRequest.onerror = () => reject(clearRequest.error);
+      });
+      
+      // Sauvegarder la nouvelle queue
+      if (queue && queue.length > 0) {
+        await this.saveToStore('syncQueue', queue);
+      }
+      
+    } catch (error) {
+      console.error('[OfflineManager] Erreur sauvegarde queue:', error);
+    }
+  }
+
   async clearCache() {
     console.log('[OfflineManager] Nettoyage cache...');
     
