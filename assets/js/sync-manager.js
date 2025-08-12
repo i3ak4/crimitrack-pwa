@@ -117,12 +117,27 @@ class SyncManager {
   async checkServerConnection() {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch(`${this.config.server.primary}/api/ping`, {
-        method: 'GET',
-        signal: controller.signal
-      });
+      // Essayer d'abord l'IP principale
+      let response;
+      try {
+        response = await fetch(`${this.config.server.primary}/api/ping`, {
+          method: 'GET',
+          signal: controller.signal,
+          mode: 'cors'
+        });
+      } catch (primaryError) {
+        console.log('[SyncManager] IP principale inaccessible, essai fallback...');
+        // Essayer le fallback
+        response = await fetch(`${this.config.server.fallback}/api/ping`, {
+          method: 'GET',
+          signal: controller.signal,
+          mode: 'cors'
+        });
+        // Si fallback fonctionne, l'utiliser
+        this.config.server.primary = this.config.server.fallback;
+      }
       
       clearTimeout(timeoutId);
       
@@ -130,14 +145,14 @@ class SyncManager {
       this.updateConnectionStatus(this.tailscaleConnected);
       
       if (this.tailscaleConnected) {
-        console.log('[SyncManager] Serveur connecté directement');
+        console.log('[SyncManager] Serveur connecté:', this.config.server.primary);
         // Récupérer l'état du serveur
         await this.fetchServerState();
       }
       
       return this.tailscaleConnected;
     } catch (error) {
-      console.log('[SyncManager] Serveur non disponible:', error.message);
+      console.log('[SyncManager] Aucun serveur disponible:', error.message);
       this.tailscaleConnected = false;
       this.updateConnectionStatus(false);
       return false;
@@ -609,23 +624,45 @@ class SyncManager {
     try {
       const connected = await this.checkServerConnection();
       if (!connected) {
-        throw new Error('Serveur non disponible');
+        throw new Error('Mac Mini non accessible. Vérifiez que :\n1. Le serveur CrimiTrack tourne sur le Mac Mini\n2. L\'iPad est sur le même réseau WiFi\n3. L\'IP du Mac Mini est bien 192.168.1.100');
       }
       
-      // Récupérer la BDD complète
-      const response = await fetch(`${this.config.server.primary}/api/sync/full-database`, {
-        method: 'GET',
-        headers: {
-          'X-Device-Id': this.deviceId,
-          'X-Device-Type': this.getDeviceType()
+      // Essayer plusieurs endpoints possibles
+      const endpoints = [
+        '/api/sync/full-database',
+        '/api/database',
+        '/data/database.json'
+      ];
+      
+      let response;
+      let data;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`[SyncManager] Tentative: ${this.config.server.primary}${endpoint}`);
+          response = await fetch(`${this.config.server.primary}${endpoint}`, {
+            method: 'GET',
+            headers: {
+              'X-Device-Id': this.deviceId,
+              'X-Device-Type': this.getDeviceType(),
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            data = await response.json();
+            console.log('[SyncManager] Données récupérées depuis:', endpoint);
+            break;
+          }
+        } catch (endpointError) {
+          console.log(`[SyncManager] Échec ${endpoint}:`, endpointError.message);
+          continue;
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Erreur serveur: ${response.status}`);
       }
       
-      const data = await response.json();
+      if (!data) {
+        throw new Error('Aucun endpoint de données accessible sur le Mac Mini');
+      }
       
       // Sauvegarder dans IndexedDB
       if (window.offlineManager) {
@@ -685,20 +722,50 @@ class SyncManager {
   }
   
   showSyncNotification(message, type) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
+    // Créer le container s'il n'existe pas
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 1100;
+        max-width: 350px;
+      `;
+      document.body.appendChild(container);
+    }
     
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+      padding: 16px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transform: translateX(100%);
+      transition: transform 300ms ease;
+      word-wrap: break-word;
+      white-space: pre-line;
+      ${type === 'error' ? 'background: #e74c3c;' : 'background: #27ae60;'}
+    `;
     toast.textContent = message;
     
     container.appendChild(toast);
     
-    setTimeout(() => toast.classList.add('show'), 100);
+    // Animation d'entrée
     setTimeout(() => {
-      toast.classList.remove('show');
+      toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-suppression
+    setTimeout(() => {
+      toast.style.transform = 'translateX(100%)';
       setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, type === 'error' ? 6000 : 3000);
   }
   
   getStatus() {
