@@ -698,30 +698,91 @@ class SyncManager {
   async loadFromFileSystemAPI() {
     console.log('[SyncManager] Utilisation File System Access API...');
     
-    const [fileHandle] = await window.showOpenFilePicker({
-      types: [{
-        description: 'Base de données CrimiTrack',
-        accept: {
-          'application/json': ['.json']
-        }
-      }],
-      multiple: false
-    });
-    
-    const file = await fileHandle.getFile();
-    const text = await file.text();
-    const data = JSON.parse(text);
-    
-    console.log('[SyncManager] Données chargées via File System API');
-    return data;
+    try {
+      console.log('[SyncManager] Ouverture du sélecteur de fichier...');
+      
+      const [fileHandle] = await window.showOpenFilePicker({
+        types: [{
+          description: 'Base de données CrimiTrack',
+          accept: {
+            'application/json': ['.json']
+          }
+        }],
+        multiple: false
+      });
+      
+      console.log('[SyncManager] Fichier sélectionné:', fileHandle.name);
+      
+      const file = await fileHandle.getFile();
+      console.log('[SyncManager] Taille du fichier:', file.size, 'bytes');
+      
+      const text = await file.text();
+      console.log('[SyncManager] Contenu lu, longueur:', text.length);
+      
+      const data = JSON.parse(text);
+      console.log('[SyncManager] JSON parsé avec succès');
+      console.log('[SyncManager] Structure des données:', Object.keys(data));
+      
+      return data;
+      
+    } catch (error) {
+      console.error('[SyncManager] Erreur File System API:', error);
+      throw error;
+    }
   }
   
-  // Fallback pour iOS Safari - données simulées mais réalistes
+  // Fallback pour iOS Safari - input file classique
   async loadFromiCloudFallback() {
-    console.log('[SyncManager] Utilisation fallback iCloud (mode demo)...');
+    console.log('[SyncManager] Utilisation fallback pour Safari iOS...');
     
-    // En production, on accéderait à iCloud via des APIs natives
-    // Pour l'instant, on simule avec des données réalistes
+    return new Promise((resolve, reject) => {
+      // Créer un input file
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,application/json';
+      input.style.display = 'none';
+      
+      input.onchange = async (event) => {
+        try {
+          const file = event.target.files[0];
+          if (!file) {
+            reject(new Error('Aucun fichier sélectionné'));
+            return;
+          }
+          
+          console.log('[SyncManager] Fichier sélectionné:', file.name, file.size, 'bytes');
+          
+          const text = await file.text();
+          console.log('[SyncManager] Contenu lu, longueur:', text.length);
+          
+          const data = JSON.parse(text);
+          console.log('[SyncManager] JSON parsé avec succès');
+          console.log('[SyncManager] Structure des données:', Object.keys(data));
+          
+          document.body.removeChild(input);
+          resolve(data);
+          
+        } catch (error) {
+          console.error('[SyncManager] Erreur lecture fichier:', error);
+          document.body.removeChild(input);
+          reject(error);
+        }
+      };
+      
+      input.oncancel = () => {
+        console.log('[SyncManager] Sélection annulée');
+        document.body.removeChild(input);
+        reject(new Error('Sélection de fichier annulée'));
+      };
+      
+      document.body.appendChild(input);
+      input.click();
+    });
+  }
+  
+  // Données de démonstration pour les tests
+  getSimulatedData() {
+    console.log('[SyncManager] Utilisation de données simulées pour test...');
     const simulatedData = {
       agenda: [
         {
@@ -799,22 +860,82 @@ class SyncManager {
       <span>Charger depuis iCloud</span>
     `;
     
-    button.addEventListener('click', async () => {
-      button.classList.add('loading');
+    // Créer aussi un bouton de démonstration
+    const demoButton = document.createElement('button');
+    demoButton.id = 'demo-database-button';
+    demoButton.className = 'sync-database-button demo-button';
+    demoButton.style.marginLeft = '10px';
+    demoButton.innerHTML = `
+      <svg viewBox="0 0 24 24" class="sync-icon">
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+      </svg>
+      <span>Demo</span>
+    `;
+    
+    demoButton.addEventListener('click', async () => {
+      console.log('[SyncManager] Bouton Demo cliqué');
+      demoButton.classList.add('loading');
+      
       try {
-        await this.syncFullDatabase();
-        this.showSyncNotification('Données iCloud chargées avec succès !', 'success');
+        const demoData = this.getSimulatedData();
+        const cleanData = this.validateAndCleanData(await demoData);
+        
+        if (window.offlineManager) {
+          await window.offlineManager.saveFullDatabase(cleanData);
+        }
+        
+        this.showSyncNotification('Données de démonstration chargées !', 'success');
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        
       } catch (error) {
-        this.showSyncNotification('Erreur de synchronisation', 'error');
+        console.error('[SyncManager] Erreur demo:', error);
+        this.showSyncNotification('Erreur chargement demo', 'error');
+      } finally {
+        demoButton.classList.remove('loading');
+      }
+    });
+    
+    button.addEventListener('click', async () => {
+      console.log('[SyncManager] Bouton Charger depuis iCloud cliqué');
+      button.classList.add('loading');
+      
+      try {
+        console.log('[SyncManager] Début de la synchronisation...');
+        const result = await this.syncFullDatabase();
+        console.log('[SyncManager] Synchronisation terminée avec succès');
+        this.showSyncNotification('Données iCloud chargées avec succès !', 'success');
+        
+        // Recharger la page pour afficher les nouvelles données
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        
+      } catch (error) {
+        console.error('[SyncManager] Erreur lors du chargement:', error);
+        let errorMessage = 'Erreur de synchronisation';
+        
+        if (error.name === 'AbortError') {
+          errorMessage = 'Chargement annulé par l\'utilisateur';
+        } else if (error.message.includes('JSON')) {
+          errorMessage = 'Fichier JSON invalide';
+        } else if (error.message.includes('iCloud')) {
+          errorMessage = 'Problème d\'accès iCloud Drive';
+        }
+        
+        this.showSyncNotification(errorMessage + '\n' + error.message, 'error');
       } finally {
         button.classList.remove('loading');
       }
     });
     
-    // Ajouter le bouton dans le header
+    // Ajouter les boutons dans le header
     const headerRight = document.querySelector('.header-right');
     if (headerRight) {
-      headerRight.insertBefore(button, headerRight.firstChild);
+      headerRight.insertBefore(demoButton, headerRight.firstChild);
+      headerRight.insertBefore(button, demoButton);
     }
   }
   
