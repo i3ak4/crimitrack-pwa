@@ -587,6 +587,57 @@ class SyncManager {
     return this.syncFullDatabase();
   }
   
+  validateAndCleanData(data) {
+    console.log('[SyncManager] Validation des données...');
+    
+    const cleanData = {
+      agenda: [],
+      waitlist: [],
+      expertises: [],
+      metadata: {}
+    };
+    
+    // Valider agenda
+    if (data.agenda && Array.isArray(data.agenda)) {
+      cleanData.agenda = data.agenda.map((item, index) => ({
+        ...item,
+        id: item.id || `agenda_${Date.now()}_${index}`
+      }));
+    }
+    
+    // Valider waitlist
+    if (data.waitlist && Array.isArray(data.waitlist)) {
+      cleanData.waitlist = data.waitlist.map((item, index) => ({
+        ...item,
+        id: item.id || `waitlist_${Date.now()}_${index}`
+      }));
+    }
+    
+    // Valider expertises
+    if (data.expertises && Array.isArray(data.expertises)) {
+      cleanData.expertises = data.expertises.map((item, index) => ({
+        ...item,
+        id: item.id || `expertise_${Date.now()}_${index}`
+      }));
+    }
+    
+    // Valider metadata
+    cleanData.metadata = {
+      ...data.metadata,
+      lastSync: Date.now(),
+      source: 'iCloud Drive',
+      version: '1.0.0'
+    };
+    
+    console.log('[SyncManager] Données validées:', {
+      agenda: cleanData.agenda.length,
+      waitlist: cleanData.waitlist.length,
+      expertises: cleanData.expertises.length
+    });
+    
+    return cleanData;
+  }
+  
   // Méthode pour charger la BDD depuis iCloud Drive
   async syncFullDatabase() {
     console.log('[SyncManager] Chargement BDD depuis iCloud Drive...');
@@ -617,9 +668,12 @@ class SyncManager {
         throw new Error('Impossible de charger database.json depuis iCloud Drive');
       }
       
+      // Valider et nettoyer les données avant sauvegarde
+      const cleanData = this.validateAndCleanData(data);
+      
       // Sauvegarder dans IndexedDB local
       if (window.offlineManager) {
-        await window.offlineManager.saveFullDatabase(data);
+        await window.offlineManager.saveFullDatabase(cleanData);
       }
       
       // Mettre à jour l'interface

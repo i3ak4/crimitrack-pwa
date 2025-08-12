@@ -93,25 +93,41 @@ class OfflineManager {
         });
       }));
       
-      // Sauvegarder les nouvelles données
-      if (data.agenda) {
-        await this.saveToStore('agenda', data.agenda);
+      // Sauvegarder les nouvelles données avec validation
+      if (data.agenda && Array.isArray(data.agenda)) {
+        const validAgenda = data.agenda.map(item => ({
+          ...item,
+          id: item.id || this.generateId()
+        }));
+        await this.saveToStore('agenda', validAgenda);
       }
       
-      if (data.waitlist) {
-        await this.saveToStore('agenda', data.waitlist); // Stocker waitlist dans agenda
+      if (data.waitlist && Array.isArray(data.waitlist)) {
+        const validWaitlist = data.waitlist.map(item => ({
+          ...item,
+          id: item.id || this.generateId(),
+          _isWaitlist: true // Marquer comme liste d'attente
+        }));
+        await this.saveToStore('agenda', validWaitlist); // Stocker waitlist dans agenda
       }
       
-      if (data.expertises) {
-        await this.saveToStore('expertises', data.expertises);
+      if (data.expertises && Array.isArray(data.expertises)) {
+        const validExpertises = data.expertises.map(item => ({
+          ...item,
+          id: item.id || this.generateId()
+        }));
+        await this.saveToStore('expertises', validExpertises);
       }
       
-      // Metadata
-      await this.saveToStore('settings', [{
+      // Metadata avec ID fixe
+      const metadata = {
         id: 'metadata',
         ...data.metadata,
-        lastSync: Date.now()
-      }]);
+        lastSync: Date.now(),
+        deviceType: this.deviceType,
+        version: '1.0.0'
+      };
+      await this.saveToStore('settings', [metadata]);
       
       console.log('[OfflineManager] Base sauvegardée avec succès');
       
@@ -130,15 +146,32 @@ class OfflineManager {
     const store = tx.objectStore(storeName);
     
     for (const item of items) {
-      if (!item.id) {
+      // S'assurer que l'item a un id valide
+      if (!item.id || typeof item.id !== 'string' || item.id.trim() === '') {
         item.id = this.generateId();
       }
+      
+      // S'assurer que l'objet est sérialisable
+      const cleanItem = this.sanitizeForStorage(item);
+      
       await new Promise((resolve, reject) => {
-        const request = store.put(item);
+        const request = store.put(cleanItem);
         request.onsuccess = () => resolve();
         request.onerror = () => reject(request.error);
       });
     }
+  }
+  
+  sanitizeForStorage(item) {
+    // Créer une copie propre de l'objet
+    const cleaned = JSON.parse(JSON.stringify(item));
+    
+    // S'assurer que l'id est toujours valide
+    if (!cleaned.id || typeof cleaned.id !== 'string' || cleaned.id.trim() === '') {
+      cleaned.id = this.generateId();
+    }
+    
+    return cleaned;
   }
   
   async getAllData() {
@@ -245,9 +278,14 @@ class OfflineManager {
         clearRequest.onerror = () => reject(clearRequest.error);
       });
       
-      // Sauvegarder la nouvelle queue
-      if (queue && queue.length > 0) {
-        await this.saveToStore('syncQueue', queue);
+      // Sauvegarder la nouvelle queue avec validation
+      if (queue && Array.isArray(queue) && queue.length > 0) {
+        const validQueue = queue.map(item => ({
+          ...item,
+          id: item.id || this.generateId(),
+          timestamp: item.timestamp || Date.now()
+        }));
+        await this.saveToStore('syncQueue', validQueue);
       }
       
     } catch (error) {
