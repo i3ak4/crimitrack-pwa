@@ -742,6 +742,22 @@ body {
   fill: currentColor;
 }
 
+/* Bouton spécifique pour l'export de logs */
+.export-logs-button {
+  background: linear-gradient(135deg, var(--danger-color), #c0392b) !important;
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+}
+
+.export-logs-button:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226) !important;
+}
+
+.export-logs-button .sync-icon {
+  width: 16px !important;
+  height: 16px !important;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
