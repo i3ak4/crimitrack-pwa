@@ -497,6 +497,11 @@ class ConnectionManager {
     return this.state.connectionType;
   }
   
+  // Getter pour compatibilité
+  get connectionType() {
+    return this.state.connectionType;
+  }
+  
   getState() {
     return { ...this.state };
   }
