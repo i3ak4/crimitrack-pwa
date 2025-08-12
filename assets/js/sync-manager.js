@@ -28,7 +28,6 @@ class SyncManager {
     this.queue = [];
     this.isSyncing = false;
     this.lastSync = null;
-    this.tailscaleConnected = false;
     this.deviceId = this.getDeviceId();
     
     this.init();
@@ -193,8 +192,8 @@ class SyncManager {
     // Sauvegarder dans IndexedDB
     await this.saveQueue();
     
-    // Traiter immédiatement si priorité urgente et connecté
-    if (priority === this.config.priorities.URGENT && this.tailscaleConnected) {
+    // Traiter immédiatement si priorité urgente et en ligne
+    if (priority === this.config.priorities.URGENT && navigator.onLine) {
       this.processQueue();
     }
     
@@ -492,7 +491,7 @@ class SyncManager {
     
     // Déclencher un événement personnalisé
     window.dispatchEvent(new CustomEvent('connectionchange', {
-      detail: { connected, tailscale: this.tailscaleConnected }
+      detail: { connected, icloud: connected }
     }));
   }
   
@@ -815,7 +814,7 @@ class SyncManager {
   getStatus() {
     return {
       connected: navigator.onLine,
-      tailscale: this.tailscaleConnected,
+      icloud: this.icloudAvailable,
       syncing: this.isSyncing,
       queueLength: this.queue.length,
       lastSync: this.lastSync,

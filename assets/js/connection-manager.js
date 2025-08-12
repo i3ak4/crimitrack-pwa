@@ -1,14 +1,12 @@
 /**
- * Connection Manager - Gestion intelligente de la connectivité
- * Détection Tailscale, bascule online/offline, indicateurs visuels
+ * Connection Manager - Gestion PWA autonome
+ * Détection état réseau et gestion mode offline/online
  */
 
 class ConnectionManager {
   constructor() {
     this.state = {
       online: navigator.onLine,
-      tailscale: false,
-      serverAvailable: false,
       connectionType: 'unknown', // Sera mis à jour dans init()
       lastCheck: null,
       autoMode: true
@@ -16,8 +14,6 @@ class ConnectionManager {
     
     this.callbacks = new Map();
     this.checkInterval = null;
-    this.serverEndpoint = 'http://mac-mini.tail-scale.ts.net:8081';
-    this.fallbackEndpoint = 'http://192.168.1.100:8081';
     
     this.init();
   }
@@ -101,87 +97,20 @@ class ConnectionManager {
   async checkConnectivity() {
     console.log('[ConnectionManager] Vérification connectivité...');
     
-    // 1. Vérifier si online
+    // Vérifier si online
     this.state.online = navigator.onLine;
     
-    if (!this.state.online) {
-      this.state.tailscale = false;
-      this.state.serverAvailable = false;
-      this.updateState();
-      return false;
-    }
-    
-    // 2. Vérifier Tailscale
-    this.state.tailscale = await this.checkTailscale();
-    
-    // 3. Vérifier serveur
-    this.state.serverAvailable = await this.checkServer();
-    
-    // 4. Mettre à jour le type de connexion
+    // Mettre à jour le type de connexion
     this.state.connectionType = this.detectConnectionType();
     
-    // 5. Timestamp
+    // Timestamp
     this.state.lastCheck = Date.now();
     
     this.updateState();
     
-    return this.state.serverAvailable;
+    return this.state.online;
   }
   
-  async checkTailscale() {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-      
-      const response = await fetch(`${this.serverEndpoint}/api/ping`, {
-        method: 'HEAD',
-        signal: controller.signal,
-        mode: 'no-cors' // Pour éviter les erreurs CORS
-      });
-      
-      clearTimeout(timeoutId);
-      
-      // Si on arrive ici sans erreur, Tailscale est probablement connecté
-      return true;
-    } catch (error) {
-      // Essayer le fallback
-      try {
-        const response = await fetch(`${this.fallbackEndpoint}/api/ping`, {
-          method: 'HEAD',
-          mode: 'no-cors'
-        });
-        this.serverEndpoint = this.fallbackEndpoint; // Utiliser le fallback
-        return true;
-      } catch {
-        return false;
-      }
-    }
-  }
-  
-  async checkServer() {
-    if (!this.state.tailscale) return false;
-    
-    try {
-      const response = await fetch(`${this.serverEndpoint}/api/status`, {
-        method: 'GET',
-        headers: {
-          'X-Device-Type': this.getDeviceType(),
-          'X-Connection-Type': this.state.connectionType
-        }
-      });
-      
-      if (response.ok) {
-        const status = await response.json();
-        console.log('[ConnectionManager] Serveur disponible:', status);
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('[ConnectionManager] Serveur indisponible:', error);
-      return false;
-    }
-  }
   
   getDeviceType() {
     const ua = navigator.userAgent;
@@ -238,8 +167,6 @@ class ConnectionManager {
   handleOffline() {
     console.log('[ConnectionManager] Connexion perdue');
     this.state.online = false;
-    this.state.tailscale = false;
-    this.state.serverAvailable = false;
     this.updateState();
     
     // Notifier les composants
@@ -326,8 +253,6 @@ class ConnectionManager {
     } else {
       // Forcer le mode offline
       this.state.online = false;
-      this.state.tailscale = false;
-      this.state.serverAvailable = false;
       this.updateState();
       this.showNotification('Mode hors ligne forcé', 'info');
     }
@@ -340,18 +265,10 @@ class ConnectionManager {
     }
     
     try {
-      // Vérifier la connexion d'abord
-      const connected = await this.checkConnectivity();
-      
-      if (!connected) {
-        this.showNotification('Impossible de synchroniser - Serveur non disponible', 'error');
-        return;
-      }
-      
-      // Lancer la synchronisation
+      // Lancer la synchronisation iCloud
       if (window.syncManager) {
         await window.syncManager.forceSyncNow();
-        this.showNotification('Synchronisation réussie', 'success');
+        this.showNotification('Synchronisation iCloud réussie', 'success');
       }
     } catch (error) {
       console.error('[ConnectionManager] Erreur sync:', error);
@@ -380,20 +297,17 @@ class ConnectionManager {
     if (connectionStatus) {
       const statusText = connectionStatus.querySelector('.status-text');
       
-      if (this.state.serverAvailable) {
+      if (this.state.online) {
         connectionStatus.className = 'connection-status connected';
-        statusText.textContent = `En ligne (Mac Mini)`;
-      } else if (this.state.online) {
-        connectionStatus.className = 'connection-status';
-        statusText.textContent = `En ligne (Local)`;
+        statusText.textContent = `☁️ PWA Autonome`;
+        
+        // Ajouter le type de connexion
+        if (this.state.connectionType !== 'unknown' && this.state.connectionType !== 'offline') {
+          statusText.textContent += ` • ${this.state.connectionType.toUpperCase()}`;
+        }
       } else {
         connectionStatus.className = 'connection-status disconnected';
-        statusText.textContent = `Hors ligne`;
-      }
-      
-      // Ajouter le type de connexion
-      if (this.state.connectionType !== 'unknown' && this.state.connectionType !== 'offline') {
-        statusText.textContent += ` • ${this.state.connectionType.toUpperCase()}`;
+        statusText.textContent = `📱 Mode hors ligne`;
       }
     }
     
@@ -488,14 +402,6 @@ class ConnectionManager {
     return this.state.online;
   }
   
-  isTailscaleConnected() {
-    return this.state.tailscale;
-  }
-  
-  isServerAvailable() {
-    return this.state.serverAvailable;
-  }
-  
   getConnectionType() {
     return this.state.connectionType;
   }
@@ -511,7 +417,7 @@ class ConnectionManager {
   
   async waitForConnection(timeout = 30000) {
     return new Promise((resolve, reject) => {
-      if (this.state.serverAvailable) {
+      if (this.state.online) {
         resolve(true);
         return;
       }
@@ -522,7 +428,7 @@ class ConnectionManager {
       }, timeout);
       
       const handler = (state) => {
-        if (state.serverAvailable) {
+        if (state.online) {
           clearTimeout(timeoutId);
           this.off('statechange', handler);
           resolve(true);
@@ -547,6 +453,5 @@ window.connectionManager = new ConnectionManager();
 
 // Exposer l'état global
 window.isOnline = () => window.connectionManager.isOnline();
-window.isTailscaleConnected = () => window.connectionManager.isTailscaleConnected();
 
 console.log('[ConnectionManager] Chargé et initialisé');
