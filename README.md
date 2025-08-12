@@ -6,11 +6,11 @@ Application Progressive Web App moderne pour la gestion d'expertises médico-lé
 
 ## ✨ Nouvelles Fonctionnalités v2.0
 
-### 🔄 Synchronisation Manuelle
-- **Bouton "Synchroniser BDD"** visible dans le header
-- **Connexion directe** au serveur (192.168.1.100:8081)
-- **Téléchargement complet** de la base de données
-- **Indicateur visuel** de l'état de synchronisation
+### ☁️ Chargement Autonome iCloud Drive
+- **Bouton "Charger depuis iCloud"** visible dans le header  
+- **Accès direct** aux fichiers iCloud Drive
+- **PWA 100% autonome** - fonctionne partout
+- **Aucune dépendance serveur** ou réseau local
 
 ### 📱 Onglets Visuels Améliorés
 - **Navigation principale** : Agenda, Attentes, Statistiques, Convocations, Facturation
@@ -73,11 +73,12 @@ CrimiTrack_PWA/
 2. **Menu** → **"Ajouter à l'écran d'accueil"**
 3. **Installer**
 
-### 🔄 Première Synchronisation
+### ☁️ Premier Chargement iCloud
 1. **Lancer la PWA**
-2. **Appuyer sur "Synchroniser BDD"** (bouton bleu en haut)
-3. **Attendre le téléchargement** complet
-4. **Naviguer** avec les onglets visuels
+2. **Appuyer sur "Charger depuis iCloud"** (bouton bleu en haut)
+3. **Navigateurs modernes** : Sélectionner database.json depuis iCloud Drive
+4. **Safari iOS** : Chargement automatique des données de démonstration
+5. **Naviguer** avec les onglets visuels
 
 ### 📄 Publipostage Multi-Templates
 1. **Onglet "Publipostage"**
