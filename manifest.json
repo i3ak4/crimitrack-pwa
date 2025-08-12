@@ -1,0 +1,174 @@
+{
+  "name": "CrimiTrack Mobile",
+  "short_name": "CrimiTrack",
+  "description": "Application de gestion d'expertises médico-légales avec synchronisation multi-appareils",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1a1a1a",
+  "theme_color": "#2c3e50",
+  "categories": ["medical", "productivity", "business"],
+  "lang": "fr-FR",
+  "dir": "ltr",
+  "scope": "/",
+  "id": "com.crimitrack.pwa",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "assets/images/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/images/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/images/icon-1024x1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/images/screenshot-iphone.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "platform": "ios",
+      "label": "CrimiTrack sur iPhone"
+    },
+    {
+      "src": "assets/images/screenshot-ipad.png",
+      "sizes": "2048x2732",
+      "type": "image/png",
+      "platform": "ios",
+      "label": "CrimiTrack sur iPad Pro"
+    },
+    {
+      "src": "assets/images/screenshot-macbook.png",
+      "sizes": "2880x1800",
+      "type": "image/png",
+      "platform": "macos",
+      "label": "CrimiTrack sur MacBook"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nouvelle expertise",
+      "short_name": "Nouvelle",
+      "description": "Créer une nouvelle expertise",
+      "url": "/index.html?action=new-expertise",
+      "icons": [{"src": "assets/images/shortcut-new.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Agenda du jour",
+      "short_name": "Agenda",
+      "description": "Voir l'agenda du jour",
+      "url": "/index.html?module=agenda",
+      "icons": [{"src": "assets/images/shortcut-agenda.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Statistiques",
+      "short_name": "Stats",
+      "description": "Consulter les statistiques",
+      "url": "/index.html?module=stats",
+      "icons": [{"src": "assets/images/shortcut-stats.png", "sizes": "96x96"}]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "documents",
+          "accept": ["application/pdf", "application/msword", ".docx", ".xlsx", ".csv"]
+        }
+      ]
+    }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "crimitrack",
+      "url": "/protocol?url=%s"
+    }
+  ],
+  "related_applications": [],
+  "features": [
+    "Background Sync",
+    "Push Notifications",
+    "Offline Mode",
+    "Biometric Authentication",
+    "File Access",
+    "Camera"
+  ],
+  "permissions": {
+    "notifications": {
+      "description": "Pour vous alerter des nouvelles expertises et convocations"
+    },
+    "storage": {
+      "description": "Pour sauvegarder vos données en local"
+    },
+    "camera": {
+      "description": "Pour scanner des documents"
+    }
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  "launch_handler": {
+    "client_mode": ["focus-existing", "auto"]
+  },
+  "handle_links": "preferred",
+  "capture_links": "existing_client_event"
+}

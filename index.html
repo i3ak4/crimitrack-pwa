@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="description" content="Application de gestion d'expertises médico-légales">
+    
+    <title>CrimiTrack Mobile</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="assets/images/icon-180x180.png">
+    <link rel="apple-touch-startup-image" href="assets/images/splash-2048x2732.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/icon-16x16.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="assets/css/pwa-styles.css">
+    
+    <!-- Preconnect pour optimisation -->
+    <link rel="preconnect" href="http://mac-mini.tail-scale.ts.net:8081">
+    <link rel="dns-prefetch" href="http://mac-mini.tail-scale.ts.net:8081">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <img src="assets/images/icon-512x512.png" alt="CrimiTrack" class="splash-logo">
+            <h1>CrimiTrack</h1>
+            <div class="splash-loader">
+                <div class="loader-bar"></div>
+            </div>
+            <p class="splash-status">Chargement...</p>
+        </div>
+    </div>
+
+    <!-- Header avec indicateurs de connexion -->
+    <header id="app-header" class="app-header">
+        <div class="header-left">
+            <button id="menu-toggle" class="menu-toggle" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="app-title">CrimiTrack</h1>
+        </div>
+        
+        <div class="header-center">
+            <div id="connection-status" class="connection-status">
+                <span class="status-indicator"></span>
+                <span class="status-text">Vérification...</span>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <button id="sync-button" class="sync-button" aria-label="Synchroniser">
+                <svg class="sync-icon" viewBox="0 0 24 24">
+                    <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                </svg>
+                <span id="sync-badge" class="sync-badge">0</span>
+            </button>
+            <button id="profile-button" class="profile-button" aria-label="Profil">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation latérale (Desktop/iPad) -->
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <img src="assets/images/icon-192x192.png" alt="Logo" class="sidebar-logo">
+            <h2>Menu Principal</h2>
+        </div>
+        
+        <ul class="nav-list">
+            <li class="nav-item active" data-module="dashboard">
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                <span>Tableau de bord</span>
+            </li>
+            <li class="nav-item" data-module="agenda">
+                <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                <span>Agenda</span>
+            </li>
+            <li class="nav-item" data-module="expertises">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                <span>Expertises</span>
+            </li>
+            <li class="nav-item" data-module="waitlist">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                <span>Liste d'attente</span>
+            </li>
+            <li class="nav-item" data-module="statistics">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                <span>Statistiques</span>
+            </li>
+            <li class="nav-item" data-module="convocations">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                <span>Convocations</span>
+            </li>
+            <li class="nav-item" data-module="mailing">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10h5v-2h-5c-4.34 0-8-3.66-8-8s3.66-8 8-8 8 3.66 8 8v1.43c0 .79-.71 1.57-1.5 1.57s-1.5-.78-1.5-1.57V12c0-2.76-2.24-5-5-5s-5 2.24-5 5 2.24 5 5 5c1.38 0 2.64-.56 3.54-1.47.65.89 1.77 1.47 2.96 1.47 1.97 0 3.5-1.6 3.5-3.57V12c0-5.52-4.48-10-10-10zm0 13c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>
+                <span>Publipostage</span>
+            </li>
+            <li class="nav-item" data-module="settings">
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                <span>Paramètres</span>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div id="sync-status" class="sync-status">
+                <span class="sync-status-icon">⏱</span>
+                <span class="sync-status-text">Dernière sync: Jamais</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <main id="main-content" class="main-content">
+        <!-- Onglets visuels pour navigation principale -->
+        <div class="visual-tabs" id="visual-tabs">
+            <button class="visual-tab active" data-module="agenda">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                </svg>
+                <span>Agenda</span>
+            </button>
+            <button class="visual-tab" data-module="waitlist">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                </svg>
+                <span>Attentes</span>
+            </button>
+            <button class="visual-tab" data-module="statistics">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                </svg>
+                <span>Stats</span>
+            </button>
+            <button class="visual-tab" data-module="convocations">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                <span>Convoc</span>
+            </button>
+            <button class="visual-tab" data-module="billing">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                </svg>
+                <span>Facture</span>
+            </button>
+        </div>
+        
+        <div id="module-container" class="module-container">
+            <!-- Le contenu des modules sera chargé ici dynamiquement -->
+            <div class="welcome-screen" id="welcome-screen">
+                <h2>Bienvenue sur CrimiTrack PWA</h2>
+                <p>Version optimisée pour iPad et iPhone - Sans Tailscale</p>
+                
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <h3>Expertises</h3>
+                        <p class="stat-value" id="stat-expertises">-</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Rendez-vous</h3>
+                        <p class="stat-value" id="stat-rdv">-</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>En attente</h3>
+                        <p class="stat-value" id="stat-waiting">-</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Synchronisation</h3>
+                        <p class="stat-value" id="stat-sync">-</p>
+                    </div>
+                </div>
+                
+                <div class="sync-instructions">
+                    <h3>Première utilisation</h3>
+                    <p>Appuyez sur le bouton <strong>"Synchroniser BDD"</strong> en haut pour charger les données depuis le serveur.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Navigation bottom (Mobile) - Masquée sur iPad+ -->
+    <nav id="bottom-nav" class="bottom-nav">
+        <button class="bottom-nav-item active" data-module="agenda">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            <span>Agenda</span>
+        </button>
+        <button class="bottom-nav-item" data-module="waitlist">
+            <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+            <span>Attentes</span>
+        </button>
+        <button class="bottom-nav-item" data-module="statistics">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+            <span>Stats</span>
+        </button>
+        <button class="bottom-nav-item" data-module="convocations">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span>Convoc</span>
+        </button>
+        <button class="bottom-nav-item" data-module="publipostage">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10h5v-2h-5c-4.34 0-8-3.66-8-8s3.66-8 8-8 8 3.66 8 8v1.43c0 .79-.71 1.57-1.5 1.57s-1.5-.78-1.5-1.57V12c0-2.76-2.24-5-5-5s-5 2.24-5 5 2.24 5 5 5c1.38 0 2.64-.56 3.54-1.47.65.89 1.77 1.47 2.96 1.47 1.97 0 3.5-1.6 3.5-3.57V12c0-5.52-4.48-10-10-10zm0 13c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>
+            <span>Publi</span>
+        </button>
+    </nav>
+
+    <!-- Modal pour résolution de conflits -->
+    <div id="conflict-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Conflit de synchronisation détecté</h3>
+            <div class="conflict-comparison">
+                <div class="version-local">
+                    <h4>Version locale</h4>
+                    <pre id="conflict-local"></pre>
+                </div>
+                <div class="version-server">
+                    <h4>Version serveur</h4>
+                    <pre id="conflict-server"></pre>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button onclick="resolveConflict('local')">Garder local</button>
+                <button onclick="resolveConflict('server')">Garder serveur</button>
+                <button onclick="resolveConflict('merge')">Fusionner</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Installation PWA prompt -->
+    <div id="install-prompt" class="install-prompt" style="display: none;">
+        <p>Installer CrimiTrack sur votre appareil?</p>
+        <div class="install-actions">
+            <button id="install-accept">Installer</button>
+            <button id="install-dismiss">Plus tard</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/offline-manager.js"></script>
+    <script src="assets/js/sync-manager.js"></script>
+    <script src="assets/js/connection-manager.js"></script>
+    <script src="assets/js/publipostage-manager.js"></script>
+    <script src="assets/js/app.js"></script>
+    
+    <!-- Enregistrement du Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker enregistré:', registration.scope);
+                        
+                        // Vérifier les mises à jour
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Nouvelle version disponible
+                                    showToast('Nouvelle version disponible. Rafraîchissez la page.', 'info');
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Erreur Service Worker:', error);
+                    });
+            });
+        }
+        
+        // Gestion de l'installation PWA
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Afficher le bouton d'installation
+            const installPrompt = document.getElementById('install-prompt');
+            if (installPrompt) {
+                installPrompt.style.display = 'flex';
+            }
+        });
+        
+        document.getElementById('install-accept')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('Installation PWA:', outcome);
+                deferredPrompt = null;
+                document.getElementById('install-prompt').style.display = 'none';
+            }
+        });
+        
+        document.getElementById('install-dismiss')?.addEventListener('click', () => {
+            document.getElementById('install-prompt').style.display = 'none';
+        });
+        
+        // Helper pour les notifications toast
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
