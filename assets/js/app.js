@@ -494,7 +494,12 @@ class CrimiTrackPWA {
   }
   
   async finalizeLaunch() {
+    console.log('🚀 Finalisation du lancement...');
+    console.log(`📦 Modules chargés: ${this.modules.size}`);
+    console.log(`📦 Modules disponibles:`, Array.from(this.modules.keys()));
+    
     // Afficher le module par défaut
+    console.log('📊 Tentative d\'affichage du dashboard...');
     await this.showModule('dashboard');
     
     // Configuration finale des animations
@@ -721,11 +726,27 @@ class CrimiTrackPWA {
     }
     
     // Rendu du module
-    await module.render(moduleContent);
+    try {
+      // Nos modules retournent du HTML depuis render(), ils ne l'injectent pas
+      const html = module.render();
+      moduleContent.innerHTML = html;
+      console.log(`✅ Module ${moduleName} rendu avec succès`);
+    } catch (error) {
+      console.error(`❌ Erreur rendu module ${moduleName}:`, error);
+      moduleContent.innerHTML = `
+        <div class="error-container">
+          <h2>Erreur de chargement</h2>
+          <p>Le module ${moduleName} n'a pas pu être chargé.</p>
+          <p class="error-detail">${error.message}</p>
+        </div>
+      `;
+    }
     
     // Animation d'entrée
     moduleContent.classList.add('active');
-    await this.animationEngine.slideIn(moduleContent);
+    if (this.animationEngine && this.animationEngine.slideIn) {
+      await this.animationEngine.slideIn(moduleContent);
+    }
     
     // Mise à jour de l'état
     this.currentModule = moduleName;
