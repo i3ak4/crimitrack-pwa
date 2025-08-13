@@ -28,13 +28,28 @@ class SyncManager {
     this.queue = [];
     this.isSyncing = false;
     this.lastSync = null;
-    this.deviceId = this.getDeviceId();
+    this.deviceId = null; // Sera défini dans initialize()
+    this.initialized = false;
     
-    this.init();
+    // NE PAS appeler init() dans le constructeur !
+    console.log('[SyncManager] Instance créée (non initialisée)');
   }
   
   async initialize() {
-    return this.init();
+    if (this.initialized) {
+      console.log('[SyncManager] Déjà initialisé');
+      return;
+    }
+    
+    try {
+      this.deviceId = this.getDeviceId();
+      await this.init();
+      this.initialized = true;
+      console.log('[SyncManager] Initialisation complète');
+    } catch (error) {
+      console.error('[SyncManager] Erreur initialisation:', error);
+      throw error;
+    }
   }
   
   async init() {
@@ -89,22 +104,28 @@ class SyncManager {
   }
   
   setupEventListeners() {
-    // Mode autonome - pas de dépendance réseau
-    console.log('[SyncManager] Mode autonome - PWA indépendante');
-    
-    // Écouter les messages du service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', event => {
-        this.handleServiceWorkerMessage(event.data);
-      });
-    }
-    
-    // Actualiser l'accès iCloud si l'app revient au premier plan
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        this.checkiCloudAccess();
+    try {
+      // Mode autonome - pas de dépendance réseau
+      console.log('[SyncManager] Mode autonome - PWA indépendante');
+      
+      // Écouter les messages du service worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', event => {
+          this.handleServiceWorkerMessage(event.data);
+        });
       }
-    });
+      
+      // Actualiser l'accès iCloud si l'app revient au premier plan
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) {
+            this.checkiCloudAccess();
+          }
+        });
+      }
+    } catch (error) {
+      console.log('[SyncManager] Erreur setup listeners:', error.message);
+    }
   }
   
   async checkiCloudAccess() {
@@ -863,8 +884,15 @@ class SyncManager {
   
   // Créer le bouton de synchronisation visible
   createSyncButton() {
-    const existingButton = document.getElementById('sync-database-button');
-    if (existingButton) return;
+    try {
+      // Vérifier que le DOM est disponible
+      if (typeof document === 'undefined') {
+        console.log('[SyncManager] DOM non disponible, bouton non créé');
+        return;
+      }
+      
+      const existingButton = document.getElementById('sync-database-button');
+      if (existingButton) return;
     
     const button = document.createElement('button');
     button.id = 'sync-database-button';
@@ -952,6 +980,9 @@ class SyncManager {
     if (headerRight) {
       headerRight.insertBefore(demoButton, headerRight.firstChild);
       headerRight.insertBefore(button, demoButton);
+    }
+    } catch (error) {
+      console.log('[SyncManager] Erreur création bouton:', error.message);
     }
   }
   
