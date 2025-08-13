@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Module Loading</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Direct Module Loading</h1>
+        
+        <button onclick="testDirectLoad()">Test Direct Load</button>
+        <button onclick="testWithDependencies()">Test With Dependencies</button>
+        <button onclick="clearResults()">Clear</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <!-- Chargement des dépendances -->
+    <script src="assets/js/real-data-manager.js"></script>
+    <script src="assets/js/sync-manager-simple.js"></script>
+    <script src="assets/js/offline-manager.js"></script>
+    <script src="assets/js/connection-manager.js"></script>
+    <script src="assets/js/log-manager.js"></script>
+    <script src="assets/js/publipostage-manager.js"></script>
+    
+    <!-- Chargement des modules -->
+    <script src="modules/dashboard/dashboard-pwa.js"></script>
+    <script src="modules/agenda/agenda-pwa.js"></script>
+    <script src="modules/waitlist/waitlist-pwa.js"></script>
+    <script src="modules/convocations/convocations-pwa.js"></script>
+    <script src="modules/mailing/mailing-pwa.js"></script>
+    <script src="modules/statistiques/statistiques-pwa.js"></script>
+    <script src="modules/billing/billing-pwa.js"></script>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testDirectLoad() {
+            addResult('=== Test Direct Load ===', 'info');
+            
+            // Test 1: Check if classes exist
+            const modules = [
+                'DashboardPWA',
+                'AgendaPWA', 
+                'WaitlistPWA',
+                'ConvocationsPWA',
+                'MailingPWA',
+                'StatistiquesPWA',
+                'BillingPWA'
+            ];
+            
+            for (const moduleName of modules) {
+                const exists = window[moduleName] !== undefined;
+                const isFunction = typeof window[moduleName] === 'function';
+                
+                if (exists && isFunction) {
+                    addResult(`✅ ${moduleName} disponible`, 'success');
+                } else if (exists) {
+                    addResult(`⚠️ ${moduleName} existe mais n'est pas une fonction`, 'error');
+                } else {
+                    addResult(`❌ ${moduleName} non trouvé`, 'error');
+                }
+            }
+            
+            // Test 2: Try to instantiate DashboardPWA
+            try {
+                addResult('--- Test instantiation DashboardPWA ---', 'info');
+                
+                if (window.DashboardPWA) {
+                    const dashboard = new window.DashboardPWA({
+                        dataManager: {},
+                        syncManager: {},
+                        notificationManager: {},
+                        animationEngine: {},
+                        device: { type: 'test' }
+                    });
+                    
+                    addResult('✅ DashboardPWA instancié avec succès', 'success');
+                    
+                    // Try initialize
+                    await dashboard.initialize();
+                    addResult('✅ DashboardPWA initialisé', 'success');
+                    
+                    // Try render
+                    const html = dashboard.render();
+                    addResult(`✅ Render retourne ${html.length} caractères`, 'success');
+                } else {
+                    addResult('❌ window.DashboardPWA non trouvé', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Erreur: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testWithDependencies() {
+            addResult('=== Test With Real Dependencies ===', 'info');
+            
+            try {
+                // Initialize managers
+                addResult('Initialisation des gestionnaires...', 'info');
+                
+                const dataManager = new window.RealDataManager();
+                await dataManager.initialize();
+                addResult('✅ DataManager initialisé', 'success');
+                
+                const syncManager = new window.SyncManager();
+                await syncManager.initialize();
+                addResult('✅ SyncManager initialisé', 'success');
+                
+                const dependencies = {
+                    dataManager: dataManager,
+                    syncManager: syncManager,
+                    notificationManager: {
+                        showToast: (msg) => console.log('Toast:', msg),
+                        initialize: async () => {}
+                    },
+                    animationEngine: {
+                        animateCounter: () => {},
+                        slideIn: () => {},
+                        initialize: async () => {}
+                    },
+                    device: {
+                        type: 'iPhone',
+                        name: 'Test iPhone'
+                    }
+                };
+                
+                // Test each module
+                const modules = [
+                    { name: 'DashboardPWA', label: 'Dashboard' },
+                    { name: 'AgendaPWA', label: 'Agenda' },
+                    { name: 'WaitlistPWA', label: 'Waitlist' }
+                ];
+                
+                for (const module of modules) {
+                    try {
+                        addResult(`--- Test ${module.label} ---`, 'info');
+                        
+                        const ModuleClass = window[module.name];
+                        if (!ModuleClass) {
+                            addResult(`❌ ${module.name} non trouvé`, 'error');
+                            continue;
+                        }
+                        
+                        const instance = new ModuleClass(dependencies);
+                        addResult(`✅ ${module.label} instancié`, 'success');
+                        
+                        await instance.initialize();
+                        addResult(`✅ ${module.label} initialisé`, 'success');
+                        
+                        const html = instance.render();
+                        addResult(`✅ ${module.label} rendu (${html.length} chars)`, 'success');
+                        
+                    } catch (error) {
+                        addResult(`❌ ${module.label}: ${error.message}`, 'error');
+                        console.error(error);
+                    }
+                }
+                
+            } catch (error) {
+                addResult(`❌ Erreur globale: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Test automatique au chargement
+        window.addEventListener('DOMContentLoaded', () => {
+            addResult('Page chargée, prête pour les tests', 'info');
+            
+            // Afficher l'état initial
+            addResult(`window.DashboardPWA: ${typeof window.DashboardPWA}`, 'info');
+            addResult(`window.RealDataManager: ${typeof window.RealDataManager}`, 'info');
+            addResult(`window.SyncManager: ${typeof window.SyncManager}`, 'info');
+        });
+    </script>
+</body>
+</html>

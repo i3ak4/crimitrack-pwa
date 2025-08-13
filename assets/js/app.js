@@ -316,7 +316,6 @@ class CrimiTrackPWA {
       { name: 'synthese', priority: 2 },
       { name: 'statistiques', priority: 2 },
       { name: 'billing', priority: 2 },
-      { name: 'indemnites', priority: 2 },
       
       // Modules outils
       { name: 'anonymisation', priority: 3 },
