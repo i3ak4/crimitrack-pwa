@@ -313,6 +313,9 @@ class CrimiTrackPWA {
     // Actions rapides
     this.setupQuickActions();
     
+    // Base de données
+    this.setupDatabaseActions();
+    
     // Profil utilisateur
     this.setupUserProfile();
     
@@ -696,6 +699,363 @@ class CrimiTrackPWA {
   }
   
   /* ============================================
+     📊 ACTIONS RAPIDES - NOUVELLES FONCTIONNALITÉS
+     ============================================ */
+  
+  setupQuickActions() {
+    // Gestionnaire pour toutes les actions rapides
+    document.addEventListener('click', (e) => {
+      const actionCard = e.target.closest('.action-card');
+      if (!actionCard) return;
+      
+      const action = actionCard.getAttribute('data-action');
+      this.handleQuickAction(action);
+    });
+  }
+  
+  async handleQuickAction(action) {
+    switch (action) {
+      case 'nouvelle-mission':
+        this.showNouvelleExpertiseModal();
+        break;
+      case 'charger-db':
+        this.chargerBaseDonnees();
+        break;
+      case 'sauvegarder-db':
+        await this.sauvegarderBaseDonnees();
+        break;
+      case 'send-convocation':
+        this.showModule('mailing');
+        break;
+      default:
+        console.log(`Action non implémentée: ${action}`);
+    }
+  }
+  
+  /* ============================================
+     🗃️ GESTION DE LA BASE DE DONNÉES
+     ============================================ */
+  
+  setupDatabaseActions() {
+    const fileInput = document.getElementById('db-file-input');
+    
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        this.handleDatabaseFile(file);
+      }
+    });
+  }
+  
+  chargerBaseDonnees() {
+    const fileInput = document.getElementById('db-file-input');
+    fileInput.click();
+  }
+  
+  async handleDatabaseFile(file) {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      // Valider la structure des données
+      if (!this.validateDatabaseStructure(data)) {
+        throw new Error('Format de base de données invalide');
+      }
+      
+      // Comparer avec la version existante
+      const shouldImport = await this.compareDatabaseVersions(data);
+      
+      if (shouldImport) {
+        await this.importDatabase(data);
+        this.showToast('Base de données importée avec succès', 'success');
+        
+        // Recharger les données
+        await this.loadInitialData();
+      } else {
+        this.showToast('Base de données locale plus récente', 'info');
+      }
+    } catch (error) {
+      console.error('Erreur import base de données:', error);
+      this.showToast(`Erreur: ${error.message}`, 'error');
+    }
+  }
+  
+  validateDatabaseStructure(data) {
+    // Vérifier la présence des propriétés essentielles
+    const requiredKeys = ['agenda', 'expertises', 'metadata'];
+    return requiredKeys.every(key => data.hasOwnProperty(key));
+  }
+  
+  async compareDatabaseVersions(newData) {
+    try {
+      const currentData = await this.dataManager.exportDatabase();
+      
+      // Comparer les timestamps de dernière modification
+      const newTimestamp = newData.metadata?.lastSync || 0;
+      const currentTimestamp = currentData.metadata?.lastSync || 0;
+      
+      if (newTimestamp > currentTimestamp) {
+        return true; // Importer la nouvelle version
+      } else if (newTimestamp === currentTimestamp) {
+        return confirm('Les versions semblent identiques. Importer quand même ?');
+      } else {
+        return confirm('Votre base locale semble plus récente. Écraser avec les données importées ?');
+      }
+    } catch (error) {
+      console.error('Erreur comparaison versions:', error);
+      return true; // En cas d'erreur, permettre l'import
+    }
+  }
+  
+  async importDatabase(data) {
+    // Ajouter metadata de synchronisation
+    data.metadata = {
+      ...data.metadata,
+      lastSync: Date.now(),
+      importTime: new Date().toISOString(),
+      importSource: 'PWA Import'
+    };
+    
+    await this.dataManager.importDatabase(data);
+  }
+  
+  async sauvegarderBaseDonnees() {
+    try {
+      const data = await this.dataManager.exportDatabase();
+      
+      // Ajouter metadata de synchronisation
+      data.metadata = {
+        ...data.metadata,
+        version: this.version,
+        exportTime: new Date().toISOString(),
+        exportSource: 'CrimiTrack PWA',
+        device: this.device.name
+      };
+      
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `crimitrack-backup-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+      
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      URL.revokeObjectURL(url);
+      
+      this.showToast('Base de données exportée avec succès', 'success');
+      
+    } catch (error) {
+      console.error('Erreur export base de données:', error);
+      this.showToast(`Erreur export: ${error.message}`, 'error');
+    }
+  }
+  
+  /* ============================================
+     🎯 NOUVELLE EXPERTISE/MISSION
+     ============================================ */
+  
+  showNouvelleExpertiseModal() {
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const modalActions = document.getElementById('modal-actions');
+    const modalSystem = document.getElementById('modal-system');
+    
+    modalTitle.textContent = 'Nouvelle Mission d\'Expertise';
+    
+    modalBody.innerHTML = `
+      <form id="nouvelle-expertise-form" class="expertise-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="patronyme">Patronyme *</label>
+            <input type="text" id="patronyme" name="patronyme" required class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="numero_dossier">N° Dossier *</label>
+            <input type="text" id="numero_dossier" name="numero_dossier" required class="form-input">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date_examen">Date d'examen *</label>
+            <input type="date" id="date_examen" name="date_examen" required class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="lieu_examen">Lieu d'examen</label>
+            <input type="text" id="lieu_examen" name="lieu_examen" value="CJ" class="form-input">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="type_mission">Type de mission</label>
+            <select id="type_mission" name="type_mission" class="form-select">
+              <option value="instruction">Instruction</option>
+              <option value="correctionnel">Correctionnel</option>
+              <option value="expertise">Expertise</option>
+              <option value="flagrance">Flagrance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tribunal">Tribunal</label>
+            <input type="text" id="tribunal" name="tribunal" class="form-input">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="magistrat">Magistrat</label>
+            <input type="text" id="magistrat" name="magistrat" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="opj_greffier">OPJ/Greffier</label>
+            <input type="text" id="opj_greffier" name="opj_greffier" class="form-input">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="chefs_accusation">Chefs d'accusation</label>
+          <textarea id="chefs_accusation" name="chefs_accusation" rows="3" class="form-textarea"></textarea>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date_oce">Date OCE</label>
+            <input type="date" id="date_oce" name="date_oce" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="limite_oce">Limite OCE</label>
+            <input type="date" id="limite_oce" name="limite_oce" class="form-input">
+          </div>
+        </div>
+      </form>
+    `;
+    
+    modalActions.innerHTML = `
+      <button type="button" class="modal-btn secondary" id="cancel-expertise">Annuler</button>
+      <button type="button" class="modal-btn primary" id="save-expertise">Créer & Publiposer</button>
+    `;
+    
+    // Afficher le modal
+    modalSystem.classList.add('show');
+    
+    // Gestionnaires d'événements
+    document.getElementById('cancel-expertise').addEventListener('click', () => {
+      modalSystem.classList.remove('show');
+    });
+    
+    document.getElementById('save-expertise').addEventListener('click', () => {
+      this.saveNouvelleExpertise();
+    });
+    
+    // Fermer avec l'overlay
+    document.querySelector('.modal-backdrop').addEventListener('click', () => {
+      modalSystem.classList.remove('show');
+    });
+  }
+  
+  async saveNouvelleExpertise() {
+    const form = document.getElementById('nouvelle-expertise-form');
+    const formData = new FormData(form);
+    
+    // Valider les champs requis
+    if (!formData.get('patronyme') || !formData.get('numero_dossier') || !formData.get('date_examen')) {
+      this.showToast('Veuillez remplir tous les champs obligatoires', 'error');
+      return;
+    }
+    
+    try {
+      const expertiseData = {
+        id: `exp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        patronyme: formData.get('patronyme'),
+        numero_dossier: formData.get('numero_dossier'),
+        date_examen: formData.get('date_examen'),
+        lieu_examen: formData.get('lieu_examen') || 'CJ',
+        type_mission: formData.get('type_mission'),
+        tribunal: formData.get('tribunal'),
+        magistrat: formData.get('magistrat'),
+        opj_greffier: formData.get('opj_greffier'),
+        chefs_accusation: formData.get('chefs_accusation'),
+        date_oce: formData.get('date_oce'),
+        limite_oce: formData.get('limite_oce'),
+        statut: 'programmee',
+        date_creation: new Date().toISOString(),
+        _lastModified: Date.now(),
+        _isWaitlist: false
+      };
+      
+      // Sauvegarder dans la base de données
+      await this.dataManager.addExpertise(expertiseData);
+      
+      // Fermer le modal
+      document.getElementById('modal-system').classList.remove('show');
+      
+      // Afficher confirmation
+      this.showToast('Expertise créée avec succès !', 'success');
+      
+      // Proposer automatiquement le publipostage
+      setTimeout(() => {
+        this.showPublipostageConfirmation(expertiseData);
+      }, 1000);
+      
+      // Recharger les données
+      await this.loadDashboardStats();
+      
+    } catch (error) {
+      console.error('Erreur création expertise:', error);
+      this.showToast(`Erreur: ${error.message}`, 'error');
+    }
+  }
+  
+  showPublipostageConfirmation(expertiseData) {
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const modalActions = document.getElementById('modal-actions');
+    const modalSystem = document.getElementById('modal-system');
+    
+    modalTitle.textContent = 'Publipostage automatique';
+    
+    modalBody.innerHTML = `
+      <div class="publipostage-confirmation">
+        <div class="confirmation-icon">
+          <i class="fas fa-paper-plane"></i>
+        </div>
+        <h3>Expertise créée avec succès !</h3>
+        <p>Voulez-vous envoyer automatiquement la convocation pour :</p>
+        <div class="expertise-summary">
+          <strong>${expertiseData.patronyme}</strong><br>
+          <span class="text-muted">Dossier: ${expertiseData.numero_dossier}</span><br>
+          <span class="text-muted">Date: ${new Date(expertiseData.date_examen).toLocaleDateString('fr-FR')}</span>
+        </div>
+      </div>
+    `;
+    
+    modalActions.innerHTML = `
+      <button type="button" class="modal-btn secondary" id="skip-publipostage">Plus tard</button>
+      <button type="button" class="modal-btn primary" id="send-publipostage">
+        <i class="fas fa-paper-plane"></i>
+        Envoyer convocation
+      </button>
+    `;
+    
+    modalSystem.classList.add('show');
+    
+    document.getElementById('skip-publipostage').addEventListener('click', () => {
+      modalSystem.classList.remove('show');
+    });
+    
+    document.getElementById('send-publipostage').addEventListener('click', () => {
+      modalSystem.classList.remove('show');
+      this.showModule('mailing');
+      this.showToast('Module de publipostage ouvert', 'info');
+    });
+  }
+  
+  /* ============================================
      📊 DONNÉES DU DASHBOARD
      ============================================ */
   
@@ -936,8 +1296,35 @@ class ModulePlaceholder {
 
 // Gestionnaires simplifiés pour l'exemple
 class DataManager {
+  constructor() {
+    this.data = {
+      agenda: [],
+      expertises: [],
+      waitlist: [],
+      documents: [],
+      metadata: {
+        version: '4.0.0',
+        lastSync: Date.now(),
+        device: 'PWA'
+      }
+    };
+  }
+  
   async initialize() {
     console.log('📊 DataManager initialisé');
+    // Charger depuis localStorage si disponible
+    const savedData = localStorage.getItem('crimitrack-data');
+    if (savedData) {
+      try {
+        this.data = JSON.parse(savedData);
+      } catch (e) {
+        console.warn('Erreur lecture localStorage:', e);
+      }
+    }
+  }
+  
+  async save() {
+    localStorage.setItem('crimitrack-data', JSON.stringify(this.data));
   }
   
   async globalSearch(query) {
@@ -946,14 +1333,44 @@ class DataManager {
   }
   
   async getDashboardStats() {
-    // Simulation de stats
     return {
-      agenda: 12,
-      waitlist: 5,
-      billing: 187,
+      agenda: this.data.agenda.length,
+      waitlist: this.data.waitlist.length,
+      billing: this.data.expertises.length,
       convocations: 3,
       syncStatus: '100%'
     };
+  }
+  
+  async addExpertise(expertiseData) {
+    // Ajouter à l'agenda
+    this.data.agenda.push(expertiseData);
+    await this.save();
+    console.log('✅ Expertise ajoutée:', expertiseData.patronyme);
+  }
+  
+  async exportDatabase() {
+    return {
+      ...this.data,
+      metadata: {
+        ...this.data.metadata,
+        exportTime: new Date().toISOString(),
+        lastSync: Date.now()
+      }
+    };
+  }
+  
+  async importDatabase(newData) {
+    this.data = {
+      ...newData,
+      metadata: {
+        ...newData.metadata,
+        importTime: new Date().toISOString(),
+        lastSync: Date.now()
+      }
+    };
+    await this.save();
+    console.log('✅ Base de données importée');
   }
 }
 

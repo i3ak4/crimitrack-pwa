@@ -201,17 +201,6 @@
                         </div>
                     </li>
                     
-                    <!-- Programmation/Planning -->
-                    <li class="nav-item" data-module="planning">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-users nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Programmation</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
                 </ul>
             </div>
 
@@ -250,30 +239,6 @@
             <div class="nav-section">
                 <h3 class="section-title">GESTION</h3>
                 <ul class="nav-list">
-                    <!-- Import -->
-                    <li class="nav-item" data-module="import">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-file-import nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Import Excel</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
-                    <!-- Synthèse & Rapports -->
-                    <li class="nav-item" data-module="synthese">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-file-medical nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Synthèse & Rapports</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
                     <!-- Statistiques -->
                     <li class="nav-item" data-module="statistiques">
                         <div class="nav-link">
@@ -307,36 +272,6 @@
                                 <div class="icon-glow"></div>
                             </div>
                             <span class="nav-text">Indemnités</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Section Outils -->
-            <div class="nav-section">
-                <h3 class="section-title">OUTILS</h3>
-                <ul class="nav-list">
-                    <!-- Anonymisation -->
-                    <li class="nav-item" data-module="anonymisation">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-user-secret nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Anonymisation</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
-                    <!-- Prompt Mastering -->
-                    <li class="nav-item" data-module="prompt-mastering">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-robot nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Prompt Mastering</span>
                             <div class="nav-indicator"></div>
                         </div>
                     </li>
@@ -471,23 +406,33 @@
                             Actions rapides
                         </h2>
                         <div class="actions-grid">
-                            <button class="action-card" data-action="new-appointment">
+                            <button class="action-card" data-action="nouvelle-mission">
                                 <div class="action-icon">
                                     <i class="fas fa-plus-circle"></i>
                                 </div>
                                 <div class="action-content">
-                                    <span class="action-title">Nouveau RDV</span>
-                                    <span class="action-desc">Planifier une expertise</span>
+                                    <span class="action-title">Nouvelle Mission</span>
+                                    <span class="action-desc">Créer une expertise</span>
                                 </div>
                             </button>
                             
-                            <button class="action-card" data-action="import-excel">
+                            <button class="action-card" data-action="charger-db">
                                 <div class="action-icon">
-                                    <i class="fas fa-file-excel"></i>
+                                    <i class="fas fa-upload"></i>
                                 </div>
                                 <div class="action-content">
-                                    <span class="action-title">Import Excel</span>
-                                    <span class="action-desc">Importer des données</span>
+                                    <span class="action-title">Charger Base</span>
+                                    <span class="action-desc">Importer JSON database</span>
+                                </div>
+                            </button>
+                            
+                            <button class="action-card" data-action="sauvegarder-db">
+                                <div class="action-icon">
+                                    <i class="fas fa-download"></i>
+                                </div>
+                                <div class="action-content">
+                                    <span class="action-title">Sauvegarder Base</span>
+                                    <span class="action-desc">Exporter JSON database</span>
                                 </div>
                             </button>
                             
@@ -496,18 +441,8 @@
                                     <i class="fas fa-paper-plane"></i>
                                 </div>
                                 <div class="action-content">
-                                    <span class="action-title">Convocation</span>
-                                    <span class="action-desc">Envoyer par email/SMS</span>
-                                </div>
-                            </button>
-                            
-                            <button class="action-card" data-action="generate-report">
-                                <div class="action-icon">
-                                    <i class="fas fa-file-pdf"></i>
-                                </div>
-                                <div class="action-content">
-                                    <span class="action-title">Rapport</span>
-                                    <span class="action-desc">Générer un rapport</span>
+                                    <span class="action-title">Publipostage</span>
+                                    <span class="action-desc">Envoyer convocations</span>
                                 </div>
                             </button>
                         </div>
@@ -602,6 +537,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Input file caché pour charger la base de données -->
+    <input type="file" id="db-file-input" accept=".json" style="display: none;">
 
     <!-- Toast notifications -->
     <div id="toast-container" class="toast-container"></div>
