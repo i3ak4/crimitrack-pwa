@@ -7,6 +7,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#7c3aed">
     <meta name="description" content="CrimiTrack - Expertise Criminologique Mobile">
+    <meta name="cache-control" content="no-cache">
+    <meta name="version" content="4.2.0-20250813">
     
     <title>CrimiTrack PWA - Expertise Criminologique</title>
     
@@ -567,18 +569,12 @@
     </div>
 
     <!-- Scripts PWA optimisés -->
-    <script src="assets/js/core/device-detection.js"></script>
-    <script src="assets/js/core/animation-engine.js"></script>
-    <script src="assets/js/core/gesture-handler.js"></script>
-    <script src="assets/js/core/state-manager.js"></script>
-    <script src="assets/js/managers/data-manager.js"></script>
     <script src="assets/js/real-data-manager.js"></script>
-    <script src="assets/js/managers/sync-manager.js"></script>
-    <script src="assets/js/managers/offline-manager.js"></script>
-    <script src="assets/js/managers/notification-manager.js"></script>
-    <script src="assets/js/ui/navigation-controller.js"></script>
-    <script src="assets/js/ui/modal-controller.js"></script>
-    <script src="assets/js/ui/search-controller.js"></script>
+    <script src="assets/js/sync-manager.js"></script>
+    <script src="assets/js/offline-manager.js"></script>
+    <script src="assets/js/connection-manager.js"></script>
+    <script src="assets/js/log-manager.js"></script>
+    <script src="assets/js/publipostage-manager.js"></script>
     
     <!-- Modules PWA -->
     <script src="modules/dashboard/dashboard-pwa.js"></script>
@@ -591,7 +587,6 @@
     <script src="modules/synthese/synthese-pwa.js"></script>
     <script src="modules/statistiques/statistiques-pwa.js"></script>
     <script src="modules/billing/billing-pwa.js"></script>
-    <script src="modules/indemnites/indemnites-pwa.js"></script>
     <script src="modules/anonymisation/anonymisation-pwa.js"></script>
     <script src="modules/prompt-mastering/prompt-mastering-pwa.js"></script>
     
