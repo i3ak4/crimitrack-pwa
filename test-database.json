@@ -1,0 +1,95 @@
+{
+  "agenda": [
+    {
+      "id": "exp_test_001",
+      "patronyme": "DUPONT Jean",
+      "numero_dossier": "2025-001-TEST",
+      "date_examen": "2025-08-15",
+      "lieu_examen": "CJ",
+      "type_mission": "flagrance",
+      "tribunal": "TGI Paris",
+      "magistrat": "M. Martin",
+      "opj_greffier": "OPJ Durand",
+      "chefs_accusation": "Vol avec violence",
+      "date_oce": "2025-08-10",
+      "limite_oce": "2025-08-20",
+      "statut": "programmee",
+      "date_creation": "2025-08-13T10:00:00.000Z",
+      "_lastModified": 1692187200000,
+      "_isWaitlist": false
+    },
+    {
+      "id": "exp_test_002",
+      "patronyme": "MARTIN Sophie",
+      "numero_dossier": "2025-002-TEST",
+      "date_examen": "2025-08-16",
+      "lieu_examen": "CJ",
+      "type_mission": "instruction",
+      "tribunal": "TGI Créteil",
+      "magistrat": "Mme Bernard",
+      "opj_greffier": "Greffier Rousseau",
+      "chefs_accusation": "Agression caractérisée",
+      "date_oce": "2025-08-11",
+      "limite_oce": "2025-08-21",
+      "statut": "programmee",
+      "date_creation": "2025-08-13T11:00:00.000Z",
+      "_lastModified": 1692190800000,
+      "_isWaitlist": false
+    }
+  ],
+  "expertises": [
+    {
+      "id": "exp_test_001",
+      "numero_dossier": "2025-001-TEST",
+      "date_creation": "2025-08-13T10:00:00.000Z",
+      "statut": "en_cours",
+      "type_expertise": "Expertise psychologique",
+      "_lastModified": 1692187200000
+    },
+    {
+      "id": "exp_test_002",
+      "numero_dossier": "2025-002-TEST",
+      "date_creation": "2025-08-13T11:00:00.000Z",
+      "statut": "en_cours",
+      "type_expertise": "Évaluation comportementale",
+      "_lastModified": 1692190800000
+    }
+  ],
+  "waitlist": [
+    {
+      "id": "wait_001",
+      "patronyme": "LEROUX Paul",
+      "numero_dossier": "2025-003-WAIT",
+      "date_examen": "2025-08-18",
+      "lieu_examen": "CJ",
+      "type_mission": "correctionnel",
+      "tribunal": "TGI Nanterre",
+      "magistrat": "M. Petit",
+      "statut": "en_attente",
+      "date_creation": "2025-08-13T12:00:00.000Z",
+      "_lastModified": 1692194400000,
+      "_isWaitlist": true
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc_001",
+      "expertise_id": "exp_test_001",
+      "nom_fichier": "rapport_dupont.pdf",
+      "type_document": "rapport_expertise",
+      "date_creation": "2025-08-13T10:30:00.000Z",
+      "taille": 256000,
+      "_lastModified": 1692189000000
+    }
+  ],
+  "metadata": {
+    "version": "4.1.0",
+    "lastSync": 1692194400000,
+    "importTime": "2025-08-13T12:30:00.000Z",
+    "importSource": "CrimiTrack Desktop v3.2",
+    "device": "MacBook Pro",
+    "totalExpertises": 2,
+    "totalDocuments": 1,
+    "exportTime": "2025-08-13T12:30:00.000Z"
+  }
+}

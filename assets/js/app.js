@@ -194,10 +194,26 @@ class CrimiTrackPWA {
     this.logSuccess('🎯 Éléments DOM cachés');
   }
   
+  async showDatabaseStatus() {
+    const status = await this.dataManager.getStatus();
+    console.log('📊 Statut de la base de données:', status);
+    
+    // Afficher dans une notification
+    if (this.notificationManager) {
+      const message = `Base de données: ${status.counts?.expertises || 0} expertises chargées`;
+      this.notificationManager.showToast(message, 'success');
+    }
+    
+    return status;
+  }
+  
   async initializeManagers() {
-    // Data Manager - Gestion des données
-    this.dataManager = new DataManager();
+    // Real Data Manager - Gestion des données réelles avec IndexedDB
+    this.dataManager = new RealDataManager();
     await this.dataManager.initialize();
+    
+    // Afficher le statut des données
+    await this.showDatabaseStatus();
     
     // Sync Manager - Synchronisation iCloud/serveur
     this.syncManager = new SyncManager(this.dataManager);
@@ -747,9 +763,29 @@ class CrimiTrackPWA {
     });
   }
   
-  chargerBaseDonnees() {
-    const fileInput = document.getElementById('db-file-input');
-    fileInput.click();
+  async chargerBaseDonnees() {
+    try {
+      this.logInfo('🔄 Rechargement de la base de données...');
+      
+      // Force le rechargement des données depuis le JSON
+      await this.dataManager.forceRefresh();
+      
+      // Afficher le nouveau statut
+      const status = await this.showDatabaseStatus();
+      
+      this.logSuccess(`✅ Base rechargée: ${status.counts?.expertises || 0} expertises`);
+      
+      // Rafraîchir le module actuel
+      if (this.currentModule) {
+        await this.showModule(this.currentModule.moduleName);
+      }
+      
+    } catch (error) {
+      console.error('❌ Erreur rechargement base:', error);
+      if (this.notificationManager) {
+        this.notificationManager.showToast('Erreur lors du rechargement', 'error');
+      }
+    }
   }
   
   async handleDatabaseFile(file) {

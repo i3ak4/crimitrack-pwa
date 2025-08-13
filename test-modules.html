@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CrimiTrack PWA Modules</title>
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            margin: 2rem;
+            background: #f9fafb;
+        }
+        .test-container { 
+            max-width: 800px; 
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .test-result { 
+            padding: 1rem; 
+            margin: 0.5rem 0; 
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .success { 
+            background: #d1fae5; 
+            color: #065f46; 
+            border: 1px solid #a7f3d0;
+        }
+        .error { 
+            background: #fee2e2; 
+            color: #991b1b; 
+            border: 1px solid #fca5a5;
+        }
+        .loading { 
+            background: #dbeafe; 
+            color: #1e40af; 
+            border: 1px solid #93c5fd;
+        }
+        h1 { 
+            color: #1f2937; 
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        h2 { 
+            color: #374151; 
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+        .icon { 
+            font-size: 1.2em; 
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test des Modules CrimiTrack PWA</h1>
+        
+        <h2>📋 Résultats des Tests</h2>
+        <div id="test-results"></div>
+        
+        <h2>📊 Statistiques</h2>
+        <div id="test-stats"></div>
+    </div>
+
+    <script type="module">
+        class ModuleTester {
+            constructor() {
+                this.results = [];
+                this.modules = [
+                    'dashboard',
+                    'agenda', 
+                    'waitlist',
+                    'convocations',
+                    'mailing',
+                    'statistiques',
+                    'billing',
+                    'planning',
+                    'import',
+                    'synthese',
+                    'indemnites',
+                    'anonymisation',
+                    'prompt-mastering'
+                ];
+            }
+            
+            async testModule(moduleName) {
+                try {
+                    this.addResult('loading', `🔄 Test du module ${moduleName}...`);
+                    
+                    // Tentative d'import du module
+                    const moduleScript = await import(`./modules/${moduleName}/${moduleName}-pwa.js`);
+                    
+                    if (!moduleScript.default) {
+                        throw new Error('Export par défaut manquant');
+                    }
+                    
+                    // Test d'instanciation
+                    const mockDependencies = {
+                        dataManager: { test: true },
+                        syncManager: { test: true },
+                        notificationManager: { test: true },
+                        animationEngine: { test: true },
+                        device: { name: 'Test Device' }
+                    };
+                    
+                    const moduleInstance = new moduleScript.default(mockDependencies);
+                    
+                    // Vérification des méthodes requises
+                    const requiredMethods = ['initialize', 'render', 'refresh', 'destroy'];
+                    for (const method of requiredMethods) {
+                        if (typeof moduleInstance[method] !== 'function') {
+                            throw new Error(`Méthode ${method} manquante`);
+                        }
+                    }
+                    
+                    this.addResult('success', `✅ Module ${moduleName} : OK`);
+                    return true;
+                    
+                } catch (error) {
+                    this.addResult('error', `❌ Module ${moduleName} : ${error.message}`);
+                    return false;
+                }
+            }
+            
+            addResult(type, message) {
+                // Supprimer l'ancien résultat de chargement pour ce module
+                const existingResults = document.querySelectorAll('#test-results .test-result');
+                existingResults.forEach(result => {
+                    if (result.textContent.includes(message.split(':')[0]) && result.classList.contains('loading')) {
+                        result.remove();
+                    }
+                });
+                
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `test-result ${type}`;
+                resultDiv.innerHTML = `<span class="icon">${this.getIcon(type)}</span>${message}`;
+                document.getElementById('test-results').appendChild(resultDiv);
+                
+                this.results.push({ type, message });
+            }
+            
+            getIcon(type) {
+                const icons = {
+                    success: '✅',
+                    error: '❌',
+                    loading: '🔄'
+                };
+                return icons[type] || '📝';
+            }
+            
+            async runAllTests() {
+                this.addResult('loading', '🚀 Début des tests des modules PWA...');
+                
+                let successCount = 0;
+                let totalCount = this.modules.length;
+                
+                for (const moduleName of this.modules) {
+                    const success = await this.testModule(moduleName);
+                    if (success) successCount++;
+                    
+                    // Petite pause pour l'UX
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // Afficher les statistiques
+                this.showStats(successCount, totalCount);
+            }
+            
+            showStats(successCount, totalCount) {
+                const failedCount = totalCount - successCount;
+                const successRate = Math.round((successCount / totalCount) * 100);
+                
+                const statsDiv = document.getElementById('test-stats');
+                statsDiv.innerHTML = `
+                    <div class="test-result ${successRate === 100 ? 'success' : failedCount > 0 ? 'error' : 'loading'}">
+                        📊 <strong>Résumé:</strong> ${successCount}/${totalCount} modules OK (${successRate}%)
+                    </div>
+                `;
+                
+                if (successRate === 100) {
+                    this.addResult('success', '🎉 Tous les modules sont fonctionnels !');
+                } else {
+                    this.addResult('error', `⚠️ ${failedCount} module(s) en erreur`);
+                }
+            }
+        }
+        
+        // Lancer les tests au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            const tester = new ModuleTester();
+            tester.runAllTests();
+        });
+    </script>
+</body>
+</html>
