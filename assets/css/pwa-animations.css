@@ -524,7 +524,8 @@
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 1rem;
   transition: all var(--duration-normal) var(--ease-out-expo);
   position: relative;
   overflow: hidden;
@@ -562,7 +563,8 @@
   align-items: center;
   justify-content: center;
   color: white;
-  margin-right: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
   transition: all var(--duration-normal) var(--ease-out-expo);
 }
 

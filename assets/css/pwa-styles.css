@@ -814,17 +814,25 @@ body.offline {
 .action-content {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  flex: 1;
 }
 
 .action-title {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--gray-800);
+  margin: 0;
+  line-height: 1.2;
 }
 
 .action-desc {
   font-size: 0.8rem;
   color: var(--gray-500);
+  margin: 0;
+  margin-top: 0.25rem;
+  line-height: 1.3;
 }
 
 .agenda-preview {
