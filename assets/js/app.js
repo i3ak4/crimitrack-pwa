@@ -278,26 +278,85 @@ class CrimiTrackPWA {
   
   async loadModule(moduleName) {
     try {
-      // Charger le module PWA adapté
-      const moduleScript = await import(`./modules/${moduleName}/${moduleName}-pwa.js`);
-      const ModuleClass = moduleScript.default;
+      // Tenter d'abord d'utiliser les classes déjà chargées globalement
+      let ModuleClass;
       
-      // Instancier avec les dépendances
-      const moduleInstance = new ModuleClass({
-        dataManager: this.dataManager,
-        syncManager: this.syncManager,
-        notificationManager: this.notificationManager,
-        animationEngine: this.animationEngine,
-        device: this.device
-      });
+      switch(moduleName) {
+        case 'dashboard':
+          ModuleClass = window.DashboardPWA || globalThis.DashboardPWA;
+          break;
+        case 'agenda':
+          ModuleClass = window.AgendaPWA || globalThis.AgendaPWA;
+          break;
+        case 'waitlist':
+          ModuleClass = window.WaitlistPWA || globalThis.WaitlistPWA;
+          break;
+        case 'convocations':
+          ModuleClass = window.ConvocationsPWA || globalThis.ConvocationsPWA;
+          break;
+        case 'mailing':
+          ModuleClass = window.MailingPWA || globalThis.MailingPWA;
+          break;
+        case 'statistiques':
+          ModuleClass = window.StatistiquesPWA || globalThis.StatistiquesPWA;
+          break;
+        case 'billing':
+          ModuleClass = window.BillingPWA || globalThis.BillingPWA;
+          break;
+        case 'planning':
+          ModuleClass = window.PlanningPWA || globalThis.PlanningPWA;
+          break;
+        case 'import':
+          ModuleClass = window.ImportPWA || globalThis.ImportPWA;
+          break;
+        case 'synthese':
+          ModuleClass = window.SynthesePWA || globalThis.SynthesePWA;
+          break;
+        case 'anonymisation':
+          ModuleClass = window.AnonymisationPWA || globalThis.AnonymisationPWA;
+          break;
+        case 'prompt-mastering':
+          ModuleClass = window.PromptMasteringPWA || globalThis.PromptMasteringPWA;
+          break;
+      }
       
-      // Initialiser
-      await moduleInstance.initialize();
+      if (ModuleClass) {
+        // Instancier avec les dépendances
+        const moduleInstance = new ModuleClass({
+          dataManager: this.dataManager,
+          syncManager: this.syncManager,
+          notificationManager: this.notificationManager,
+          animationEngine: this.animationEngine,
+          device: this.device
+        });
+        
+        // Initialiser
+        await moduleInstance.initialize();
+        
+        // Stocker
+        this.modules.set(moduleName, moduleInstance);
+        
+        console.log(`✅ Module ${moduleName} chargé (statique)`);
+      } else {
+        // Fallback: tentative de chargement dynamique
+        console.log(`⚠️ Module ${moduleName} non trouvé en statique, tentative dynamique...`);
+        const moduleScript = await import(`./modules/${moduleName}/${moduleName}-pwa.js`);
+        const DynamicModuleClass = moduleScript.default;
+        
+        const moduleInstance = new DynamicModuleClass({
+          dataManager: this.dataManager,
+          syncManager: this.syncManager,
+          notificationManager: this.notificationManager,
+          animationEngine: this.animationEngine,
+          device: this.device
+        });
+        
+        await moduleInstance.initialize();
+        this.modules.set(moduleName, moduleInstance);
+        
+        console.log(`✅ Module ${moduleName} chargé (dynamique)`);
+      }
       
-      // Stocker
-      this.modules.set(moduleName, moduleInstance);
-      
-      console.log(`✅ Module ${moduleName} chargé`);
     } catch (error) {
       console.warn(`⚠️ Module ${moduleName} non disponible:`, error.message);
       

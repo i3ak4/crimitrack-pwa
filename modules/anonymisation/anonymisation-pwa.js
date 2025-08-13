@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module d'anonymisation des données
  */
 
-export default class AnonymisationPWA {
+class AnonymisationPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -48,3 +48,7 @@ export default class AnonymisationPWA {
     console.log('🔒 Anonymisation PWA détruite');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default AnonymisationPWA;
+window.AnonymisationPWA = AnonymisationPWA;

@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module de planification
  */
 
-export default class PlanningPWA {
+class PlanningPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -48,3 +48,6 @@ export default class PlanningPWA {
     console.log('📅 Planning PWA détruit');
   }
 }
+// Export ES6 et exposition globale pour compatibilité
+export default PlanningPWA;
+window.PlanningPWA = PlanningPWA;

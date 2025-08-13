@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module de liste d'attente
  */
 
-export default class WaitlistPWA {
+class WaitlistPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -454,3 +454,7 @@ export default class WaitlistPWA {
     console.log('⏰ Waitlist PWA détruite');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default WaitlistPWA;
+window.WaitlistPWA = WaitlistPWA;

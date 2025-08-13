@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module d'import de données
  */
 
-export default class ImportPWA {
+class ImportPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -48,3 +48,7 @@ export default class ImportPWA {
     console.log('📊 Import PWA détruit');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default ImportPWA;
+window.ImportPWA = ImportPWA;

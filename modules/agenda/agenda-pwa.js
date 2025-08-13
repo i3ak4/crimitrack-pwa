@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module de gestion d'agenda
  */
 
-export default class AgendaPWA {
+class AgendaPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -413,3 +413,7 @@ export default class AgendaPWA {
     console.log('📅 Agenda PWA détruit');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default AgendaPWA;
+window.AgendaPWA = AgendaPWA;

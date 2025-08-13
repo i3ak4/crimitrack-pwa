@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module de synthèse et rapports
  */
 
-export default class SynthesePWA {
+class SynthesePWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -48,3 +48,6 @@ export default class SynthesePWA {
     console.log('📋 Synthèse PWA détruite');
   }
 }
+// Export ES6 et exposition globale pour compatibilité
+export default SynthesePWA;
+window.SynthesePWA = SynthesePWA;

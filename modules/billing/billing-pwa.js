@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Simplified version with payment tracking
  */
 
-export default class BillingPWA {
+class BillingPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -879,6 +879,10 @@ export default class BillingPWA {
     console.log('💰 Billing PWA détruit');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default BillingPWA;
+window.BillingPWA = BillingPWA;
 
 // Fonction globale pour changer de vue (appelée depuis le HTML)
 window.switchBillingView = function(view) {

@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module d'optimisation des prompts
  */
 
-export default class PromptMasteringPWA {
+class PromptMasteringPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -48,3 +48,7 @@ export default class PromptMasteringPWA {
     console.log('🎭 Prompt Mastering PWA détruit');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default PromptMasteringPWA;
+window.PromptMasteringPWA = PromptMasteringPWA;

@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module de tableau de bord
  */
 
-export default class DashboardPWA {
+class DashboardPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -281,3 +281,7 @@ export default class DashboardPWA {
     console.log('📊 Dashboard PWA détruit');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default DashboardPWA;
+window.DashboardPWA = DashboardPWA;

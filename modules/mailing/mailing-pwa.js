@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Module de publipostage
  */
 
-export default class MailingPWA {
+class MailingPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -577,3 +577,7 @@ export default class MailingPWA {
     console.log('📧 Mailing PWA détruit');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default MailingPWA;
+window.MailingPWA = MailingPWA;

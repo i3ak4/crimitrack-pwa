@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Suivi des convocations en cours
  */
 
-export default class ConvocationsPWA {
+class ConvocationsPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -443,3 +443,7 @@ export default class ConvocationsPWA {
     console.log('📞 Convocations PWA détruites');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default ConvocationsPWA;
+window.ConvocationsPWA = ConvocationsPWA;

@@ -3,7 +3,7 @@
  * Agent UI-Fantaisie - Exact same statistics as desktop version
  */
 
-export default class StatistiquesPWA {
+class StatistiquesPWA {
   constructor(dependencies) {
     this.dataManager = dependencies.dataManager;
     this.syncManager = dependencies.syncManager;
@@ -842,3 +842,7 @@ export default class StatistiquesPWA {
     console.log('📊 Statistiques PWA détruites');
   }
 }
+
+// Export ES6 et exposition globale pour compatibilité
+export default StatistiquesPWA;
+window.StatistiquesPWA = StatistiquesPWA;
