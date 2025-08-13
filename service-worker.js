@@ -3,7 +3,7 @@
  * Gestion du cache intelligent et mode offline
  */
 
-const CACHE_VERSION = 'crimitrack-v4.2.0-20250813';
+const CACHE_VERSION = 'crimitrack-v4.3.0-20250813';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
@@ -85,7 +85,6 @@ const MODULE_FILES = {
     '/modules/synthese/synthese-pwa.js',
     '/modules/statistiques/statistiques-pwa.js',
     '/modules/billing/billing-pwa.js',
-    '/modules/indemnites/indemnites-pwa.js',
     '/modules/anonymisation/anonymisation-pwa.js',
     '/modules/prompt-mastering/prompt-mastering-pwa.js'
   ]
