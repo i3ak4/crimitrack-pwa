@@ -33,6 +33,10 @@ class SyncManager {
     this.init();
   }
   
+  async initialize() {
+    return this.init();
+  }
+  
   async init() {
     console.log('[SyncManager] Initialisation...');
     
@@ -998,7 +1002,7 @@ class SyncManager {
   }
 }
 
-// Initialiser le gestionnaire de synchronisation
-window.syncManager = new SyncManager();
+// Exposer la classe SyncManager globalement pour instanciation dans app.js
+window.SyncManager = SyncManager;
 
-console.log('[SyncManager] Chargé et initialisé');
+console.log('[SyncManager] Classe exposée globalement');

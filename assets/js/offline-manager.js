@@ -20,8 +20,18 @@ class OfflineManager {
     
     this.deviceType = this.getDeviceType();
     this.storageQuota = this.getStorageQuota();
+    this.isInitialized = false;
     
     this.init();
+  }
+  
+  async initialize() {
+    if (this.isInitialized) return;
+    
+    console.log('[OfflineManager] Initialisation...');
+    // Déjà initialisé dans le constructeur via init()
+    this.isInitialized = true;
+    console.log('[OfflineManager] ✅ Initialisé');
   }
   
   getDeviceType() {
@@ -312,7 +322,7 @@ class OfflineManager {
   }
 }
 
-// Initialiser le gestionnaire offline
-window.offlineManager = new OfflineManager();
+// Exposer la classe OfflineManager globalement pour instanciation dans app.js
+window.OfflineManager = OfflineManager;
 
-console.log('[OfflineManager] Chargé et initialisé');
+console.log('[OfflineManager] Classe exposée globalement');

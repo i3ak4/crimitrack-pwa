@@ -51,7 +51,17 @@ class PublipostageManager {
       }
     ];
     
+    this.isInitialized = false;
     this.init();
+  }
+  
+  async initialize() {
+    if (this.isInitialized) return;
+    
+    console.log('[PublipostageManager] Initialisation...');
+    // Déjà initialisé dans le constructeur via init()
+    this.isInitialized = true;
+    console.log('[PublipostageManager] ✅ Initialisé');
   }
   
   init() {
@@ -590,7 +600,7 @@ class PublipostageManager {
   }
 }
 
-// Initialiser le gestionnaire de publipostage
-window.publipostageManager = new PublipostageManager();
+// Exposer la classe PublipostageManager globalement pour instanciation dans app.js
+window.PublipostageManager = PublipostageManager;
 
 console.log('[PublipostageManager] Chargé et initialisé');

@@ -8,8 +8,18 @@ class LogManager {
     this.logs = [];
     this.maxLogs = 1000; // Limite pour éviter trop de mémoire
     this.startTime = Date.now();
+    this.isInitialized = false;
     
     this.init();
+  }
+  
+  async initialize() {
+    if (this.isInitialized) return;
+    
+    console.log('[LogManager] Initialisation...');
+    // Déjà initialisé dans le constructeur via init()
+    this.isInitialized = true;
+    console.log('[LogManager] ✅ Initialisé');
   }
   
   init() {
@@ -264,7 +274,7 @@ class LogManager {
   }
 }
 
-// Initialiser le gestionnaire de logs
-window.logManager = new LogManager();
+// Exposer la classe LogManager globalement pour instanciation dans app.js
+window.LogManager = LogManager;
 
 console.log('[LogManager] Gestionnaire de logs chargé et initialisé');

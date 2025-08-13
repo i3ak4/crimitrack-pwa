@@ -208,26 +208,82 @@ class CrimiTrackPWA {
   }
   
   async initializeManagers() {
-    // Real Data Manager - Gestion des données réelles avec IndexedDB
-    this.dataManager = new RealDataManager();
-    await this.dataManager.initialize();
+    try {
+      // Vérifier que les classes des gestionnaires sont disponibles
+      this.verifyManagerClasses();
+      
+      // Real Data Manager - Gestion des données réelles avec IndexedDB
+      this.dataManager = new window.RealDataManager();
+      await this.dataManager.initialize();
+      
+      // Afficher le statut des données
+      await this.showDatabaseStatus();
+      
+      // Sync Manager - Synchronisation iCloud/serveur (sans paramètre dataManager car il l'obtient autrement)
+      this.syncManager = new window.SyncManager();
+      await this.syncManager.initialize();
+      
+      // Connection Manager - Gestion de la connectivité
+      this.connectionManager = new window.ConnectionManager();
+      await this.connectionManager.initialize();
+      
+      // Offline Manager - Gestion hors ligne
+      this.offlineManager = new window.OfflineManager();
+      await this.offlineManager.initialize();
+      
+      // Log Manager - Gestion des logs
+      this.logManager = new window.LogManager();
+      await this.logManager.initialize();
+      
+      // Publipostage Manager - Gestion du publipostage
+      this.publipostageManager = new window.PublipostageManager();
+      await this.publipostageManager.initialize();
+      
+      // Notification Manager - Système de notifications (défini localement)
+      this.notificationManager = new NotificationManager();
+      await this.notificationManager.initialize();
+      
+      // Animation Engine - Moteur d'animations fantastiques (défini localement)
+      this.animationEngine = new AnimationEngine(this.device);
+      await this.animationEngine.initialize();
+      
+      this.logSuccess('⚙️ Gestionnaires initialisés');
+      
+    } catch (error) {
+      console.error('❌ Erreur initialisation gestionnaires:', error);
+      this.showFallbackManagers();
+      throw error;
+    }
+  }
+  
+  verifyManagerClasses() {
+    const requiredClasses = [
+      'RealDataManager',
+      'SyncManager', 
+      'ConnectionManager',
+      'OfflineManager',
+      'LogManager',
+      'PublipostageManager'
+    ];
     
-    // Afficher le statut des données
-    await this.showDatabaseStatus();
+    const missingClasses = requiredClasses.filter(className => !window[className]);
     
-    // Sync Manager - Synchronisation iCloud/serveur
-    this.syncManager = new SyncManager(this.dataManager);
-    await this.syncManager.initialize();
+    if (missingClasses.length > 0) {
+      console.error('❌ Classes gestionnaires manquantes:', missingClasses);
+      throw new Error(`Classes manquantes: ${missingClasses.join(', ')}`);
+    }
     
-    // Notification Manager - Système de notifications
-    this.notificationManager = new NotificationManager();
-    await this.notificationManager.initialize();
+    console.log('✅ Toutes les classes gestionnaires sont disponibles');
+  }
+  
+  showFallbackManagers() {
+    console.log('🔄 Utilisation des gestionnaires de fallback...');
     
-    // Animation Engine - Moteur d'animations fantastiques
-    this.animationEngine = new AnimationEngine(this.device);
-    await this.animationEngine.initialize();
-    
-    this.logSuccess('⚙️ Gestionnaires initialisés');
+    // Gestionnaires simplifiés pour éviter les crashes
+    this.dataManager = this.dataManager || new DataManager();
+    this.syncManager = this.syncManager || new SyncManager();
+    this.notificationManager = this.notificationManager || new NotificationManager();
+    this.animationEngine = this.animationEngine || new AnimationEngine(this.device);
   }
   
   async setupUI() {
@@ -277,91 +333,109 @@ class CrimiTrackPWA {
   }
   
   async loadModule(moduleName) {
+    console.log(`🔄 Chargement du module ${moduleName}...`);
+    
     try {
+      // Vérifier que les gestionnaires sont bien initialisés
+      if (!this.dataManager || !this.syncManager || !this.notificationManager || !this.animationEngine) {
+        throw new Error('Gestionnaires non initialisés - dependencies manquantes');
+      }
+      
       // Tenter d'abord d'utiliser les classes déjà chargées globalement
       let ModuleClass;
+      const moduleClassMap = {
+        'dashboard': 'DashboardPWA',
+        'agenda': 'AgendaPWA',
+        'waitlist': 'WaitlistPWA',
+        'convocations': 'ConvocationsPWA',
+        'mailing': 'MailingPWA',
+        'statistiques': 'StatistiquesPWA',
+        'billing': 'BillingPWA',
+        'planning': 'PlanningPWA',
+        'import': 'ImportPWA',
+        'synthese': 'SynthesePWA',
+        'anonymisation': 'AnonymisationPWA',
+        'prompt-mastering': 'PromptMasteringPWA'
+      };
       
-      switch(moduleName) {
-        case 'dashboard':
-          ModuleClass = window.DashboardPWA || globalThis.DashboardPWA;
-          break;
-        case 'agenda':
-          ModuleClass = window.AgendaPWA || globalThis.AgendaPWA;
-          break;
-        case 'waitlist':
-          ModuleClass = window.WaitlistPWA || globalThis.WaitlistPWA;
-          break;
-        case 'convocations':
-          ModuleClass = window.ConvocationsPWA || globalThis.ConvocationsPWA;
-          break;
-        case 'mailing':
-          ModuleClass = window.MailingPWA || globalThis.MailingPWA;
-          break;
-        case 'statistiques':
-          ModuleClass = window.StatistiquesPWA || globalThis.StatistiquesPWA;
-          break;
-        case 'billing':
-          ModuleClass = window.BillingPWA || globalThis.BillingPWA;
-          break;
-        case 'planning':
-          ModuleClass = window.PlanningPWA || globalThis.PlanningPWA;
-          break;
-        case 'import':
-          ModuleClass = window.ImportPWA || globalThis.ImportPWA;
-          break;
-        case 'synthese':
-          ModuleClass = window.SynthesePWA || globalThis.SynthesePWA;
-          break;
-        case 'anonymisation':
-          ModuleClass = window.AnonymisationPWA || globalThis.AnonymisationPWA;
-          break;
-        case 'prompt-mastering':
-          ModuleClass = window.PromptMasteringPWA || globalThis.PromptMasteringPWA;
-          break;
+      const className = moduleClassMap[moduleName];
+      if (!className) {
+        throw new Error(`Nom de module inconnu: ${moduleName}`);
       }
       
-      if (ModuleClass) {
-        // Instancier avec les dépendances
-        const moduleInstance = new ModuleClass({
-          dataManager: this.dataManager,
-          syncManager: this.syncManager,
-          notificationManager: this.notificationManager,
-          animationEngine: this.animationEngine,
-          device: this.device
-        });
-        
-        // Initialiser
-        await moduleInstance.initialize();
-        
-        // Stocker
-        this.modules.set(moduleName, moduleInstance);
-        
-        console.log(`✅ Module ${moduleName} chargé (statique)`);
-      } else {
-        // Fallback: tentative de chargement dynamique
-        console.log(`⚠️ Module ${moduleName} non trouvé en statique, tentative dynamique...`);
-        const moduleScript = await import(`./modules/${moduleName}/${moduleName}-pwa.js`);
-        const DynamicModuleClass = moduleScript.default;
-        
-        const moduleInstance = new DynamicModuleClass({
-          dataManager: this.dataManager,
-          syncManager: this.syncManager,
-          notificationManager: this.notificationManager,
-          animationEngine: this.animationEngine,
-          device: this.device
-        });
-        
-        await moduleInstance.initialize();
-        this.modules.set(moduleName, moduleInstance);
-        
-        console.log(`✅ Module ${moduleName} chargé (dynamique)`);
+      // Chercher la classe dans window et globalThis
+      ModuleClass = window[className] || globalThis[className];
+      
+      if (!ModuleClass) {
+        console.warn(`❌ Classe ${className} non trouvée dans window/globalThis pour module ${moduleName}`);
+        throw new Error(`Classe ${className} non trouvée`);
       }
+      
+      console.log(`✅ Classe ${className} trouvée pour module ${moduleName}`);
+      
+      // Préparer les dépendances avec vérification
+      const dependencies = {
+        dataManager: this.dataManager,
+        syncManager: this.syncManager,
+        notificationManager: this.notificationManager,
+        animationEngine: this.animationEngine,
+        device: this.device
+      };
+      
+      // Vérifier que toutes les dépendances sont valides
+      const invalidDeps = Object.entries(dependencies)
+        .filter(([key, value]) => !value)
+        .map(([key]) => key);
+      
+      if (invalidDeps.length > 0) {
+        throw new Error(`Dépendances invalides: ${invalidDeps.join(', ')}`);
+      }
+      
+      // Instancier le module
+      console.log(`🔧 Instanciation du module ${moduleName}...`);
+      const moduleInstance = new ModuleClass(dependencies);
+      
+      if (!moduleInstance) {
+        throw new Error('Échec instanciation - moduleInstance null');
+      }
+      
+      // Initialiser le module
+      console.log(`⚡ Initialisation du module ${moduleName}...`);
+      await moduleInstance.initialize();
+      
+      // Vérifier que l'initialisation a réussi
+      if (!moduleInstance.isInitialized) {
+        console.warn(`⚠️ Module ${moduleName} non marqué comme initialisé`);
+      }
+      
+      // Stocker le module
+      this.modules.set(moduleName, moduleInstance);
+      
+      console.log(`✅ Module ${moduleName} chargé avec succès (${className})`);
+      return moduleInstance;
       
     } catch (error) {
-      console.warn(`⚠️ Module ${moduleName} non disponible:`, error.message);
+      console.error(`❌ Erreur chargement module ${moduleName}:`, {
+        message: error.message,
+        stack: error.stack,
+        managersState: {
+          dataManager: !!this.dataManager,
+          syncManager: !!this.syncManager,
+          notificationManager: !!this.notificationManager,
+          animationEngine: !!this.animationEngine
+        },
+        windowState: {
+          className: moduleClassMap[moduleName],
+          classExists: !!(window[moduleClassMap[moduleName]] || globalThis[moduleClassMap[moduleName]])
+        }
+      });
       
-      // Créer un placeholder pour les modules manquants
-      this.modules.set(moduleName, new ModulePlaceholder(moduleName));
+      // Créer un placeholder pour les modules en échec AVEC debugging
+      const placeholder = new ModulePlaceholder(moduleName, error.message);
+      this.modules.set(moduleName, placeholder);
+      
+      // Ne pas propager l'erreur pour éviter de casser l'app entière
+      return placeholder;
     }
   }
   
@@ -1366,23 +1440,50 @@ class CrimiTrackPWA {
    ============================================ */
 
 class ModulePlaceholder {
-  constructor(name) {
+  constructor(name, errorMessage = null) {
     this.name = name;
+    this.errorMessage = errorMessage;
+    this.isInitialized = false;
   }
   
   async initialize() {
-    console.log(`📦 Module ${this.name} en mode placeholder`);
+    console.log(`📦 Module ${this.name} en mode placeholder${this.errorMessage ? ' (erreur: ' + this.errorMessage + ')' : ''}`);
+    this.isInitialized = true;
   }
   
   async render(container) {
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+    
     container.innerHTML = `
       <div class="module-placeholder">
         <div class="placeholder-content">
           <div class="placeholder-icon">
-            <i class="fas fa-puzzle-piece"></i>
+            <i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i>
           </div>
           <h2>Module ${this.name}</h2>
-          <p>Ce module sera bientôt disponible</p>
+          <p style="color: #e74c3c; font-weight: bold;">Erreur de chargement</p>
+          ${this.errorMessage ? `
+            <div class="error-details" style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 15px; margin: 15px 0; text-align: left;">
+              <h4 style="color: #e53e3e; margin: 0 0 10px 0;">Détails de l'erreur:</h4>
+              <code style="background: #fff; padding: 8px; border-radius: 4px; display: block; font-size: 12px; color: #e53e3e;">${this.errorMessage}</code>
+            </div>
+          ` : ''}
+          ${isDevelopment ? `
+            <div class="debug-info" style="background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin: 15px 0; text-align: left;">
+              <h4 style="color: #4a5568; margin: 0 0 10px 0;">Debug Info:</h4>
+              <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #718096;">
+                <li>Module: ${this.name}</li>
+                <li>Timestamp: ${new Date().toLocaleString()}</li>
+                <li>User Agent: ${navigator.userAgent.substring(0, 100)}...</li>
+                <li>Window classes: ${Object.keys(window).filter(k => k.endsWith('PWA')).join(', ') || 'Aucune'}</li>
+              </ul>
+            </div>
+          ` : ''}
+          <div class="placeholder-actions" style="margin-top: 20px;">
+            <button onclick="window.location.reload()" class="retry-btn" style="background: #4299e1; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+              <i class="fas fa-redo"></i> Réessayer
+            </button>
+          </div>
         </div>
       </div>
     `;

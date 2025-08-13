@@ -18,6 +18,10 @@ class ConnectionManager {
     this.init();
   }
   
+  async initialize() {
+    return this.init();
+  }
+  
   async init() {
     console.log('[ConnectionManager] Initialisation...');
     
@@ -448,10 +452,7 @@ class ConnectionManager {
   }
 }
 
-// Initialiser le gestionnaire de connexion
-window.connectionManager = new ConnectionManager();
+// Exposer la classe ConnectionManager globalement pour instanciation dans app.js
+window.ConnectionManager = ConnectionManager;
 
-// Exposer l'état global
-window.isOnline = () => window.connectionManager.isOnline();
-
-console.log('[ConnectionManager] Chargé et initialisé');
+console.log('[ConnectionManager] Classe exposée globalement');
