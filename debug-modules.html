@@ -5,93 +5,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Debug Modules - CrimiTrack PWA</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 20px;
-            background: #f5f5f5;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
-        .debug-panel {
-            background: white;
-            border-radius: 10px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .test-section {
+            background: #f7fafc;
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 2px solid #e2e8f0;
+        }
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        h2 {
+            color: #2d3748;
+            font-size: 1.3rem;
         }
         .status {
-            padding: 10px;
-            border-radius: 5px;
-            margin: 5px 0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
-        .status.success { background: #d4edda; color: #155724; }
-        .status.error { background: #f8d7da; color: #721c24; }
-        .status.warning { background: #fff3cd; color: #856404; }
-        .status.info { background: #d1ecf1; color: #0c5460; }
-        button {
-            background: #007bff;
+        .status.loading { background: #fef3c7; color: #92400e; }
+        .status.success { background: #d1fae5; color: #065f46; }
+        .status.error { background: #fee2e2; color: #991b1b; }
+        .status.warning { background: #fed7aa; color: #92400e; }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .test-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-name {
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .test-result {
+            font-size: 1.2rem;
+        }
+        .console-output {
+            background: #1a202c;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .console-line {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .console-time {
+            color: #6b7280;
+            margin-right: 10px;
+            min-width: 70px;
+        }
+        .console-error { color: #ef4444; }
+        .console-warn { color: #f59e0b; }
+        .console-info { color: #3b82f6; }
+        .console-success { color: #10b981; }
+        .btn {
+            background: #7c3aed;
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            margin: 5px;
+            font-weight: 600;
+            transition: all 0.3s;
         }
-        button:hover { background: #0056b3; }
-        code {
-            background: #f8f9fa;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-        .module-test {
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .btn:hover { background: #6d28d9; }
+        .btn:active { transform: scale(0.95); }
+        .device-info {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
             padding: 15px;
-            margin: 10px 0;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
-        .log-entry {
-            font-family: monospace;
-            font-size: 12px;
-            padding: 5px;
-            border-left: 3px solid #007bff;
-            margin: 2px 0;
-            background: #f8f9fa;
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        .info-value {
+            font-weight: 600;
+            color: #0f172a;
         }
     </style>
 </head>
 <body>
-    <h1>🔬 Debug CrimiTrack PWA - Modules</h1>
-    
-    <div class="debug-panel">
-        <h2>🌐 Informations du navigateur</h2>
-        <div id="browser-info"></div>
-    </div>
-    
-    <div class="debug-panel">
-        <h2>📦 État des gestionnaires</h2>
-        <div id="managers-status"></div>
-        <button onclick="testManagers()">Tester les gestionnaires</button>
-    </div>
-    
-    <div class="debug-panel">
-        <h2>🎭 État des modules</h2>
-        <div id="modules-status"></div>
-        <button onclick="testModules()">Tester les modules</button>
-        <button onclick="testModuleLoading()">Tester le chargement</button>
-    </div>
-    
-    <div class="debug-panel">
-        <h2>🔄 Test de chargement complet</h2>
-        <div id="loading-test"></div>
-        <button onclick="runFullTest()">Lancer test complet</button>
-    </div>
-    
-    <div class="debug-panel">
-        <h2>📝 Console de debug</h2>
-        <div id="debug-console"></div>
-        <button onclick="clearConsole()">Vider console</button>
+    <div class="container">
+        <h1>🔧 Debug Modules PWA</h1>
+        <p class="subtitle">Test complet du système de chargement des modules</p>
+        
+        <!-- Info appareil -->
+        <div class="device-info">
+            <h3>📱 Informations Appareil</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">User Agent</span>
+                    <span class="info-value" id="user-agent">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Plateforme</span>
+                    <span class="info-value" id="platform">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Standalone</span>
+                    <span class="info-value" id="standalone">...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Service Worker</span>
+                    <span class="info-value" id="sw-status">...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 1: Classes Gestionnaires -->
+        <div class="test-section">
+            <div class="test-header">
+                <h2>1️⃣ Classes Gestionnaires</h2>
+                <span class="status loading" id="managers-status">Test en cours...</span>
+            </div>
+            <div class="test-grid" id="managers-grid"></div>
+            <div class="console-output" id="managers-console"></div>
+        </div>
+
+        <!-- Test 2: Classes Modules -->
+        <div class="test-section">
+            <div class="test-header">
+                <h2>2️⃣ Classes Modules PWA</h2>
+                <span class="status loading" id="modules-status">Test en cours...</span>
+            </div>
+            <div class="test-grid" id="modules-grid"></div>
+            <div class="console-output" id="modules-console"></div>
+        </div>
+
+        <!-- Test 3: Instanciation -->
+        <div class="test-section">
+            <div class="test-header">
+                <h2>3️⃣ Test d'Instanciation</h2>
+                <button class="btn" onclick="testInstantiation()">Lancer le test</button>
+                <span class="status loading" id="instantiation-status">En attente...</span>
+            </div>
+            <div class="test-grid" id="instantiation-grid"></div>
+            <div class="console-output" id="instantiation-console"></div>
+        </div>
+
+        <!-- Test 4: Rendu Module -->
+        <div class="test-section">
+            <div class="test-header">
+                <h2>4️⃣ Test de Rendu</h2>
+                <button class="btn" onclick="testRender()">Tester Dashboard</button>
+                <span class="status loading" id="render-status">En attente...</span>
+            </div>
+            <div id="render-container" style="min-height: 200px; background: white; border-radius: 8px; padding: 20px; margin-top: 15px;">
+                <!-- Le module sera rendu ici -->
+            </div>
+            <div class="console-output" id="render-console"></div>
+        </div>
     </div>
 
-    <!-- Chargement des scripts dans l'ordre exact de index.html -->
+    <!-- Chargement des scripts nécessaires -->
     <script src="assets/js/real-data-manager.js"></script>
     <script src="assets/js/sync-manager.js"></script>
     <script src="assets/js/offline-manager.js"></script>
@@ -103,369 +228,241 @@
     <script src="modules/dashboard/dashboard-pwa.js"></script>
     <script src="modules/agenda/agenda-pwa.js"></script>
     <script src="modules/waitlist/waitlist-pwa.js"></script>
-    <script src="modules/planning/planning-pwa.js"></script>
     <script src="modules/convocations/convocations-pwa.js"></script>
     <script src="modules/mailing/mailing-pwa.js"></script>
-    <script src="modules/import/import-pwa.js"></script>
-    <script src="modules/synthese/synthese-pwa.js"></script>
     <script src="modules/statistiques/statistiques-pwa.js"></script>
     <script src="modules/billing/billing-pwa.js"></script>
-    <script src="modules/anonymisation/anonymisation-pwa.js"></script>
-    <script src="modules/prompt-mastering/prompt-mastering-pwa.js"></script>
-    
+
     <script>
-        const debugConsole = document.getElementById('debug-console');
-        const logEntries = [];
-        
-        function log(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString();
-            const entry = `[${timestamp}] ${message}`;
-            logEntries.push(entry);
-            
-            const logElement = document.createElement('div');
-            logElement.className = `log-entry status ${type}`;
-            logElement.textContent = entry;
-            debugConsole.appendChild(logElement);
-            debugConsole.scrollTop = debugConsole.scrollHeight;
-            
-            console.log(entry);
+        // Utilitaires de logging
+        function logToConsole(elementId, message, type = 'info') {
+            const console = document.getElementById(elementId);
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.innerHTML = `<span class="console-time">${time}</span><span class="console-${type}">${message}</span>`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
         }
-        
-        function clearConsole() {
-            debugConsole.innerHTML = '';
-            logEntries.length = 0;
+
+        // Info appareil
+        function displayDeviceInfo() {
+            document.getElementById('user-agent').textContent = navigator.userAgent;
+            document.getElementById('platform').textContent = navigator.platform;
+            document.getElementById('standalone').textContent = window.navigator.standalone ? 'Oui' : 'Non';
+            document.getElementById('sw-status').textContent = 'serviceWorker' in navigator ? 'Supporté' : 'Non supporté';
         }
-        
-        function showBrowserInfo() {
-            const info = {
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                language: navigator.language,
-                cookiesEnabled: navigator.cookieEnabled,
-                onLine: navigator.onLine,
-                viewport: `${window.innerWidth}x${window.innerHeight}`,
-                devicePixelRatio: window.devicePixelRatio,
-                standalone: window.navigator.standalone,
-                displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser',
-                touchSupport: 'ontouchstart' in window,
-                webGL: !!window.WebGLRenderingContext,
-                indexedDB: !!window.indexedDB,
-                serviceWorker: 'serviceWorker' in navigator,
-                localStorage: !!window.localStorage,
-                sessionStorage: !!window.sessionStorage
-            };
-            
-            const container = document.getElementById('browser-info');
-            container.innerHTML = Object.entries(info)
-                .map(([key, value]) => `
-                    <div class="status ${value === false ? 'error' : (value === true ? 'success' : 'info')}">
-                        <strong>${key}:</strong> ${value}
-                    </div>
-                `).join('');
-        }
-        
-        function testManagers() {
-            log('=== TEST DES GESTIONNAIRES ===', 'info');
-            const container = document.getElementById('managers-status');
-            container.innerHTML = '';
-            
+
+        // Test 1: Classes Gestionnaires
+        async function testManagers() {
             const managers = [
                 'RealDataManager',
                 'SyncManager',
-                'OfflineManager',
                 'ConnectionManager',
+                'OfflineManager',
                 'LogManager',
                 'PublipostageManager'
             ];
-            
-            managers.forEach(managerName => {
-                const exists = !!window[managerName];
-                const canInstantiate = exists ? testInstantiation(managerName) : false;
+
+            const grid = document.getElementById('managers-grid');
+            const status = document.getElementById('managers-status');
+            let allOk = true;
+
+            logToConsole('managers-console', 'Début du test des gestionnaires...', 'info');
+
+            for (const manager of managers) {
+                const item = document.createElement('div');
+                item.className = 'test-item';
                 
-                log(`${managerName}: ${exists ? '✅ Disponible' : '❌ Manquant'}${exists && canInstantiate ? ' + Instanciable' : ''}`, exists ? 'success' : 'error');
+                const exists = window[manager] !== undefined;
+                const isFunction = typeof window[manager] === 'function';
                 
-                const status = document.createElement('div');
-                status.className = `status ${exists ? (canInstantiate ? 'success' : 'warning') : 'error'}`;
-                status.innerHTML = `
-                    <strong>${managerName}:</strong> 
-                    ${exists ? '✅ Chargé' : '❌ Non trouvé'}
-                    ${exists && canInstantiate ? ' (Instanciable)' : ''}
-                    ${exists && !canInstantiate ? ' (Erreur instanciation)' : ''}
+                item.innerHTML = `
+                    <span class="test-name">${manager}</span>
+                    <span class="test-result">${exists ? (isFunction ? '✅' : '⚠️') : '❌'}</span>
                 `;
-                container.appendChild(status);
-            });
-        }
-        
-        function testInstantiation(className) {
-            try {
-                if (className === 'RealDataManager') {
-                    new window[className]();
-                } else if (className === 'SyncManager') {
-                    new window[className]();
+                
+                grid.appendChild(item);
+                
+                if (exists) {
+                    if (isFunction) {
+                        logToConsole('managers-console', `✅ ${manager} disponible et est une fonction`, 'success');
+                    } else {
+                        logToConsole('managers-console', `⚠️ ${manager} existe mais n'est pas une fonction: ${typeof window[manager]}`, 'warn');
+                        allOk = false;
+                    }
                 } else {
-                    // Pour les autres gestionnaires, juste vérifier la fonction
-                    const Constructor = window[className];
-                    return typeof Constructor === 'function';
+                    logToConsole('managers-console', `❌ ${manager} non trouvé dans window`, 'error');
+                    allOk = false;
                 }
-                return true;
-            } catch (error) {
-                log(`Erreur instanciation ${className}: ${error.message}`, 'error');
-                return false;
             }
+
+            status.className = `status ${allOk ? 'success' : 'error'}`;
+            status.textContent = allOk ? 'Tous les gestionnaires OK' : 'Gestionnaires manquants';
         }
-        
-        function testModules() {
-            log('=== TEST DES MODULES ===', 'info');
-            const container = document.getElementById('modules-status');
-            container.innerHTML = '';
-            
+
+        // Test 2: Classes Modules
+        async function testModules() {
             const modules = [
                 'DashboardPWA',
                 'AgendaPWA',
                 'WaitlistPWA',
-                'PlanningPWA',
                 'ConvocationsPWA',
                 'MailingPWA',
-                'ImportPWA',
-                'SynthesePWA',
                 'StatistiquesPWA',
-                'BillingPWA',
-                'AnonymisationPWA',
-                'PromptMasteringPWA'
+                'BillingPWA'
             ];
-            
-            modules.forEach(moduleName => {
-                const windowExists = !!window[moduleName];
-                const globalExists = !!globalThis[moduleName];
-                const canInstantiate = windowExists ? testModuleInstantiation(moduleName) : false;
+
+            const grid = document.getElementById('modules-grid');
+            const status = document.getElementById('modules-status');
+            let allOk = true;
+
+            logToConsole('modules-console', 'Début du test des modules PWA...', 'info');
+
+            for (const module of modules) {
+                const item = document.createElement('div');
+                item.className = 'test-item';
                 
-                log(`${moduleName}: window=${windowExists}, global=${globalExists}, instanciable=${canInstantiate}`, 
-                    windowExists ? 'success' : 'error');
+                const exists = window[module] !== undefined;
+                const isFunction = typeof window[module] === 'function';
                 
-                const moduleDiv = document.createElement('div');
-                moduleDiv.className = 'module-test';
-                moduleDiv.innerHTML = `
-                    <strong>${moduleName}</strong><br>
-                    <div class="status ${windowExists ? 'success' : 'error'}">
-                        window.${moduleName}: ${windowExists ? '✅' : '❌'}
-                    </div>
-                    <div class="status ${globalExists ? 'success' : 'error'}">
-                        globalThis.${moduleName}: ${globalExists ? '✅' : '❌'}
-                    </div>
-                    <div class="status ${canInstantiate ? 'success' : 'warning'}">
-                        Instanciable: ${canInstantiate ? '✅' : '❌'}
-                    </div>
+                item.innerHTML = `
+                    <span class="test-name">${module}</span>
+                    <span class="test-result">${exists ? (isFunction ? '✅' : '⚠️') : '❌'}</span>
                 `;
-                container.appendChild(moduleDiv);
-            });
-        }
-        
-        function testModuleInstantiation(moduleName) {
-            try {
-                const MockDependencies = {
-                    dataManager: { initialize: () => Promise.resolve() },
-                    syncManager: { initialize: () => Promise.resolve() },
-                    notificationManager: { showToast: () => {} },
-                    animationEngine: { slideIn: () => Promise.resolve() },
-                    device: { type: 'mobile', name: 'iPhone' }
-                };
                 
-                const module = new window[moduleName](MockDependencies);
-                return !!module;
-            } catch (error) {
-                log(`Erreur instanciation ${moduleName}: ${error.message}`, 'error');
-                return false;
-            }
-        }
-        
-        function testModuleLoading() {
-            log('=== TEST DE CHARGEMENT MODULES ===', 'info');
-            
-            // Simuler le chargement comme dans app.js
-            const moduleList = [
-                { name: 'dashboard', className: 'DashboardPWA' },
-                { name: 'agenda', className: 'AgendaPWA' },
-                { name: 'waitlist', className: 'WaitlistPWA' },
-                { name: 'convocations', className: 'ConvocationsPWA' },
-                { name: 'mailing', className: 'MailingPWA' },
-                { name: 'statistiques', className: 'StatistiquesPWA' },
-                { name: 'billing', className: 'BillingPWA' }
-            ];
-            
-            const mockDependencies = {
-                dataManager: {
-                    initialize: () => Promise.resolve(),
-                    getDashboardStats: () => Promise.resolve({ agenda: 0, waitlist: 0, billing: 0 })
-                },
-                syncManager: { initialize: () => Promise.resolve() },
-                notificationManager: { showToast: () => {} },
-                animationEngine: { slideIn: () => Promise.resolve() },
-                device: { type: 'mobile', name: 'iPhone' }
-            };
-            
-            moduleList.forEach(({ name, className }) => {
-                try {
-                    let ModuleClass = window[className] || globalThis[className];
-                    
-                    if (ModuleClass) {
-                        const moduleInstance = new ModuleClass(mockDependencies);
-                        log(`✅ Module ${name} (${className}) chargé avec succès`, 'success');
-                        
-                        // Test du rendu
-                        const testContainer = document.createElement('div');
-                        moduleInstance.render(testContainer).then(() => {
-                            log(`✅ Module ${name} rendu avec succès`, 'success');
-                        }).catch(error => {
-                            log(`❌ Erreur rendu module ${name}: ${error.message}`, 'error');
-                        });
-                        
+                grid.appendChild(item);
+                
+                if (exists) {
+                    if (isFunction) {
+                        logToConsole('modules-console', `✅ ${module} disponible et est une fonction`, 'success');
                     } else {
-                        log(`❌ Module ${name} (${className}) non trouvé - PLACEHOLDER sera utilisé`, 'error');
+                        logToConsole('modules-console', `⚠️ ${module} existe mais n'est pas une fonction: ${typeof window[module]}`, 'warn');
+                        allOk = false;
                     }
-                } catch (error) {
-                    log(`❌ Erreur chargement module ${name}: ${error.message}`, 'error');
+                } else {
+                    logToConsole('modules-console', `❌ ${module} non trouvé dans window`, 'error');
+                    allOk = false;
                 }
-            });
+            }
+
+            status.className = `status ${allOk ? 'success' : 'error'}`;
+            status.textContent = allOk ? 'Tous les modules OK' : 'Modules manquants';
         }
-        
-        async function runFullTest() {
-            log('=== DÉMARRAGE TEST COMPLET ===', 'info');
-            const container = document.getElementById('loading-test');
-            container.innerHTML = '<div class="status info">Test en cours...</div>';
+
+        // Test 3: Instanciation
+        async function testInstantiation() {
+            const grid = document.getElementById('instantiation-grid');
+            const status = document.getElementById('instantiation-status');
+            grid.innerHTML = '';
             
+            logToConsole('instantiation-console', 'Test d\'instanciation des gestionnaires...', 'info');
+
             try {
-                // Test 1: Vérifier l'ordre de chargement des scripts
-                log('Test 1: Ordre de chargement des scripts', 'info');
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                // Test 2: Initialiser les gestionnaires
-                log('Test 2: Initialisation des gestionnaires', 'info');
-                let dataManager = null;
-                try {
-                    dataManager = new RealDataManager();
-                    await dataManager.initialize();
-                    log('✅ RealDataManager initialisé', 'success');
-                } catch (error) {
-                    log(`❌ Erreur RealDataManager: ${error.message}`, 'error');
-                }
-                
-                // Test 3: Chargement des modules
-                log('Test 3: Chargement séquentiel des modules', 'info');
-                const moduleResults = [];
-                
-                const modules = ['dashboard', 'agenda', 'waitlist'];
-                for (const moduleName of modules) {
-                    try {
-                        const result = await testModuleLoadingProcess(moduleName, dataManager);
-                        moduleResults.push({ module: moduleName, success: result.success, error: result.error });
-                        log(`Module ${moduleName}: ${result.success ? '✅ OK' : '❌ KO - ' + result.error}`, 
-                            result.success ? 'success' : 'error');
-                    } catch (error) {
-                        moduleResults.push({ module: moduleName, success: false, error: error.message });
-                        log(`Module ${moduleName}: ❌ Exception - ${error.message}`, 'error');
-                    }
-                }
-                
-                // Résultats finaux
-                const successCount = moduleResults.filter(r => r.success).length;
-                const totalCount = moduleResults.length;
-                
-                container.innerHTML = `
-                    <div class="status ${successCount === totalCount ? 'success' : 'warning'}">
-                        <strong>Résultats:</strong> ${successCount}/${totalCount} modules chargés avec succès
-                    </div>
-                    ${moduleResults.map(r => `
-                        <div class="status ${r.success ? 'success' : 'error'}">
-                            ${r.module}: ${r.success ? '✅ OK' : '❌ ' + r.error}
-                        </div>
-                    `).join('')}
-                `;
-                
-                log(`=== TEST TERMINÉ: ${successCount}/${totalCount} modules OK ===`, 'info');
-                
-            } catch (error) {
-                log(`❌ Erreur test complet: ${error.message}`, 'error');
-                container.innerHTML = `<div class="status error">Erreur: ${error.message}</div>`;
-            }
-        }
-        
-        async function testModuleLoadingProcess(moduleName, dataManager) {
-            const className = {
-                'dashboard': 'DashboardPWA',
-                'agenda': 'AgendaPWA', 
-                'waitlist': 'WaitlistPWA'
-            }[moduleName];
-            
-            if (!className) {
-                return { success: false, error: 'Nom de classe inconnu' };
-            }
-            
-            // Étape 1: Vérifier l'existence
-            let ModuleClass = window[className] || globalThis[className];
-            if (!ModuleClass) {
-                return { success: false, error: 'Classe non trouvée dans window/globalThis' };
-            }
-            
-            // Étape 2: Instanciation
-            let moduleInstance;
-            try {
-                const mockDeps = {
-                    dataManager: dataManager || { getDashboardStats: () => Promise.resolve({}) },
-                    syncManager: { initialize: () => Promise.resolve() },
-                    notificationManager: { showToast: () => {} },
-                    animationEngine: { slideIn: () => Promise.resolve() },
-                    device: { type: 'mobile', name: 'iPhone' }
+                // Test DataManager
+                logToConsole('instantiation-console', 'Instanciation RealDataManager...', 'info');
+                const dataManager = new window.RealDataManager();
+                await dataManager.initialize();
+                logToConsole('instantiation-console', '✅ RealDataManager initialisé', 'success');
+
+                // Test autres managers
+                const managers = {
+                    'SyncManager': window.SyncManager,
+                    'ConnectionManager': window.ConnectionManager,
+                    'OfflineManager': window.OfflineManager,
+                    'LogManager': window.LogManager
                 };
-                moduleInstance = new ModuleClass(mockDeps);
-            } catch (error) {
-                return { success: false, error: `Erreur instanciation: ${error.message}` };
-            }
-            
-            // Étape 3: Initialisation
-            try {
-                await moduleInstance.initialize();
-            } catch (error) {
-                return { success: false, error: `Erreur initialisation: ${error.message}` };
-            }
-            
-            // Étape 4: Rendu
-            try {
-                const testContainer = document.createElement('div');
-                await moduleInstance.render(testContainer);
-                
-                // Vérifier que le contenu n'est pas un placeholder
-                const isPlaceholder = testContainer.innerHTML.includes('sera bientôt disponible') || 
-                                    testContainer.innerHTML.includes('module-placeholder');
-                
-                if (isPlaceholder) {
-                    return { success: false, error: 'Module rendu en placeholder' };
+
+                let allOk = true;
+                for (const [name, ManagerClass] of Object.entries(managers)) {
+                    try {
+                        logToConsole('instantiation-console', `Instanciation ${name}...`, 'info');
+                        const instance = new ManagerClass();
+                        if (instance.initialize) {
+                            await instance.initialize();
+                        }
+                        logToConsole('instantiation-console', `✅ ${name} instancié`, 'success');
+                        
+                        const item = document.createElement('div');
+                        item.className = 'test-item';
+                        item.innerHTML = `
+                            <span class="test-name">${name}</span>
+                            <span class="test-result">✅</span>
+                        `;
+                        grid.appendChild(item);
+                    } catch (err) {
+                        logToConsole('instantiation-console', `❌ Erreur ${name}: ${err.message}`, 'error');
+                        allOk = false;
+                        
+                        const item = document.createElement('div');
+                        item.className = 'test-item';
+                        item.innerHTML = `
+                            <span class="test-name">${name}</span>
+                            <span class="test-result">❌</span>
+                        `;
+                        grid.appendChild(item);
+                    }
                 }
-                
+
+                status.className = `status ${allOk ? 'success' : 'error'}`;
+                status.textContent = allOk ? 'Instanciation réussie' : 'Erreurs d\'instanciation';
+
             } catch (error) {
-                return { success: false, error: `Erreur rendu: ${error.message}` };
+                logToConsole('instantiation-console', `❌ Erreur critique: ${error.message}`, 'error');
+                status.className = 'status error';
+                status.textContent = 'Échec instanciation';
             }
-            
-            return { success: true, error: null };
         }
-        
-        // Initialisation au chargement
-        document.addEventListener('DOMContentLoaded', () => {
-            showBrowserInfo();
+
+        // Test 4: Rendu Module
+        async function testRender() {
+            const container = document.getElementById('render-container');
+            const status = document.getElementById('render-status');
             
-            // Attendre que tous les scripts soient chargés
-            setTimeout(() => {
-                testManagers();
-                testModules();
-            }, 1000);
-        });
-        
-        // Capture des erreurs globales
-        window.addEventListener('error', (event) => {
-            log(`❌ Erreur globale: ${event.error?.message || event.message}`, 'error');
-        });
-        
-        window.addEventListener('unhandledrejection', (event) => {
-            log(`❌ Promise rejetée: ${event.reason}`, 'error');
+            logToConsole('render-console', 'Test de rendu du module Dashboard...', 'info');
+
+            try {
+                // Préparer les dépendances minimales
+                const dataManager = new window.RealDataManager();
+                await dataManager.initialize();
+                
+                // Mock des autres dépendances
+                const dependencies = {
+                    dataManager: dataManager,
+                    syncManager: { getStatus: () => ({ synced: true }) },
+                    notificationManager: { showToast: () => {} },
+                    animationEngine: { animateCounter: () => {} },
+                    device: { type: 'test', name: 'Debug' }
+                };
+
+                logToConsole('render-console', 'Instanciation DashboardPWA...', 'info');
+                const dashboard = new window.DashboardPWA(dependencies);
+                
+                logToConsole('render-console', 'Initialisation du module...', 'info');
+                await dashboard.initialize();
+                
+                logToConsole('render-console', 'Rendu du module...', 'info');
+                const html = dashboard.render();
+                container.innerHTML = html;
+                
+                logToConsole('render-console', '✅ Module rendu avec succès', 'success');
+                status.className = 'status success';
+                status.textContent = 'Rendu réussi';
+
+            } catch (error) {
+                logToConsole('render-console', `❌ Erreur rendu: ${error.message}`, 'error');
+                logToConsole('render-console', `Stack: ${error.stack}`, 'error');
+                container.innerHTML = `<div style="color: red;">Erreur: ${error.message}</div>`;
+                status.className = 'status error';
+                status.textContent = 'Échec du rendu';
+            }
+        }
+
+        // Lancement automatique des tests
+        window.addEventListener('DOMContentLoaded', async () => {
+            displayDeviceInfo();
+            await testManagers();
+            await testModules();
         });
     </script>
 </body>
