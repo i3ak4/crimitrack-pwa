@@ -3,7 +3,7 @@
  * Gestion du cache intelligent et mode offline
  */
 
-const CACHE_VERSION = 'crimitrack-v3.2.0';
+const CACHE_VERSION = 'crimitrack-v4.0.0';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
@@ -49,44 +49,45 @@ const STATIC_FILES = [
   '/index.html',
   '/manifest.json',
   '/assets/css/pwa-styles.css',
+  '/assets/css/pwa-animations.css',
   '/assets/js/app.js',
-  '/assets/js/sync-manager.js',
-  '/assets/js/offline-manager.js',
-  '/assets/js/connection-manager.js',
-  '/assets/images/icon-192x192.png',
-  '/assets/images/icon-512x512.png'
+  '/assets/images/apple-touch-icon.png',
+  '/assets/images/favicon.svg',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
-// Modules à précharger selon l'appareil
+// Modules à précharger selon l'appareil (chemins PWA)
 const MODULE_FILES = {
   iPhone: [
-    '/modules/agenda/agenda.js',
-    '/modules/waitlist/waitlist.js',
-    '/modules/statistiques/statistiques.js',
-    '/modules/convocations/convocations.js'
+    '/modules/dashboard/dashboard-pwa.js',
+    '/modules/agenda/agenda-pwa.js',
+    '/modules/waitlist/waitlist-pwa.js',
+    '/modules/convocations/convocations-pwa.js'
   ],
   iPad: [
-    '/modules/agenda/agenda.js',
-    '/modules/waitlist/waitlist.js',
-    '/modules/statistiques/statistiques.js',
-    '/modules/convocations/convocations.js',
-    '/modules/mailing/mailing.js',
-    '/modules/synthese/synthese.js'
+    '/modules/dashboard/dashboard-pwa.js',
+    '/modules/agenda/agenda-pwa.js',
+    '/modules/waitlist/waitlist-pwa.js',
+    '/modules/convocations/convocations-pwa.js',
+    '/modules/mailing/mailing-pwa.js',
+    '/modules/synthese/synthese-pwa.js',
+    '/modules/statistiques/statistiques-pwa.js'
   ],
   MacBook: [
-    // Tous les modules
-    '/modules/agenda/agenda.js',
-    '/modules/billing/billing.js',
-    '/modules/convocations/convocations.js',
-    '/modules/import/import.js',
-    '/modules/indemnites/indemnites.js',
-    '/modules/mailing/mailing.js',
-    '/modules/planning/planning.js',
-    '/modules/prompt-mastering/prompt-mastering.js',
-    '/modules/statistiques/statistiques.js',
-    '/modules/synthese/synthese.js',
-    '/modules/waitlist/waitlist.js',
-    '/modules/anonymisation/anonymisation.js'
+    // Tous les modules PWA
+    '/modules/dashboard/dashboard-pwa.js',
+    '/modules/agenda/agenda-pwa.js',
+    '/modules/waitlist/waitlist-pwa.js',
+    '/modules/planning/planning-pwa.js',
+    '/modules/convocations/convocations-pwa.js',
+    '/modules/mailing/mailing-pwa.js',
+    '/modules/import/import-pwa.js',
+    '/modules/synthese/synthese-pwa.js',
+    '/modules/statistiques/statistiques-pwa.js',
+    '/modules/billing/billing-pwa.js',
+    '/modules/indemnites/indemnites-pwa.js',
+    '/modules/anonymisation/anonymisation-pwa.js',
+    '/modules/prompt-mastering/prompt-mastering-pwa.js'
   ]
 };
 

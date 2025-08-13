@@ -1,629 +1,1052 @@
 /**
- * CrimiTrack PWA - Application principale
- * Orchestration de tous les composants et modules
+ * ============================================
+ * 🎭 CrimiTrack PWA - Application Fantastique
+ * Agent UI-Fantaisie - Excellence Interactive
+ * ============================================
  */
 
-class CrimiTrackApp {
+class CrimiTrackPWA {
   constructor() {
-    this.currentModule = null;
-    this.modules = new Map();
-    this.deviceType = this.detectDevice();
-    this.isStandalone = this.checkStandalone();
+    // Configuration de base
+    this.version = '4.0.0';
+    this.buildDate = '2025-08-13';
     
-    this.init();
+    // État de l'application
+    this.currentModule = 'dashboard';
+    this.modules = new Map();
+    this.isInitialized = false;
+    
+    // Détection de l'appareil
+    this.device = this.detectDevice();
+    this.isStandalone = this.checkStandaloneMode();
+    this.supportsPWA = this.checkPWASupport();
+    
+    // Gestionnaires principaux
+    this.dataManager = null;
+    this.syncManager = null;
+    this.notificationManager = null;
+    this.animationEngine = null;
+    
+    // Éléments DOM principaux
+    this.elements = {};
+    
+    console.log(`🚀 CrimiTrack PWA v${this.version} - ${this.device.name}`);
+    
+    // Lancement de l'application
+    this.initialize();
   }
+  
+  /* ============================================
+     🔍 DÉTECTION DE L'APPAREIL ET CAPACITÉS
+     ============================================ */
   
   detectDevice() {
     const ua = navigator.userAgent;
     const width = window.innerWidth;
+    const height = window.innerHeight;
+    const pixelRatio = window.devicePixelRatio || 1;
     
-    if (/iPhone/.test(ua) || width <= 430) return 'iPhone';
-    if (/iPad/.test(ua) || (width > 430 && width <= 1024)) return 'iPad';
-    if (/Mac/.test(ua) || width > 1024) return 'MacBook';
+    // iPhone (toutes les tailles)
+    if (/iPhone/i.test(ua)) {
+      if (width >= 414) return { 
+        name: 'iPhone Pro Max', 
+        type: 'mobile', 
+        optimizations: ['haptic', 'gestures', 'reduced-motion'] 
+      };
+      if (width >= 390) return { 
+        name: 'iPhone Pro', 
+        type: 'mobile', 
+        optimizations: ['haptic', 'gestures', 'reduced-motion'] 
+      };
+      return { 
+        name: 'iPhone', 
+        type: 'mobile', 
+        optimizations: ['haptic', 'gestures', 'reduced-motion', 'minimal-animations'] 
+      };
+    }
     
-    return 'Unknown';
+    // iPad (optimisé pour iPad Pro 13")
+    if (/iPad/i.test(ua) || (width >= 768 && width <= 1366)) {
+      if (width >= 1024) return { 
+        name: 'iPad Pro 13"', 
+        type: 'tablet', 
+        optimizations: ['hover', 'multi-touch', 'advanced-animations', 'glass-effects'] 
+      };
+      return { 
+        name: 'iPad', 
+        type: 'tablet', 
+        optimizations: ['hover', 'multi-touch', 'advanced-animations'] 
+      };
+    }
+    
+    // MacBook et desktop
+    if (width >= 1024) {
+      return { 
+        name: 'MacBook', 
+        type: 'desktop', 
+        optimizations: ['hover', 'keyboard', 'complex-animations', 'glass-effects', 'parallax'] 
+      };
+    }
+    
+    // Fallback
+    return { 
+      name: 'Unknown', 
+      type: 'mobile', 
+      optimizations: ['reduced-motion'] 
+    };
   }
   
-  checkStandalone() {
-    // iOS Safari
-    if (window.navigator.standalone) return true;
-    
-    // Android Chrome
-    if (window.matchMedia('(display-mode: standalone)').matches) return true;
-    
-    // Windows PWA
-    if (window.matchMedia('(display-mode: window-controls-overlay)').matches) return true;
-    
-    return false;
+  checkStandaloneMode() {
+    return window.navigator.standalone || 
+           window.matchMedia('(display-mode: standalone)').matches ||
+           window.matchMedia('(display-mode: window-controls-overlay)').matches;
   }
   
-  async init() {
-    console.log(`[App] Initialisation CrimiTrack PWA sur ${this.deviceType}`);
-    console.log(`[App] Mode: ${this.isStandalone ? 'Standalone PWA' : 'Navigateur'}`);
-    
+  checkPWASupport() {
+    return 'serviceWorker' in navigator && 
+           'indexedDB' in window && 
+           'fetch' in window;
+  }
+  
+  /* ============================================
+     🚀 INITIALISATION DE L'APPLICATION
+     ============================================ */
+  
+  async initialize() {
     try {
-      // Cacher le splash screen après chargement
-      await this.hideSplashScreen();
+      // Étape 1: Configuration initiale
+      await this.setupConfiguration();
       
-      // Initialiser l'interface
-      this.setupUI();
+      // Étape 2: Éléments DOM
+      this.cacheElements();
       
-      // Charger les modules selon l'appareil
-      await this.loadModules();
+      // Étape 3: Gestionnaires principaux
+      await this.initializeManagers();
       
-      // Configurer la navigation
+      // Étape 4: Interface utilisateur
+      await this.setupUI();
+      
+      // Étape 5: Modules de l'application
+      await this.loadAllModules();
+      
+      // Étape 6: Navigation et interactions
       this.setupNavigation();
+      this.setupInteractions();
       
-      // Charger les statistiques initiales
-      await this.loadDashboardStats();
+      // Étape 7: Données initiales
+      await this.loadInitialData();
       
-      // Gérer l'orientation
-      this.handleOrientation();
+      // Étape 8: Finalisation
+      await this.finalizeLaunch();
       
-      // Configurer les raccourcis clavier
-      this.setupKeyboardShortcuts();
+      this.isInitialized = true;
+      this.logSuccess('✅ Application entièrement initialisée');
       
-      // Vérifier les mises à jour
-      this.checkForUpdates();
-      
-      console.log('[App] Initialisation terminée');
     } catch (error) {
-      console.error('[App] Erreur initialisation:', error);
-      this.showError('Erreur lors du chargement de l\'application');
+      console.error('❌ Erreur critique initialisation:', error);
+      this.showCriticalError(error);
     }
   }
   
-  async hideSplashScreen() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const splash = document.getElementById('splash-screen');
-        if (splash) {
-          splash.classList.add('hide');
-          setTimeout(() => {
-            splash.remove();
-            resolve();
-          }, 500);
-        } else {
-          resolve();
-        }
-      }, 1500);
-    });
+  async setupConfiguration() {
+    // Configuration de l'appareil
+    document.documentElement.className = `device-${this.device.type}`;
+    document.body.classList.add(
+      `device-${this.device.name.toLowerCase().replace(/\s+/g, '-')}`,
+      this.isStandalone ? 'standalone' : 'browser',
+      ...this.device.optimizations.map(opt => `opt-${opt}`)
+    );
+    
+    // Variables CSS dynamiques
+    this.updateCSSVariables();
+    
+    // Préférences utilisateur
+    this.loadUserPreferences();
   }
   
-  setupUI() {
-    // Adapter l'interface selon l'appareil
-    document.body.className = `device-${this.deviceType.toLowerCase()}`;
-    
-    if (this.isStandalone) {
-      document.body.classList.add('standalone');
-    }
-    
-    // Menu toggle pour mobile/tablet
-    const menuToggle = document.getElementById('menu-toggle');
-    const sidebar = document.getElementById('sidebar');
-    
-    if (menuToggle && sidebar) {
-      menuToggle.addEventListener('click', () => {
-        menuToggle.classList.toggle('active');
-        sidebar.classList.toggle('open');
-        
-        // Overlay pour fermer le menu
-        if (sidebar.classList.contains('open') && this.deviceType !== 'MacBook') {
-          this.createOverlay(() => {
-            menuToggle.classList.remove('active');
-            sidebar.classList.remove('open');
-          });
-        }
-      });
-    }
-    
-    // Gérer le safe area sur iOS
-    if (this.deviceType === 'iPhone' || this.deviceType === 'iPad') {
-      this.handleSafeArea();
-    }
-  }
-  
-  handleSafeArea() {
-    // Ajuster pour l'encoche et les coins arrondis
-    const viewport = document.querySelector('meta[name="viewport"]');
-    if (viewport) {
-      viewport.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
-    }
-    
-    // Ajuster les marges si nécessaire
-    const safeAreaTop = getComputedStyle(document.documentElement)
-      .getPropertyValue('--safe-area-inset-top');
-    
-    if (parseInt(safeAreaTop) > 20) {
-      document.body.classList.add('has-notch');
-    }
-  }
-  
-  createOverlay(onClick) {
-    const existing = document.querySelector('.sidebar-overlay');
-    if (existing) existing.remove();
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'sidebar-overlay';
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 89;
-      opacity: 0;
-      transition: opacity 300ms;
-    `;
-    
-    document.body.appendChild(overlay);
-    
-    // Fade in
-    requestAnimationFrame(() => {
-      overlay.style.opacity = '1';
-    });
-    
-    overlay.addEventListener('click', () => {
-      overlay.style.opacity = '0';
-      setTimeout(() => overlay.remove(), 300);
-      if (onClick) onClick();
-    });
-  }
-  
-  async loadModules() {
-    // Définir les modules disponibles selon l'appareil
-    const moduleConfig = {
-      iPhone: ['agenda', 'waitlist', 'statistics', 'convocations', 'publipostage'],
-      iPad: ['agenda', 'waitlist', 'statistics', 'convocations', 'publipostage', 'billing'],
-      MacBook: ['agenda', 'waitlist', 'statistics', 'convocations', 'publipostage', 'billing', 'synthese', 'import', 'planning', 'anonymisation']
+  cacheElements() {
+    this.elements = {
+      // Navigation
+      sidebar: document.getElementById('sidebar'),
+      bottomNav: document.getElementById('bottom-nav'),
+      sidebarOverlay: document.getElementById('sidebar-overlay'),
+      menuToggle: document.getElementById('menu-toggle'),
+      
+      // Header
+      header: document.getElementById('app-header'),
+      globalSearch: document.getElementById('global-search'),
+      searchResults: document.getElementById('search-results'),
+      syncStatus: document.getElementById('sync-status'),
+      notifications: document.getElementById('notifications'),
+      profileButton: document.getElementById('profile-button'),
+      
+      // Contenu principal
+      mainContent: document.getElementById('main-content'),
+      moduleContainer: document.getElementById('module-container'),
+      currentModuleBreadcrumb: document.getElementById('current-module'),
+      
+      // Modals et toasts
+      modalSystem: document.getElementById('modal-system'),
+      toastContainer: document.getElementById('toast-container'),
+      installPrompt: document.getElementById('install-prompt')
     };
     
-    const modulesToLoad = moduleConfig[this.deviceType] || moduleConfig.iPad;
+    this.logSuccess('🎯 Éléments DOM cachés');
+  }
+  
+  async initializeManagers() {
+    // Data Manager - Gestion des données
+    this.dataManager = new DataManager();
+    await this.dataManager.initialize();
     
-    console.log(`[App] Chargement des modules pour ${this.deviceType}:`, modulesToLoad);
+    // Sync Manager - Synchronisation iCloud/serveur
+    this.syncManager = new SyncManager(this.dataManager);
+    await this.syncManager.initialize();
     
-    // Charger les modules de manière asynchrone
-    for (const moduleName of modulesToLoad) {
-      try {
-        // En production, charger depuis les fichiers JS
-        // Pour le prototype, créer des modules factices
-        this.modules.set(moduleName, {
-          name: moduleName,
-          loaded: true,
-          render: () => this.renderModule(moduleName)
-        });
-      } catch (error) {
-        console.error(`[App] Erreur chargement module ${moduleName}:`, error);
-      }
+    // Notification Manager - Système de notifications
+    this.notificationManager = new NotificationManager();
+    await this.notificationManager.initialize();
+    
+    // Animation Engine - Moteur d'animations fantastiques
+    this.animationEngine = new AnimationEngine(this.device);
+    await this.animationEngine.initialize();
+    
+    this.logSuccess('⚙️ Gestionnaires initialisés');
+  }
+  
+  async setupUI() {
+    // Masquer le splash screen avec animation
+    await this.hideSplashScreen();
+    
+    // Configuration de l'interface selon l'appareil
+    this.adaptUIForDevice();
+    
+    // Activation des animations
+    this.animationEngine.activate();
+    
+    this.logSuccess('🎨 Interface utilisateur configurée');
+  }
+  
+  async loadAllModules() {
+    const moduleList = [
+      // Modules principaux - TOUS les modules de l'app desktop
+      { name: 'dashboard', priority: 1 },
+      { name: 'agenda', priority: 1 },
+      { name: 'waitlist', priority: 1 },
+      { name: 'planning', priority: 2 },
+      
+      // Modules de communication
+      { name: 'convocations', priority: 2 },
+      { name: 'mailing', priority: 2 },
+      
+      // Modules de gestion
+      { name: 'import', priority: 3 },
+      { name: 'synthese', priority: 2 },
+      { name: 'statistiques', priority: 2 },
+      { name: 'billing', priority: 2 },
+      { name: 'indemnites', priority: 2 },
+      
+      // Modules outils
+      { name: 'anonymisation', priority: 3 },
+      { name: 'prompt-mastering', priority: 3 }
+    ];
+    
+    // Charger par priorité
+    for (let priority = 1; priority <= 3; priority++) {
+      const modulesForPriority = moduleList.filter(m => m.priority === priority);
+      await Promise.all(modulesForPriority.map(module => this.loadModule(module.name)));
+    }
+    
+    this.logSuccess(`📦 ${moduleList.length} modules chargés`);
+  }
+  
+  async loadModule(moduleName) {
+    try {
+      // Charger le module PWA adapté
+      const moduleScript = await import(`./modules/${moduleName}/${moduleName}-pwa.js`);
+      const ModuleClass = moduleScript.default;
+      
+      // Instancier avec les dépendances
+      const moduleInstance = new ModuleClass({
+        dataManager: this.dataManager,
+        syncManager: this.syncManager,
+        notificationManager: this.notificationManager,
+        animationEngine: this.animationEngine,
+        device: this.device
+      });
+      
+      // Initialiser
+      await moduleInstance.initialize();
+      
+      // Stocker
+      this.modules.set(moduleName, moduleInstance);
+      
+      console.log(`✅ Module ${moduleName} chargé`);
+    } catch (error) {
+      console.warn(`⚠️ Module ${moduleName} non disponible:`, error.message);
+      
+      // Créer un placeholder pour les modules manquants
+      this.modules.set(moduleName, new ModulePlaceholder(moduleName));
     }
   }
   
   setupNavigation() {
-    // Navigation onglets visuels (principal)
-    const visualTabs = document.querySelectorAll('.visual-tab');
-    visualTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const moduleName = tab.dataset.module;
-        this.navigateToModule(moduleName);
-      });
-    });
-    
-    // Navigation sidebar (desktop/tablet)
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const moduleName = item.dataset.module;
-        this.navigateToModule(moduleName);
-      });
-    });
+    // Navigation sidebar (desktop/iPad)
+    this.setupSidebarNavigation();
     
     // Navigation bottom (mobile)
-    const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
-    bottomNavItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const moduleName = item.dataset.module;
-        
-        if (moduleName === 'more') {
-          this.showMoreMenu();
+    this.setupBottomNavigation();
+    
+    // Menu burger
+    this.setupMobileMenu();
+    
+    // Navigation au clavier
+    this.setupKeyboardNavigation();
+    
+    this.logSuccess('🧭 Navigation configurée');
+  }
+  
+  setupInteractions() {
+    // Recherche globale
+    this.setupGlobalSearch();
+    
+    // Actions rapides
+    this.setupQuickActions();
+    
+    // Profil utilisateur
+    this.setupUserProfile();
+    
+    // Statut de synchronisation
+    this.setupSyncStatus();
+    
+    // Gestes tactiles (mobile/iPad)
+    if (this.device.type !== 'desktop') {
+      this.setupTouchGestures();
+    }
+    
+    this.logSuccess('👆 Interactions configurées');
+  }
+  
+  async loadInitialData() {
+    // Charger les statistiques du dashboard
+    await this.loadDashboardStats();
+    
+    // Charger les données de l'agenda du jour
+    await this.loadTodayAgenda();
+    
+    // Synchronisation initiale si connecté
+    if (navigator.onLine) {
+      this.syncManager.performSync();
+    }
+    
+    this.logSuccess('📊 Données initiales chargées');
+  }
+  
+  async finalizeLaunch() {
+    // Afficher le module par défaut
+    await this.showModule('dashboard');
+    
+    // Configuration finale des animations
+    this.animationEngine.activateInteractions();
+    
+    // Vérification des mises à jour PWA
+    this.checkForPWAUpdates();
+    
+    // Analytics et télémétrie
+    this.trackLaunch();
+    
+    this.logSuccess('🎉 Lancement finalisé');
+  }
+  
+  /* ============================================
+     🎭 GESTION DU SPLASH SCREEN
+     ============================================ */
+  
+  async hideSplashScreen() {
+    return new Promise(resolve => {
+      const splash = document.getElementById('splash-screen');
+      if (!splash) {
+        resolve();
+        return;
+      }
+      
+      // Animation de sortie progressive
+      const phases = [
+        () => this.updateSplashStatus("Chargement des modules..."),
+        () => this.updateSplashStatus("Configuration de l'interface..."),
+        () => this.updateSplashStatus("Synchronisation des données..."),
+        () => this.updateSplashStatus("Finalisation...")
+      ];
+      
+      let phaseIndex = 0;
+      const phaseInterval = setInterval(() => {
+        if (phaseIndex < phases.length) {
+          phases[phaseIndex]();
+          phaseIndex++;
         } else {
-          this.navigateToModule(moduleName);
+          clearInterval(phaseInterval);
+          
+          // Masquage final avec animation fantastique
+          splash.style.opacity = '0';
+          splash.style.transform = 'scale(0.9)';
+          
+          setTimeout(() => {
+            splash.remove();
+            resolve();
+          }, 600);
+        }
+      }, 400);
+    });
+  }
+  
+  updateSplashStatus(message) {
+    const statusEl = document.getElementById('splash-status');
+    if (statusEl) {
+      statusEl.textContent = message;
+      statusEl.style.animation = 'fadeIn 0.3s ease';
+    }
+  }
+  
+  /* ============================================
+     📱 ADAPTATION À L'APPAREIL
+     ============================================ */
+  
+  adaptUIForDevice() {
+    switch (this.device.type) {
+      case 'mobile':
+        this.setupMobileUI();
+        break;
+      case 'tablet':
+        this.setupTabletUI();
+        break;
+      case 'desktop':
+        this.setupDesktopUI();
+        break;
+    }
+  }
+  
+  setupMobileUI() {
+    // Masquer la sidebar sur mobile
+    this.elements.sidebar.style.transform = 'translateX(-100%)';
+    
+    // Afficher la navigation bottom
+    this.elements.bottomNav.style.display = 'flex';
+    
+    // Bouton menu visible
+    this.elements.menuToggle.style.display = 'flex';
+    
+    // Optimisations mobile
+    this.enableMobileOptimizations();
+  }
+  
+  setupTabletUI() {
+    // iPad Pro 13" optimisé
+    if (this.device.name === 'iPad Pro 13"') {
+      // Sidebar partiellement visible
+      this.elements.sidebar.style.width = '240px';
+      
+      // Navigation adaptative
+      if (window.orientation === 90 || window.orientation === -90) {
+        // Mode paysage - sidebar visible
+        this.elements.sidebar.style.transform = 'translateX(0)';
+        this.elements.bottomNav.style.display = 'none';
+      } else {
+        // Mode portrait - navigation bottom
+        this.elements.sidebar.style.transform = 'translateX(-100%)';
+        this.elements.bottomNav.style.display = 'flex';
+      }
+    }
+    
+    // Optimisations tactiles
+    this.enableTouchOptimizations();
+  }
+  
+  setupDesktopUI() {
+    // Sidebar toujours visible
+    this.elements.sidebar.style.transform = 'translateX(0)';
+    
+    // Navigation bottom masquée
+    this.elements.bottomNav.style.display = 'none';
+    
+    // Menu burger masqué
+    this.elements.menuToggle.style.display = 'none';
+    
+    // Optimisations desktop
+    this.enableDesktopOptimizations();
+  }
+  
+  /* ============================================
+     🧭 SYSTÈME DE NAVIGATION
+     ============================================ */
+  
+  setupSidebarNavigation() {
+    const navItems = this.elements.sidebar.querySelectorAll('.nav-item');
+    
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const moduleName = item.getAttribute('data-module');
+        this.showModule(moduleName);
+        
+        // Animation de sélection
+        this.animationEngine.animateNavSelection(item);
+      });
+    });
+  }
+  
+  setupBottomNavigation() {
+    const navItems = this.elements.bottomNav.querySelectorAll('.bottom-nav-item');
+    
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const moduleName = item.getAttribute('data-module');
+        this.showModule(moduleName);
+        
+        // Animation ripple
+        this.animationEngine.createRippleEffect(item, e);
+      });
+    });
+  }
+  
+  setupMobileMenu() {
+    this.elements.menuToggle.addEventListener('click', () => {
+      this.toggleSidebar();
+    });
+    
+    this.elements.sidebarOverlay.addEventListener('click', () => {
+      this.hideSidebar();
+    });
+  }
+  
+  setupKeyboardNavigation() {
+    if (this.device.type === 'desktop') {
+      document.addEventListener('keydown', (e) => {
+        // Cmd/Ctrl + nombre pour naviguer
+        if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '9') {
+          e.preventDefault();
+          const moduleIndex = parseInt(e.key) - 1;
+          const modules = ['dashboard', 'agenda', 'waitlist', 'planning', 'convocations', 'mailing', 'synthese', 'statistiques', 'billing'];
+          if (modules[moduleIndex]) {
+            this.showModule(modules[moduleIndex]);
+          }
+        }
+        
+        // Cmd/Ctrl + K pour la recherche
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          this.elements.globalSearch.focus();
         }
       });
-    });
-    
-    // Gestion du bouton retour
-    window.addEventListener('popstate', (event) => {
-      if (event.state && event.state.module) {
-        this.navigateToModule(event.state.module, false);
-      }
-    });
-    
-    // Navigation initiale vers Agenda
-    this.navigateToModule('agenda');
+    }
   }
   
-  navigateToModule(moduleName, pushState = true) {
-    if (moduleName === this.currentModule) return;
+  /* ============================================
+     🎪 GESTION DES MODULES
+     ============================================ */
+  
+  async showModule(moduleName) {
+    if (this.currentModule === moduleName) return;
     
-    console.log(`[App] Navigation vers: ${moduleName}`);
-    
-    // Mettre à jour l'état actif dans toutes les navigations
-    document.querySelectorAll('.nav-item, .bottom-nav-item, .visual-tab').forEach(item => {
-      item.classList.toggle('active', item.dataset.module === moduleName);
-    });
-    
-    // Cacher l'écran de bienvenue
-    const welcomeScreen = document.getElementById('welcome-screen');
-    if (welcomeScreen) {
-      welcomeScreen.style.display = 'none';
-    }
-    
-    // Charger le module
     const module = this.modules.get(moduleName);
-    if (module) {
-      const container = document.getElementById('module-container');
-      if (container) {
-        container.innerHTML = module.render();
-      }
-      
-      this.currentModule = moduleName;
-      
-      // Déclencher l'événement d'activation du module
-      window.dispatchEvent(new CustomEvent('moduleactivated', {
-        detail: { module: moduleName, device: this.deviceType }
-      }));
-      
-      // Mettre à jour l'historique
-      if (pushState) {
-        history.pushState({ module: moduleName }, moduleName, `#${moduleName}`);
-      }
-      
-      // Fermer le menu sur mobile
-      if (this.deviceType !== 'MacBook') {
-        document.getElementById('sidebar')?.classList.remove('open');
-        document.getElementById('menu-toggle')?.classList.remove('active');
-      }
-    } else {
-      console.error(`[App] Module non trouvé: ${moduleName}`);
+    if (!module) {
+      console.warn(`Module ${moduleName} non trouvé`);
+      return;
     }
+    
+    // Animation de sortie du module actuel
+    if (this.currentModule) {
+      const currentContent = document.querySelector('.module-content.active');
+      if (currentContent) {
+        await this.animationEngine.fadeOut(currentContent);
+        currentContent.classList.remove('active');
+      }
+    }
+    
+    // Préparation du nouveau module
+    let moduleContent = document.getElementById(`${moduleName}-module`);
+    if (!moduleContent) {
+      moduleContent = await this.createModuleContainer(moduleName, module);
+    }
+    
+    // Rendu du module
+    await module.render(moduleContent);
+    
+    // Animation d'entrée
+    moduleContent.classList.add('active');
+    await this.animationEngine.slideIn(moduleContent);
+    
+    // Mise à jour de l'état
+    this.currentModule = moduleName;
+    this.updateNavigation(moduleName);
+    this.updateBreadcrumb(moduleName);
+    
+    // Analytics
+    this.trackModuleView(moduleName);
   }
   
-  renderModule(moduleName) {
-    // Templates de modules pour le prototype
-    const templates = {
-      dashboard: `
-        <div class="module-content">
-          <h2>Tableau de bord</h2>
-          <div class="dashboard-grid">
-            <div class="dashboard-card">
-              <h3>Expertises récentes</h3>
-              <ul id="recent-expertises"></ul>
-            </div>
-            <div class="dashboard-card">
-              <h3>Agenda du jour</h3>
-              <ul id="today-agenda"></ul>
-            </div>
-            <div class="dashboard-card">
-              <h3>Actions rapides</h3>
-              <button class="action-button">Nouvelle expertise</button>
-              <button class="action-button">Ajouter RDV</button>
-              <button class="action-button">Générer rapport</button>
-            </div>
-          </div>
-        </div>
-      `,
-      agenda: `
-        <div class="module-content">
-          <h2>Agenda</h2>
-          <div class="agenda-view">
-            <div class="agenda-header">
-              <button>← Précédent</button>
-              <h3>Novembre 2025</h3>
-              <button>Suivant →</button>
-            </div>
-            <div class="agenda-calendar">
-              <!-- Calendrier généré dynamiquement -->
-            </div>
-          </div>
-        </div>
-      `,
-      expertises: `
-        <div class="module-content">
-          <h2>Expertises</h2>
-          <div class="search-bar">
-            <input type="search" placeholder="Rechercher une expertise..." />
-            <button>Rechercher</button>
-          </div>
-          <div class="expertises-list">
-            <!-- Liste générée dynamiquement -->
-          </div>
-        </div>
-      `,
-      statistics: `
-        <div class="module-content">
-          <h2>📊 Statistiques</h2>
-          <div class="stats-overview">
-            <div class="stat-card">
-              <h3>Expertises totales</h3>
-              <p class="stat-big-number" id="total-expertises">-</p>
-            </div>
-            <div class="stat-card">
-              <h3>Ce mois</h3>
-              <p class="stat-big-number" id="monthly-expertises">-</p>
-            </div>
-            <div class="stat-card">
-              <h3>En attente</h3>
-              <p class="stat-big-number" id="pending-expertises">-</p>
-            </div>
-          </div>
-          <div class="stats-grid">
-            <div class="stat-chart">
-              <h3>Évolution mensuelle</h3>
-              <canvas id="monthly-chart"></canvas>
-            </div>
-            <div class="stat-chart">
-              <h3>Répartition par type</h3>
-              <canvas id="type-chart"></canvas>
-            </div>
-          </div>
-        </div>
-      `,
-      waitlist: `
-        <div class="module-content">
-          <h2>⏳ Liste d'attentes</h2>
-          <div class="waitlist-filter">
-            <select id="waitlist-priority">
-              <option value="">Toutes priorités</option>
-              <option value="urgent">Urgent</option>
-              <option value="normal">Normal</option>
-              <option value="low">Faible</option>
-            </select>
-            <button id="refresh-waitlist">🔄 Actualiser</button>
-          </div>
-          <div class="horizontal-scroll" id="waitlist-scroll">
-            <div class="scroll-item">
-              <h3>Chargement...</h3>
-              <p>Synchronisez la base de données</p>
-            </div>
-          </div>
-        </div>
-      `,
-      convocations: `
-        <div class="module-content">
-          <h2>📧 Convocations</h2>
-          <div class="convocations-actions">
-            <button class="action-button">Nouvelle convocation</button>
-            <button class="action-button">Modèles de convocation</button>
-            <button class="action-button">Historique envois</button>
-          </div>
-          <div class="convocations-list">
-            <div class="horizontal-scroll">
-              <div class="scroll-item">
-                <h3>Convocations récentes</h3>
-                <p>Aucune convocation récente</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      `,
-      billing: `
-        <div class="module-content">
-          <h2>💰 Facturation</h2>
-          <div class="billing-overview">
-            <div class="stat-card">
-              <h3>CA ce mois</h3>
-              <p class="stat-big-number">-€</p>
-            </div>
-            <div class="stat-card">
-              <h3>Factures en attente</h3>
-              <p class="stat-big-number">-</p>
-            </div>
-          </div>
-          <div class="billing-actions">
-            <button class="action-button">Nouvelle facture</button>
-            <button class="action-button">Suivi paiements</button>
-            <button class="action-button">Rapports</button>
-          </div>
-        </div>
-      `,
-      publipostage: `
-        <!-- Le contenu sera géré par publipostage-manager.js -->
-        <div class="loading-publipostage">
-          <h2>📄 Chargement du publipostage...</h2>
-          <p>Initialisation du module</p>
-        </div>
-      `
+  async createModuleContainer(moduleName, module) {
+    const container = document.createElement('div');
+    container.id = `${moduleName}-module`;
+    container.className = 'module-content';
+    container.setAttribute('data-module', moduleName);
+    
+    this.elements.moduleContainer.appendChild(container);
+    return container;
+  }
+  
+  updateNavigation(moduleName) {
+    // Sidebar
+    const sidebarItems = this.elements.sidebar.querySelectorAll('.nav-item');
+    sidebarItems.forEach(item => {
+      item.classList.toggle('active', item.getAttribute('data-module') === moduleName);
+    });
+    
+    // Bottom nav
+    const bottomItems = this.elements.bottomNav.querySelectorAll('.bottom-nav-item');
+    bottomItems.forEach(item => {
+      item.classList.toggle('active', item.getAttribute('data-module') === moduleName);
+    });
+  }
+  
+  updateBreadcrumb(moduleName) {
+    const moduleNames = {
+      'dashboard': 'Tableau de bord',
+      'agenda': 'Agenda',
+      'waitlist': 'Liste d\'attente',
+      'planning': 'Programmation',
+      'convocations': 'Convocations',
+      'mailing': 'Publipostage',
+      'import': 'Import Excel',
+      'synthese': 'Synthèse & Rapports',
+      'statistiques': 'Statistiques',
+      'billing': 'Facturation',
+      'indemnites': 'Indemnités',
+      'anonymisation': 'Anonymisation',
+      'prompt-mastering': 'Prompt Mastering'
     };
     
-    return templates[moduleName] || `
-      <div class="module-content">
-        <h2>${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}</h2>
-        <p>Module en cours de chargement...</p>
-      </div>
-    `;
+    if (this.elements.currentModuleBreadcrumb) {
+      this.elements.currentModuleBreadcrumb.textContent = moduleNames[moduleName] || moduleName;
+    }
   }
   
-  showMoreMenu() {
-    // Créer un menu contextuel pour les options supplémentaires
-    const menu = document.createElement('div');
-    menu.className = 'more-menu';
-    menu.innerHTML = `
-      <div class="more-menu-content">
-        <h3>Plus d'options</h3>
-        <button data-module="mailing">Publipostage</button>
-        <button data-module="billing">Facturation</button>
-        <button data-module="import">Import</button>
-        <button data-module="settings">Paramètres</button>
-        <button class="close-menu">Fermer</button>
-      </div>
-    `;
+  /* ============================================
+     🔍 RECHERCHE GLOBALE
+     ============================================ */
+  
+  setupGlobalSearch() {
+    let searchTimeout;
     
-    document.body.appendChild(menu);
-    
-    // Gérer les clics
-    menu.querySelectorAll('button[data-module]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.navigateToModule(btn.dataset.module);
-        menu.remove();
-      });
+    this.elements.globalSearch.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
+      
+      if (query.length < 2) {
+        this.hideSearchResults();
+        return;
+      }
+      
+      searchTimeout = setTimeout(() => {
+        this.performGlobalSearch(query);
+      }, 300);
     });
     
-    menu.querySelector('.close-menu').addEventListener('click', () => {
-      menu.remove();
+    this.elements.globalSearch.addEventListener('focus', () => {
+      if (this.elements.globalSearch.value.length >= 2) {
+        this.elements.searchResults.style.display = 'block';
+      }
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (!this.elements.globalSearch.contains(e.target) && 
+          !this.elements.searchResults.contains(e.target)) {
+        this.hideSearchResults();
+      }
     });
   }
+  
+  async performGlobalSearch(query) {
+    try {
+      const results = await this.dataManager.globalSearch(query);
+      this.displaySearchResults(results);
+    } catch (error) {
+      console.error('Erreur recherche:', error);
+    }
+  }
+  
+  displaySearchResults(results) {
+    const container = this.elements.searchResults;
+    container.innerHTML = '';
+    
+    if (results.length === 0) {
+      container.innerHTML = '<div class="search-no-results">Aucun résultat trouvé</div>';
+    } else {
+      results.forEach(result => {
+        const resultElement = this.createSearchResultElement(result);
+        container.appendChild(resultElement);
+      });
+    }
+    
+    container.style.display = 'block';
+  }
+  
+  hideSearchResults() {
+    this.elements.searchResults.style.display = 'none';
+  }
+  
+  /* ============================================
+     📊 DONNÉES DU DASHBOARD
+     ============================================ */
   
   async loadDashboardStats() {
     try {
-      // Charger les statistiques depuis IndexedDB
-      if (window.offlineManager) {
-        const counts = await window.offlineManager.getItemCount();
-        
-        // Mettre à jour l'affichage
-        const statElements = {
-          'stat-expertises': counts.expertises || 0,
-          'stat-rdv': counts.agenda || 0,
-          'stat-waiting': counts.syncQueue || 0,
-          'stat-sync': window.syncManager?.getStatus().queueLength || 0
-        };
-        
-        for (const [id, value] of Object.entries(statElements)) {
-          const element = document.getElementById(id);
-          if (element) {
-            element.textContent = value.toLocaleString('fr-FR');
-          }
-        }
-      }
+      const stats = await this.dataManager.getDashboardStats();
+      this.updateDashboardUI(stats);
     } catch (error) {
-      console.error('[App] Erreur chargement stats:', error);
+      console.error('Erreur stats dashboard:', error);
     }
   }
   
-  handleOrientation() {
-    // Gérer les changements d'orientation sur mobile/tablet
-    window.addEventListener('orientationchange', () => {
-      const orientation = window.orientation;
-      document.body.classList.toggle('landscape', Math.abs(orientation) === 90);
-      
-      // Ajuster l'interface si nécessaire
-      if (this.deviceType === 'iPad') {
-        this.adjustForOrientation(orientation);
+  updateDashboardUI(stats) {
+    // Mettre à jour les compteurs
+    this.updateStatCard('stat-agenda', stats.agenda || 0);
+    this.updateStatCard('stat-waitlist', stats.waitlist || 0);
+    this.updateStatCard('stat-revenue', stats.billing || 0);
+    this.updateStatCard('stat-sync', stats.syncStatus || '100%');
+    
+    // Mettre à jour les badges de navigation
+    this.updateNavBadges(stats);
+  }
+  
+  updateStatCard(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.textContent = value;
+      this.animationEngine.animateCounter(element);
+    }
+  }
+  
+  updateNavBadges(stats) {
+    const badges = {
+      'nav-agenda-count': stats.agenda,
+      'nav-waitlist-count': stats.waitlist,
+      'nav-convocations-count': stats.convocations,
+      'nav-billing-count': stats.billing
+    };
+    
+    Object.entries(badges).forEach(([id, count]) => {
+      const badge = document.getElementById(id);
+      if (badge && count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline';
+      } else if (badge) {
+        badge.style.display = 'none';
       }
     });
-    
-    // Vérification initiale
-    if (window.orientation !== undefined) {
-      document.body.classList.toggle('landscape', Math.abs(window.orientation) === 90);
-    }
   }
   
-  adjustForOrientation(orientation) {
-    const sidebar = document.getElementById('sidebar');
-    
-    if (Math.abs(orientation) === 90) {
-      // Paysage - afficher la sidebar
-      sidebar?.classList.add('landscape-visible');
-    } else {
-      // Portrait - masquer la sidebar
-      sidebar?.classList.remove('landscape-visible');
-    }
-  }
+  /* ============================================
+     📱 GESTION DU PWA
+     ============================================ */
   
-  setupKeyboardShortcuts() {
-    // Raccourcis clavier pour desktop
-    if (this.deviceType === 'MacBook') {
-      document.addEventListener('keydown', (event) => {
-        // Cmd/Ctrl + K : Recherche rapide
-        if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-          event.preventDefault();
-          this.showQuickSearch();
-        }
+  checkForPWAUpdates() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        this.showToast('Nouvelle version installée', 'success');
         
-        // Cmd/Ctrl + N : Nouvelle expertise
-        if ((event.metaKey || event.ctrlKey) && event.key === 'n') {
-          event.preventDefault();
-          this.createNewExpertise();
-        }
-        
-        // Cmd/Ctrl + S : Synchroniser
-        if ((event.metaKey || event.ctrlKey) && event.key === 's') {
-          event.preventDefault();
-          window.connectionManager?.forceSyncNow();
-        }
-        
-        // Échap : Fermer les modals
-        if (event.key === 'Escape') {
-          this.closeAllModals();
-        }
+        // Recharger après un délai
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       });
     }
   }
   
-  showQuickSearch() {
-    console.log('[App] Recherche rapide');
-    // Implémenter la recherche rapide
-  }
+  /* ============================================
+     🍞 SYSTÈME DE NOTIFICATIONS
+     ============================================ */
   
-  createNewExpertise() {
-    console.log('[App] Nouvelle expertise');
-    // Implémenter la création d'expertise
-  }
-  
-  closeAllModals() {
-    document.querySelectorAll('.modal, .more-menu, .sidebar-overlay').forEach(element => {
-      element.remove();
-    });
-  }
-  
-  async checkForUpdates() {
-    if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.getRegistration();
-      
-      if (registration) {
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              this.showUpdatePrompt();
-            }
-          });
-        });
-        
-        // Vérifier manuellement les mises à jour toutes les heures
-        setInterval(() => {
-          registration.update();
-        }, 3600000);
-      }
+  showToast(message, type = 'info', options = {}) {
+    if (this.notificationManager) {
+      this.notificationManager.showToast(message, type, options);
+    } else {
+      // Fallback simple
+      console.log(`[Toast ${type}] ${message}`);
     }
   }
   
-  showUpdatePrompt() {
-    const prompt = document.createElement('div');
-    prompt.className = 'update-prompt';
-    prompt.innerHTML = `
-      <p>Une nouvelle version de CrimiTrack est disponible</p>
-      <button onclick="location.reload()">Mettre à jour</button>
-      <button onclick="this.parentElement.remove()">Plus tard</button>
-    `;
-    
-    document.body.appendChild(prompt);
+  showError(message) {
+    this.showToast(message, 'error');
   }
   
-  showError(message) {
+  showCriticalError(error) {
+    const container = document.body;
     const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    document.body.appendChild(errorDiv);
+    errorDiv.className = 'critical-error';
+    errorDiv.innerHTML = `
+      <div class="error-content">
+        <h2>Erreur Critique</h2>
+        <p>L'application a rencontré une erreur critique.</p>
+        <button onclick="location.reload()">Recharger</button>
+      </div>
+    `;
+    container.appendChild(errorDiv);
+  }
+  
+  /* ============================================
+     🔧 UTILITAIRES
+     ============================================ */
+  
+  updateCSSVariables() {
+    const root = document.documentElement;
     
-    setTimeout(() => errorDiv.remove(), 5000);
+    // Variables dynamiques selon l'appareil
+    if (this.device.name === 'iPad Pro 13"') {
+      root.style.setProperty('--sidebar-width', '260px');
+      root.style.setProperty('--header-height', '64px');
+    }
+    
+    // Variables de performance
+    if (this.device.optimizations.includes('reduced-motion')) {
+      root.style.setProperty('--duration-fast', '0.1s');
+      root.style.setProperty('--duration-normal', '0.15s');
+    }
+  }
+  
+  loadUserPreferences() {
+    const prefs = localStorage.getItem('crimitrack-preferences');
+    if (prefs) {
+      try {
+        this.userPreferences = JSON.parse(prefs);
+      } catch (e) {
+        this.userPreferences = {};
+      }
+    } else {
+      this.userPreferences = {};
+    }
+  }
+  
+  saveUserPreferences() {
+    localStorage.setItem('crimitrack-preferences', JSON.stringify(this.userPreferences));
+  }
+  
+  toggleSidebar() {
+    const isOpen = this.elements.sidebar.classList.contains('open');
+    
+    if (isOpen) {
+      this.hideSidebar();
+    } else {
+      this.showSidebar();
+    }
+  }
+  
+  showSidebar() {
+    this.elements.sidebar.classList.add('open');
+    this.elements.sidebarOverlay.classList.add('active');
+    this.elements.menuToggle.classList.add('active');
+  }
+  
+  hideSidebar() {
+    this.elements.sidebar.classList.remove('open');
+    this.elements.sidebarOverlay.classList.remove('active');
+    this.elements.menuToggle.classList.remove('active');
+  }
+  
+  logSuccess(message) {
+    console.log(`%c${message}`, 'color: #10b981; font-weight: bold;');
+  }
+  
+  trackLaunch() {
+    // Analytics basiques sans données personnelles
+    console.log('📈 Lancement tracké:', {
+      device: this.device.name,
+      standalone: this.isStandalone,
+      version: this.version,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  trackModuleView(moduleName) {
+    console.log(`📊 Module vu: ${moduleName}`);
+  }
+  
+  /* ============================================
+     ⚡ OPTIMISATIONS SPÉCIFIQUES
+     ============================================ */
+  
+  enableMobileOptimizations() {
+    // Optimisations pour mobile
+    document.body.style.webkitUserSelect = 'none';
+    document.body.style.webkitTouchCallout = 'none';
+    
+    // Désactiver le zoom sur les inputs
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+      input.addEventListener('focus', () => {
+        document.querySelector('meta[name=viewport]').setAttribute('content', 
+          'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      });
+      
+      input.addEventListener('blur', () => {
+        document.querySelector('meta[name=viewport]').setAttribute('content',
+          'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+      });
+    });
+  }
+  
+  enableTouchOptimizations() {
+    // Support des gestes sur iPad
+    this.setupSwipeGestures();
+  }
+  
+  enableDesktopOptimizations() {
+    // Optimisations desktop
+    document.body.style.cursor = 'default';
   }
 }
 
-// Initialiser l'application au chargement
+/* ============================================
+   🏗️ CLASSES AUXILIAIRES
+   ============================================ */
+
+class ModulePlaceholder {
+  constructor(name) {
+    this.name = name;
+  }
+  
+  async initialize() {
+    console.log(`📦 Module ${this.name} en mode placeholder`);
+  }
+  
+  async render(container) {
+    container.innerHTML = `
+      <div class="module-placeholder">
+        <div class="placeholder-content">
+          <div class="placeholder-icon">
+            <i class="fas fa-puzzle-piece"></i>
+          </div>
+          <h2>Module ${this.name}</h2>
+          <p>Ce module sera bientôt disponible</p>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Gestionnaires simplifiés pour l'exemple
+class DataManager {
+  async initialize() {
+    console.log('📊 DataManager initialisé');
+  }
+  
+  async globalSearch(query) {
+    // Simulation de recherche
+    return [];
+  }
+  
+  async getDashboardStats() {
+    // Simulation de stats
+    return {
+      agenda: 12,
+      waitlist: 5,
+      billing: 187,
+      convocations: 3,
+      syncStatus: '100%'
+    };
+  }
+}
+
+class SyncManager {
+  constructor(dataManager) {
+    this.dataManager = dataManager;
+  }
+  
+  async initialize() {
+    console.log('🔄 SyncManager initialisé');
+  }
+  
+  async performSync() {
+    console.log('🔄 Synchronisation en cours...');
+  }
+}
+
+class NotificationManager {
+  async initialize() {
+    console.log('🔔 NotificationManager initialisé');
+  }
+  
+  showToast(message, type = 'info', options = {}) {
+    console.log(`🍞 Toast: ${message} (${type})`);
+  }
+}
+
+class AnimationEngine {
+  constructor(device) {
+    this.device = device;
+  }
+  
+  async initialize() {
+    console.log('🎬 AnimationEngine initialisé');
+  }
+  
+  activate() {
+    console.log('🎬 Animations activées');
+  }
+  
+  activateInteractions() {
+    console.log('🎬 Interactions activées');
+  }
+  
+  async fadeOut(element) {
+    element.style.transition = 'opacity 0.3s ease';
+    element.style.opacity = '0';
+    return new Promise(resolve => setTimeout(resolve, 300));
+  }
+  
+  async slideIn(element) {
+    element.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    element.style.transform = 'translateX(0)';
+    element.style.opacity = '1';
+    return new Promise(resolve => setTimeout(resolve, 300));
+  }
+  
+  animateNavSelection(item) {
+    console.log('🎬 Animation nav selection');
+  }
+  
+  createRippleEffect(element, event) {
+    console.log('🎬 Effet ripple créé');
+  }
+  
+  animateCounter(element) {
+    console.log('🎬 Animation compteur');
+  }
+}
+
+/* ============================================
+   🚀 LANCEMENT DE L'APPLICATION
+   ============================================ */
+
+// Fonction globale pour les toasts (utilisée dans les scripts inline)
+window.showToast = function(message, type = 'info', options = {}) {
+  if (window.crimiTrackApp && window.crimiTrackApp.notificationManager) {
+    window.crimiTrackApp.notificationManager.showToast(message, type, options);
+  } else {
+    console.log(`[Toast ${type}] ${message}`);
+  }
+};
+
+// Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-  window.app = new CrimiTrackApp();
+  window.crimiTrackApp = new CrimiTrackPWA();
 });
 
-console.log('[App] Script principal chargé');
+// Gestion des erreurs globales
+window.addEventListener('error', (event) => {
+  console.error('Erreur globale:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Promise rejetée:', event.reason);
+});
