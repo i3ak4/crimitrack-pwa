@@ -122,13 +122,17 @@ class SyncManager {
         this.icloudAvailable = true;
       }
       
-      this.updateConnectionStatus(this.icloudAvailable);
+      if (typeof this.updateConnectionStatus === 'function') {
+        this.updateConnectionStatus(this.icloudAvailable);
+      }
       return this.icloudAvailable;
       
     } catch (error) {
       console.log('[SyncManager] iCloud Drive non accessible:', error.message);
       this.icloudAvailable = false;
-      this.updateConnectionStatus(false);
+      if (typeof this.updateConnectionStatus === 'function') {
+        this.updateConnectionStatus(false);
+      }
       return false;
     }
   }
@@ -531,8 +535,16 @@ class SyncManager {
   
   async loadQueue() {
     // Charger depuis IndexedDB (implémenté dans offline-manager.js)
-    if (window.offlineManager) {
-      this.queue = await window.offlineManager.getQueue() || [];
+    try {
+      if (window.offlineManager && typeof window.offlineManager.getQueue === 'function') {
+        this.queue = await window.offlineManager.getQueue() || [];
+      } else {
+        this.queue = [];
+        console.log('[SyncManager] OfflineManager non disponible, queue vide');
+      }
+    } catch (error) {
+      console.log('[SyncManager] Erreur chargement queue:', error.message);
+      this.queue = [];
     }
   }
   

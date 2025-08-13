@@ -50,5 +50,5 @@ class PromptMasteringPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default PromptMasteringPWA;
+// export default PromptMasteringPWA;
 window.PromptMasteringPWA = PromptMasteringPWA;

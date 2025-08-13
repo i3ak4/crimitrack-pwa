@@ -49,5 +49,5 @@ class PlanningPWA {
   }
 }
 // Export ES6 et exposition globale pour compatibilité
-export default PlanningPWA;
+// export default PlanningPWA;
 window.PlanningPWA = PlanningPWA;

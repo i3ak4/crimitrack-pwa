@@ -50,5 +50,5 @@ class ImportPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default ImportPWA;
+// export default ImportPWA;
 window.ImportPWA = ImportPWA;

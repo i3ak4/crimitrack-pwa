@@ -3,7 +3,7 @@
  * Gestion du cache intelligent et mode offline
  */
 
-const CACHE_VERSION = 'crimitrack-v4.5.0-20250813';
+const CACHE_VERSION = 'crimitrack-v4.6.0-20250813';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;

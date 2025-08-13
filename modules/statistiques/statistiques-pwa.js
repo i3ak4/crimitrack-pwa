@@ -844,5 +844,5 @@ class StatistiquesPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default StatistiquesPWA;
+// export default StatistiquesPWA;
 window.StatistiquesPWA = StatistiquesPWA;

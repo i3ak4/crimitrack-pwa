@@ -881,7 +881,7 @@ class BillingPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default BillingPWA;
+// export default BillingPWA;
 window.BillingPWA = BillingPWA;
 
 // Fonction globale pour changer de vue (appelée depuis le HTML)

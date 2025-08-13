@@ -50,5 +50,5 @@ class AnonymisationPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default AnonymisationPWA;
+// export default AnonymisationPWA;
 window.AnonymisationPWA = AnonymisationPWA;

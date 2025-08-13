@@ -445,5 +445,5 @@ class ConvocationsPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default ConvocationsPWA;
+// export default ConvocationsPWA;
 window.ConvocationsPWA = ConvocationsPWA;

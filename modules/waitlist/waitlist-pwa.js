@@ -456,5 +456,5 @@ class WaitlistPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default WaitlistPWA;
+// export default WaitlistPWA;
 window.WaitlistPWA = WaitlistPWA;

@@ -49,5 +49,5 @@ class SynthesePWA {
   }
 }
 // Export ES6 et exposition globale pour compatibilité
-export default SynthesePWA;
+// export default SynthesePWA;
 window.SynthesePWA = SynthesePWA;

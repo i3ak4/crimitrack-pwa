@@ -415,5 +415,5 @@ class AgendaPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default AgendaPWA;
+// export default AgendaPWA;
 window.AgendaPWA = AgendaPWA;

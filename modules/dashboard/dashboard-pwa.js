@@ -282,6 +282,6 @@ class DashboardPWA {
   }
 }
 
-// Export ES6 et exposition globale pour compatibilité
-export default DashboardPWA;
+// Exposition globale pour compatibilité (pas d'export pour Safari iOS)
+// export default DashboardPWA;
 window.DashboardPWA = DashboardPWA;

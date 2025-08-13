@@ -579,5 +579,5 @@ class MailingPWA {
 }
 
 // Export ES6 et exposition globale pour compatibilité
-export default MailingPWA;
+// export default MailingPWA;
 window.MailingPWA = MailingPWA;
