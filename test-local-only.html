@@ -346,6 +346,24 @@
         let syncManager = null;
         let testData = null;
         
+        // Attendre que la classe soit disponible
+        function waitForSyncManager() {
+            return new Promise((resolve) => {
+                const checkInterval = setInterval(() => {
+                    if (window.SyncManagerSimple || window.SyncManager) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+                
+                // Timeout après 5 secondes
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    resolve();
+                }, 5000);
+            });
+        }
+        
         // Fonction de log
         function log(message, type = 'info') {
             const container = document.getElementById('log-container');
@@ -368,9 +386,19 @@
             log('Démarrage des tests CrimiTrack PWA...', 'info');
             
             try {
+                // Attendre que la classe soit chargée
+                log('Attente du chargement de SyncManager...', 'info');
+                await waitForSyncManager();
+                
+                // Vérifier quelle classe est disponible
+                const ManagerClass = window.SyncManagerSimple || window.SyncManager;
+                if (!ManagerClass) {
+                    throw new Error('Classe SyncManager non trouvée après le timeout');
+                }
+                
                 // Initialiser le SyncManager
                 log('Initialisation du SyncManager...', 'info');
-                syncManager = new SyncManagerSimple();
+                syncManager = new ManagerClass();
                 await syncManager.initialize();
                 log('SyncManager initialisé avec succès', 'success');
                 
