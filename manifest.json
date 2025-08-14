@@ -2,7 +2,7 @@
   "name": "CrimiTrack PWA - Expertise Criminologique",
   "short_name": "CrimiTrack",
   "description": "Application professionnelle de gestion d'expertises criminologiques avec synchronisation multi-appareils et mode hors-ligne",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#7c3aed",
@@ -10,7 +10,7 @@
   "categories": ["medical", "productivity", "business"],
   "lang": "fr-FR",
   "dir": "ltr",
-  "scope": "/",
+  "scope": "./",
   "id": "com.crimitrack.pwa",
   "prefer_related_applications": false,
   "icons": [
@@ -55,26 +55,26 @@
       "name": "Nouvelle expertise",
       "short_name": "Nouvelle",
       "description": "Créer une nouvelle expertise",
-      "url": "/index.html?action=new-expertise",
+      "url": "./index.html?action=new-expertise",
       "icons": [{"src": "assets/images/shortcut-new.png", "sizes": "96x96"}]
     },
     {
       "name": "Agenda du jour",
       "short_name": "Agenda",
       "description": "Voir l'agenda du jour",
-      "url": "/index.html?module=agenda",
+      "url": "./index.html?module=agenda",
       "icons": [{"src": "assets/images/shortcut-agenda.png", "sizes": "96x96"}]
     },
     {
       "name": "Statistiques",
       "short_name": "Stats",
       "description": "Consulter les statistiques",
-      "url": "/index.html?module=stats",
+      "url": "./index.html?module=stats",
       "icons": [{"src": "assets/images/shortcut-stats.png", "sizes": "96x96"}]
     }
   ],
   "share_target": {
-    "action": "/share",
+    "action": "./share",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {
@@ -92,7 +92,7 @@
   "protocol_handlers": [
     {
       "protocol": "crimitrack",
-      "url": "/protocol?url=%s"
+      "url": "./protocol?url=%s"
     }
   ],
   "related_applications": [],

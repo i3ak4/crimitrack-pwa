@@ -1580,151 +1580,165 @@ class ModulePlaceholder {
   }
 }
 
-// Gestionnaires simplifiés pour l'exemple
-class DataManager {
-  constructor() {
-    this.data = {
-      agenda: [],
-      expertises: [],
-      waitlist: [],
-      documents: [],
-      metadata: {
-        version: '4.0.0',
-        lastSync: Date.now(),
-        device: 'PWA'
-      }
-    };
-  }
-  
-  async initialize() {
-    console.log('📊 DataManager initialisé');
-    // Charger depuis localStorage si disponible
-    const savedData = localStorage.getItem('crimitrack-data');
-    if (savedData) {
-      try {
-        this.data = JSON.parse(savedData);
-      } catch (e) {
-        console.warn('Erreur lecture localStorage:', e);
+// Gestionnaires simplifiés pour l'exemple (fallback conditionnels)
+// Ces classes ne sont utilisées que si les vraies classes ne sont pas chargées
+
+if (typeof DataManager === 'undefined') {
+  class DataManager {
+    constructor() {
+      this.data = {
+        agenda: [],
+        expertises: [],
+        waitlist: [],
+        documents: [],
+        metadata: {
+          version: '4.0.0',
+          lastSync: Date.now(),
+          device: 'PWA'
+        }
+      };
+    }
+    
+    async initialize() {
+      console.log('📊 DataManager (fallback) initialisé');
+      // Charger depuis localStorage si disponible
+      const savedData = localStorage.getItem('crimitrack-data');
+      if (savedData) {
+        try {
+          this.data = JSON.parse(savedData);
+        } catch (e) {
+          console.warn('Erreur lecture localStorage:', e);
+        }
       }
     }
+    
+    async save() {
+      localStorage.setItem('crimitrack-data', JSON.stringify(this.data));
+    }
+    
+    async globalSearch(query) {
+      // Simulation de recherche
+      return [];
+    }
+    
+    async getDashboardStats() {
+      return {
+        agenda: this.data.agenda.length,
+        waitlist: this.data.waitlist.length,
+        billing: this.data.expertises.length,
+        convocations: 3,
+        syncStatus: '100%'
+      };
+    }
+    
+    async addExpertise(expertiseData) {
+      // Ajouter à l'agenda
+      this.data.agenda.push(expertiseData);
+      await this.save();
+      console.log('✅ Expertise ajoutée:', expertiseData.patronyme);
+    }
+    
+    async exportDatabase() {
+      return {
+        ...this.data,
+        metadata: {
+          ...this.data.metadata,
+          exportTime: new Date().toISOString(),
+          lastSync: Date.now()
+        }
+      };
+    }
+    
+    async importDatabase(newData) {
+      this.data = {
+        ...newData,
+        metadata: {
+          ...newData.metadata,
+          importTime: new Date().toISOString(),
+          lastSync: Date.now()
+        }
+      };
+      await this.save();
+      console.log('✅ Base de données importée');
+    }
   }
-  
-  async save() {
-    localStorage.setItem('crimitrack-data', JSON.stringify(this.data));
-  }
-  
-  async globalSearch(query) {
-    // Simulation de recherche
-    return [];
-  }
-  
-  async getDashboardStats() {
-    return {
-      agenda: this.data.agenda.length,
-      waitlist: this.data.waitlist.length,
-      billing: this.data.expertises.length,
-      convocations: 3,
-      syncStatus: '100%'
-    };
-  }
-  
-  async addExpertise(expertiseData) {
-    // Ajouter à l'agenda
-    this.data.agenda.push(expertiseData);
-    await this.save();
-    console.log('✅ Expertise ajoutée:', expertiseData.patronyme);
-  }
-  
-  async exportDatabase() {
-    return {
-      ...this.data,
-      metadata: {
-        ...this.data.metadata,
-        exportTime: new Date().toISOString(),
-        lastSync: Date.now()
-      }
-    };
-  }
-  
-  async importDatabase(newData) {
-    this.data = {
-      ...newData,
-      metadata: {
-        ...newData.metadata,
-        importTime: new Date().toISOString(),
-        lastSync: Date.now()
-      }
-    };
-    await this.save();
-    console.log('✅ Base de données importée');
-  }
+  window.DataManager = DataManager; // Assurer la disponibilité globale
 }
 
-class SyncManager {
-  constructor(dataManager) {
-    this.dataManager = dataManager;
+if (typeof SyncManager === 'undefined') {
+  class SyncManager {
+    constructor(dataManager) {
+      this.dataManager = dataManager;
+    }
+    
+    async initialize() {
+      console.log('🔄 SyncManager (fallback) initialisé');
+    }
+    
+    async performSync() {
+      console.log('🔄 Synchronisation en cours...');
+    }
   }
-  
-  async initialize() {
-    console.log('🔄 SyncManager initialisé');
-  }
-  
-  async performSync() {
-    console.log('🔄 Synchronisation en cours...');
-  }
+  window.SyncManager = SyncManager; // Assurer la disponibilité globale
 }
 
-class NotificationManager {
-  async initialize() {
-    console.log('🔔 NotificationManager initialisé');
+if (typeof NotificationManager === 'undefined') {
+  class NotificationManager {
+    async initialize() {
+      console.log('🔔 NotificationManager (fallback) initialisé');
+    }
+    
+    showToast(message, type = 'info', options = {}) {
+      console.log(`🍞 Toast: ${message} (${type})`);
+    }
   }
-  
-  showToast(message, type = 'info', options = {}) {
-    console.log(`🍞 Toast: ${message} (${type})`);
-  }
+  window.NotificationManager = NotificationManager; // Assurer la disponibilité globale
 }
 
-class AnimationEngine {
-  constructor(device) {
-    this.device = device;
+if (typeof AnimationEngine === 'undefined') {
+  class AnimationEngine {
+    constructor(device) {
+      this.device = device;
+    }
+    
+    async initialize() {
+      console.log('🎬 AnimationEngine (fallback) initialisé');
+    }
+    
+    activate() {
+      console.log('🎬 Animations activées');
+    }
+    
+    activateInteractions() {
+      console.log('🎬 Interactions activées');
+    }
+    
+    async fadeOut(element) {
+      element.style.transition = 'opacity 0.3s ease';
+      element.style.opacity = '0';
+      return new Promise(resolve => setTimeout(resolve, 300));
+    }
+    
+    async slideIn(element) {
+      element.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      element.style.transform = 'translateX(0)';
+      element.style.opacity = '1';
+      return new Promise(resolve => setTimeout(resolve, 300));
+    }
+    
+    animateNavSelection(item) {
+      console.log('🎬 Animation nav selection');
+    }
+    
+    createRippleEffect(element, event) {
+      console.log('🎬 Effet ripple créé');
+    }
+    
+    animateCounter(element) {
+      console.log('🎬 Animation compteur');
+    }
   }
-  
-  async initialize() {
-    console.log('🎬 AnimationEngine initialisé');
-  }
-  
-  activate() {
-    console.log('🎬 Animations activées');
-  }
-  
-  activateInteractions() {
-    console.log('🎬 Interactions activées');
-  }
-  
-  async fadeOut(element) {
-    element.style.transition = 'opacity 0.3s ease';
-    element.style.opacity = '0';
-    return new Promise(resolve => setTimeout(resolve, 300));
-  }
-  
-  async slideIn(element) {
-    element.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-    element.style.transform = 'translateX(0)';
-    element.style.opacity = '1';
-    return new Promise(resolve => setTimeout(resolve, 300));
-  }
-  
-  animateNavSelection(item) {
-    console.log('🎬 Animation nav selection');
-  }
-  
-  createRippleEffect(element, event) {
-    console.log('🎬 Effet ripple créé');
-  }
-  
-  animateCounter(element) {
-    console.log('🎬 Animation compteur');
-  }
+  window.AnimationEngine = AnimationEngine; // Assurer la disponibilité globale
 }
 
 /* ============================================
