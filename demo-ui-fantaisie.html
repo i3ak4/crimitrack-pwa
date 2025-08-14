@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrimiTrack UI Fantaisie - Démo</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-section {
+            padding: 2rem;
+            margin: 1rem 0;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .demo-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        .demo-cards {
+            display: grid;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .code-example {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>CrimiTrack UI Fantaisie - Démo</h1>
+        </header>
+
+        <main style="padding: 2rem;">
+            <div class="demo-section">
+                <h2>🎯 Micro-interactions des boutons</h2>
+                <p>Cliquez sur les boutons pour voir les effets ripple et les animations de hover.</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary">Bouton Principal</button>
+                    <button class="btn btn-secondary">Bouton Secondaire</button>
+                    <button class="btn-icon" title="Action rapide">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                    </button>
+                    <button class="btn btn-primary" onclick="window.celebrateButton(this)">
+                        Célébration
+                    </button>
+                </div>
+                <div class="code-example">
+                    // Effet ripple automatique au clic<br>
+                    // Animation de célébration :<br>
+                    window.celebrateButton(buttonElement);
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h2>🎉 Notifications de succès</h2>
+                <p>Notifications élégantes avec animations et confettis.</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary" onclick="window.showSuccessToast('Expertise ajoutée avec succès !')">
+                        Notification Succès
+                    </button>
+                    <button class="btn btn-primary" onclick="window.showSuccessToast('Document généré !'); setTimeout(() => window.showSuccessToast('Sauvegarde automatique'), 1000)">
+                        Multiple Notifications
+                    </button>
+                </div>
+                <div class="code-example">
+                    // Afficher une notification de succès :<br>
+                    window.showSuccessToast('Message de succès');
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h2>📱 Cartes d'expertise interactives</h2>
+                <p>Cartes avec animations de sélection, hover effects et transitions fluides.</p>
+                <div class="demo-cards">
+                    <div class="expertise-card">
+                        <div class="card-header">
+                            <div class="card-title">Dupont Martin</div>
+                            <span class="card-badge badge-programmee">Programmée</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-info">
+                                <strong>Date:</strong> 15/08/2025
+                            </div>
+                            <div class="card-info">
+                                <strong>Lieu:</strong> Cabinet
+                            </div>
+                            <div class="card-info">
+                                <strong>Magistrat:</strong> Mme Dubois
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expertise-card">
+                        <div class="card-header">
+                            <div class="card-title">Moreau Julie</div>
+                            <span class="card-badge badge-attente">En attente</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-info">
+                                <strong>Date:</strong> À définir
+                            </div>
+                            <div class="card-info">
+                                <strong>Tribunal:</strong> Paris
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expertise-card">
+                        <div class="card-header">
+                            <div class="card-title">Bernard Paul</div>
+                            <span class="card-badge badge-realisee">Réalisée</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-info">
+                                <strong>Date:</strong> 10/08/2025
+                            </div>
+                            <div class="card-info">
+                                <strong>Rapport:</strong> Envoyé
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="code-example">
+                    // Animation automatique de sélection au clic<br>
+                    // Effets de hover avec glassmorphism<br>
+                    // Transitions staggered pour les nouvelles cartes
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h2>⏳ États de chargement</h2>
+                <p>Skeleton screens et overlays de chargement élégants.</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary" onclick="demoSkeleton()">
+                        Skeleton Screen
+                    </button>
+                    <button class="btn btn-primary" onclick="demoLoadingOverlay()">
+                        Loading Overlay
+                    </button>
+                </div>
+                <div id="skeleton-demo" class="demo-cards">
+                    <!-- Le contenu sera remplacé par le skeleton -->
+                </div>
+                <div class="code-example">
+                    // Afficher skeleton pendant le chargement :<br>
+                    window.showSkeleton(container);<br>
+                    // Puis remplacer par le contenu :<br>
+                    window.hideSkeleton(container, content);
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h2>🪟 Modales animées</h2>
+                <p>Modales avec glassmorphism, blur effects et animations fluides.</p>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary" onclick="openDemoModal()">
+                        Ouvrir Modale
+                    </button>
+                </div>
+                <div class="code-example">
+                    // Ouverture et fermeture avec animations<br>
+                    // Support de l'échap et clic sur backdrop<br>
+                    // Effet glassmorphism avec blur
+                </div>
+            </div>
+        </main>
+
+        <!-- Modale de démo -->
+        <div id="demo-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Modale de démonstration</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Cette modale démontre les animations élégantes :</p>
+                    <ul>
+                        <li>✨ Transition d'ouverture avec blur progressif</li>
+                        <li>🎭 Animation du backdrop avec glassmorphism</li>
+                        <li>🎯 Fermeture fluide avec échap ou clic extérieur</li>
+                        <li>💫 Bouton de fermeture avec micro-interaction</li>
+                    </ul>
+                    <div class="demo-buttons">
+                        <button class="btn btn-primary" onclick="window.showSuccessToast('Action exécutée depuis la modale !')">
+                            Action
+                        </button>
+                        <button class="btn btn-secondary modal-close">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="ui-fantaisie.js"></script>
+    <script>
+        // Fonctions de démonstration
+        function demoSkeleton() {
+            const container = document.getElementById('skeleton-demo');
+            window.showSkeleton(container);
+            
+            setTimeout(() => {
+                const content = `
+                    <div class="expertise-card">
+                        <div class="card-header">
+                            <div class="card-title">Nouvelle Expertise</div>
+                            <span class="card-badge badge-programmee">Chargée</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-info"><strong>Statut:</strong> Données chargées avec succès</div>
+                        </div>
+                    </div>
+                `;
+                window.hideSkeleton(container, content);
+                window.showSuccessToast('Données chargées !');
+            }, 2000);
+        }
+
+        function demoLoadingOverlay() {
+            const section = document.querySelector('.demo-section:last-child');
+            const overlay = window.showLoadingOverlay(section);
+            
+            setTimeout(() => {
+                window.hideLoadingOverlay(overlay);
+                window.showSuccessToast('Opération terminée !');
+            }, 2000);
+        }
+
+        function openDemoModal() {
+            const modal = document.getElementById('demo-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        // Notification de bienvenue
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                window.showSuccessToast('Bienvenue dans CrimiTrack UI Fantaisie ! ✨');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

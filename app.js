@@ -1026,7 +1026,7 @@ class CrimiTrackApp {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-  showNotification(message, type = 'info') {
+  showNotification(message, type = 'success') {
     // Créer une notification temporaire
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
