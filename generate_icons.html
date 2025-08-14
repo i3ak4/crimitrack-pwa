@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Générateur d'icônes CrimiTrack</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        #canvas-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .icon-preview {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            display: block;
+            margin: 10px auto;
+        }
+        button {
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #3a5582;
+        }
+        #instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions">
+        <h1>🎨 Générateur d'icônes CrimiTrack PWA</h1>
+        <p>Cliquez sur "Générer toutes les icônes" puis téléchargez chaque icône en cliquant sur le bouton correspondant.</p>
+        <button onclick="generateAllIcons()">Générer toutes les icônes</button>
+    </div>
+    
+    <div id="canvas-container"></div>
+
+    <script>
+        const iconSizes = [
+            { size: 512, name: 'icon-512.png', hasText: true },
+            { size: 192, name: 'icon-192.png', hasText: true },
+            { size: 180, name: 'apple-touch-icon.png', hasText: false },
+            { size: 167, name: 'icon-167.png', hasText: false },
+            { size: 152, name: 'icon-152.png', hasText: false },
+            { size: 144, name: 'icon-144.png', hasText: false },
+            { size: 120, name: 'icon-120.png', hasText: false },
+            { size: 32, name: 'favicon-32.png', hasText: false },
+            { size: 16, name: 'favicon-16.png', hasText: false }
+        ];
+
+        function drawLogo(ctx, size, includeText = true) {
+            const scale = size / 512;
+            ctx.scale(scale, scale);
+            
+            // Fond blanc avec bordure
+            ctx.fillStyle = '#f7f9fc';
+            ctx.beginPath();
+            ctx.arc(256, 256, 240, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Bordure
+            ctx.strokeStyle = '#4a6fa5';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // Balance de la Justice
+            ctx.save();
+            ctx.translate(256, includeText ? 256 : 280);
+            if (!includeText) ctx.scale(1.3, 1.3);
+            
+            // Tige centrale de la balance
+            ctx.fillStyle = '#8da7cd';
+            ctx.fillRect(-4, -120, 8, 180);
+            
+            // Bras de la balance
+            ctx.fillRect(-120, -100, 240, 8);
+            
+            // Plateaux
+            ctx.strokeStyle = '#8da7cd';
+            ctx.lineWidth = 3;
+            // Plateau gauche
+            ctx.beginPath();
+            ctx.moveTo(-120, -96);
+            ctx.lineTo(-140, -60);
+            ctx.lineTo(-100, -60);
+            ctx.closePath();
+            ctx.stroke();
+            
+            ctx.fillStyle = '#8da7cd';
+            ctx.beginPath();
+            ctx.ellipse(-120, -60, 25, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Plateau droit
+            ctx.beginPath();
+            ctx.moveTo(120, -96);
+            ctx.lineTo(100, -60);
+            ctx.lineTo(140, -60);
+            ctx.closePath();
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.ellipse(120, -60, 25, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Base
+            ctx.fillStyle = '#8da7cd';
+            ctx.fillRect(-60, 55, 120, 10);
+            ctx.fillRect(-40, 65, 80, 8);
+            
+            ctx.restore();
+            
+            // Caducée médical
+            ctx.save();
+            ctx.translate(256, includeText ? 256 : 280);
+            if (!includeText) ctx.scale(1.3, 1.3);
+            
+            // Bâton central
+            const gradient = ctx.createLinearGradient(0, -90, 0, 60);
+            gradient.addColorStop(0, '#4a6fa5');
+            gradient.addColorStop(0.5, '#5c8ed8');
+            gradient.addColorStop(1, '#3a5582');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(-6, -90, 12, 150);
+            
+            // Serpents
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            
+            // Serpent gauche
+            ctx.beginPath();
+            ctx.moveTo(-6, -70);
+            ctx.quadraticCurveTo(-30, -50, -6, -30);
+            ctx.quadraticCurveTo(20, -10, -6, 10);
+            ctx.quadraticCurveTo(-30, 30, -6, 50);
+            ctx.stroke();
+            
+            // Serpent droit
+            ctx.beginPath();
+            ctx.moveTo(6, -70);
+            ctx.quadraticCurveTo(30, -50, 6, -30);
+            ctx.quadraticCurveTo(-20, -10, 6, 10);
+            ctx.quadraticCurveTo(30, 30, 6, 50);
+            ctx.stroke();
+            
+            // Ailes
+            ctx.fillStyle = gradient;
+            ctx.globalAlpha = 0.9;
+            
+            // Aile gauche
+            ctx.beginPath();
+            ctx.moveTo(-10, -85);
+            ctx.quadraticCurveTo(-45, -95, -60, -85);
+            ctx.quadraticCurveTo(-55, -70, -35, -65);
+            ctx.quadraticCurveTo(-40, -55, -30, -50);
+            ctx.quadraticCurveTo(-15, -55, -10, -70);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Aile droite
+            ctx.beginPath();
+            ctx.moveTo(10, -85);
+            ctx.quadraticCurveTo(45, -95, 60, -85);
+            ctx.quadraticCurveTo(55, -70, 35, -65);
+            ctx.quadraticCurveTo(40, -55, 30, -50);
+            ctx.quadraticCurveTo(15, -55, 10, -70);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.globalAlpha = 1;
+            
+            // Têtes de serpent
+            ctx.beginPath();
+            ctx.ellipse(-18, -75, 8, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(18, -75, 8, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Yeux
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(-20, -77, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(20, -77, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+            
+            // Texte si nécessaire
+            if (includeText && size >= 180) {
+                ctx.fillStyle = '#4a6fa5';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('CrimiTrack', 256, 440);
+                
+                ctx.fillStyle = '#6b8bb9';
+                ctx.font = '24px Arial';
+                ctx.fillText('PWA', 256, 470);
+            }
+        }
+
+        function generateIcon(size, name, hasText) {
+            const container = document.createElement('div');
+            container.className = 'icon-preview';
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            
+            const ctx = canvas.getContext('2d');
+            drawLogo(ctx, size, hasText);
+            
+            const title = document.createElement('h3');
+            title.textContent = `${name} (${size}x${size})`;
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = `Télécharger ${name}`;
+            downloadBtn.onclick = () => {
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = name;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+            };
+            
+            container.appendChild(title);
+            container.appendChild(canvas);
+            container.appendChild(downloadBtn);
+            
+            return container;
+        }
+
+        function generateAllIcons() {
+            const container = document.getElementById('canvas-container');
+            container.innerHTML = '';
+            
+            iconSizes.forEach(({ size, name, hasText }) => {
+                const iconElement = generateIcon(size, name, hasText);
+                container.appendChild(iconElement);
+            });
+        }
+    </script>
+</body>
+</html>

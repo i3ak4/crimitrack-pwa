@@ -1,11 +1,32 @@
 {
   "name": "CrimiTrack Portable",
   "short_name": "CrimiTrack",
-  "description": "Application de suivi d'expertises judiciaires et publipostage",
+  "description": "Application de gestion d'expertises médico-judiciaires",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2c3e50",
+  "background_color": "#f7f9fc",
+  "theme_color": "#4a6fa5",
   "orientation": "any",
-  "icons": []
+  "icons": [
+    {
+      "src": "logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["medical", "productivity", "utilities"],
+  "lang": "fr-FR"
 }

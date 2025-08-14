@@ -1,0 +1,2 @@
+Les icônes doivent être générées via le fichier generate_icons.html ou create_basic_icons.html
+Ouvrez l'un de ces fichiers dans votre navigateur pour créer les icônes PNG.

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Créer icônes de base</title>
+</head>
+<body>
+    <h1>Création automatique des icônes</h1>
+    <div id="status"></div>
+    
+    <script>
+        function drawIcon(size, hasText = false) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            const scale = size / 512;
+            ctx.scale(scale, scale);
+            
+            // Fond
+            ctx.fillStyle = '#f7f9fc';
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Cercle
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(256, 256, 230, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#4a6fa5';
+            ctx.lineWidth = 8;
+            ctx.stroke();
+            
+            // Position centrale
+            const centerY = hasText ? 256 : 280;
+            const scaleIcon = hasText ? 1 : 1.3;
+            
+            // Balance simplifiée
+            ctx.save();
+            ctx.translate(256, centerY);
+            ctx.scale(scaleIcon, scaleIcon);
+            
+            ctx.strokeStyle = '#8da7cd';
+            ctx.lineWidth = 12;
+            ctx.lineCap = 'round';
+            
+            // Tige verticale
+            ctx.beginPath();
+            ctx.moveTo(0, -100);
+            ctx.lineTo(0, 60);
+            ctx.stroke();
+            
+            // Bras horizontal
+            ctx.beginPath();
+            ctx.moveTo(-100, -80);
+            ctx.lineTo(100, -80);
+            ctx.stroke();
+            
+            // Plateaux
+            ctx.beginPath();
+            ctx.moveTo(-100, -80);
+            ctx.lineTo(-100, -40);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(100, -80);
+            ctx.lineTo(100, -40);
+            ctx.stroke();
+            
+            ctx.restore();
+            
+            // Caducée simplifié
+            ctx.save();
+            ctx.translate(256, centerY);
+            ctx.scale(scaleIcon, scaleIcon);
+            
+            ctx.strokeStyle = '#4a6fa5';
+            ctx.lineWidth = 14;
+            ctx.lineCap = 'round';
+            
+            // Bâton central
+            ctx.beginPath();
+            ctx.moveTo(0, -80);
+            ctx.lineTo(0, 50);
+            ctx.stroke();
+            
+            // Serpent en S
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.moveTo(-20, -60);
+            ctx.quadraticCurveTo(20, -40, -20, -20);
+            ctx.quadraticCurveTo(20, 0, -20, 20);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(20, -60);
+            ctx.quadraticCurveTo(-20, -40, 20, -20);
+            ctx.quadraticCurveTo(-20, 0, 20, 20);
+            ctx.stroke();
+            
+            // Ailes simplifiées
+            ctx.fillStyle = '#4a6fa5';
+            ctx.beginPath();
+            ctx.moveTo(-15, -75);
+            ctx.quadraticCurveTo(-40, -85, -45, -70);
+            ctx.quadraticCurveTo(-35, -60, -15, -65);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(15, -75);
+            ctx.quadraticCurveTo(40, -85, 45, -70);
+            ctx.quadraticCurveTo(35, -60, 15, -65);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+            
+            // Texte
+            if (hasText && size >= 180) {
+                ctx.fillStyle = '#4a6fa5';
+                ctx.font = 'bold 42px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('CrimiTrack', 256, 440);
+                
+                ctx.font = '20px Arial';
+                ctx.fillText('PWA', 256, 465);
+            }
+            
+            return canvas;
+        }
+        
+        // Créer les icônes
+        const icons = [
+            { size: 192, name: 'icon-192.png', hasText: true },
+            { size: 512, name: 'icon-512.png', hasText: true }
+        ];
+        
+        const status = document.getElementById('status');
+        
+        icons.forEach(({ size, name, hasText }) => {
+            const canvas = drawIcon(size, hasText);
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = name;
+                a.textContent = `Télécharger ${name}`;
+                a.style.display = 'block';
+                a.style.margin = '10px';
+                status.appendChild(a);
+            });
+        });
+        
+        status.innerHTML += '<p>Cliquez sur les liens pour télécharger les icônes, puis placez-les dans le dossier "icons"</p>';
+    </script>
+</body>
+</html>

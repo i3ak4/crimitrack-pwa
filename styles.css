@@ -69,11 +69,22 @@ body {
   z-index: 100;
 }
 
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-logo svg {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
 .app-header h1 {
   font-size: 1.5rem;
   color: #ffffff;
   font-weight: 600;
   letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .header-actions {
