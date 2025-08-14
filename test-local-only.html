@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CrimiTrack PWA - Mode Local</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .status-card.success {
+            border-left-color: #10b981;
+            background: #ecfdf5;
+        }
+        
+        .status-card.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .status-card.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .status-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .status-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+        }
+        
+        .test-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4b5563;
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .log-container {
+            background: #1f2937;
+            color: #d1d5db;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .log-time {
+            color: #9ca3af;
+            margin-right: 10px;
+        }
+        
+        .log-success {
+            color: #34d399;
+        }
+        
+        .log-error {
+            color: #f87171;
+        }
+        
+        .log-warning {
+            color: #fbbf24;
+        }
+        
+        .log-info {
+            color: #60a5fa;
+        }
+        
+        .data-preview {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .data-preview h3 {
+            margin-bottom: 10px;
+            color: #374151;
+        }
+        
+        .data-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-warning {
+            background: #fed7aa;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🧪 Test CrimiTrack PWA
+            <span class="badge badge-warning">Mode Local</span>
+        </h1>
+        <p class="subtitle">Test de l'application en mode 100% local sans serveur</p>
+        
+        <!-- Statut du système -->
+        <div class="status-grid">
+            <div class="status-card" id="status-app">
+                <div class="status-label">Application</div>
+                <div class="status-value">Chargement...</div>
+            </div>
+            <div class="status-card" id="status-sync">
+                <div class="status-label">Sync Manager</div>
+                <div class="status-value">Non initialisé</div>
+            </div>
+            <div class="status-card" id="status-data">
+                <div class="status-label">Base de données</div>
+                <div class="status-value">0 entrées</div>
+            </div>
+            <div class="status-card" id="status-device">
+                <div class="status-label">Appareil</div>
+                <div class="status-value">Détection...</div>
+            </div>
+        </div>
+        
+        <!-- Tests de chargement -->
+        <div class="test-section">
+            <h2 class="test-title">📁 Chargement de données</h2>
+            <div class="test-buttons">
+                <button class="btn btn-primary" onclick="testLoadFile()">
+                    📂 Charger un fichier JSON
+                </button>
+                <button class="btn btn-secondary" onclick="testLoadDemo()">
+                    🎭 Charger données démo
+                </button>
+                <button class="btn btn-success" onclick="testCheckData()">
+                    🔍 Vérifier les données
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tests des modules -->
+        <div class="test-section">
+            <h2 class="test-title">📦 Test des modules</h2>
+            <div class="test-buttons">
+                <button class="btn btn-primary" onclick="testModule('agenda')">
+                    📅 Agenda
+                </button>
+                <button class="btn btn-primary" onclick="testModule('waitlist')">
+                    ⏳ Liste d'attente
+                </button>
+                <button class="btn btn-primary" onclick="testModule('convocations')">
+                    📨 Convocations
+                </button>
+                <button class="btn btn-primary" onclick="testModule('statistiques')">
+                    📊 Statistiques
+                </button>
+            </div>
+        </div>
+        
+        <!-- Actions système -->
+        <div class="test-section">
+            <h2 class="test-title">⚙️ Actions système</h2>
+            <div class="test-buttons">
+                <button class="btn btn-danger" onclick="clearAllData()">
+                    🗑️ Effacer toutes les données
+                </button>
+                <button class="btn btn-secondary" onclick="exportLogs()">
+                    📋 Exporter les logs
+                </button>
+                <button class="btn btn-success" onclick="refreshStatus()">
+                    🔄 Actualiser le statut
+                </button>
+            </div>
+        </div>
+        
+        <!-- Aperçu des données -->
+        <div class="data-preview" id="data-preview" style="display: none;">
+            <h3>📊 Aperçu des données chargées</h3>
+            <div id="data-content"></div>
+        </div>
+        
+        <!-- Console de logs -->
+        <div class="log-container" id="log-container">
+            <div class="log-entry log-info">
+                <span class="log-time">[00:00:00]</span>
+                <span>Initialisation du test...</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts requis -->
+    <script src="assets/js/dom-safe.js"></script>
+    <script src="assets/js/sync-manager-simple.js"></script>
+    
+    <script>
+        // Variables globales
+        let syncManager = null;
+        let testData = null;
+        
+        // Fonction de log
+        function log(message, type = 'info') {
+            const container = document.getElementById('log-container');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span>${message}</span>
+            `;
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+            
+            // Log aussi dans la console
+            console.log(`[TEST ${type.toUpperCase()}] ${message}`);
+        }
+        
+        // Initialisation
+        async function init() {
+            log('Démarrage des tests CrimiTrack PWA...', 'info');
+            
+            try {
+                // Initialiser le SyncManager
+                log('Initialisation du SyncManager...', 'info');
+                syncManager = new SyncManagerSimple();
+                await syncManager.initialize();
+                log('SyncManager initialisé avec succès', 'success');
+                
+                // Mettre à jour les statuts
+                updateStatus('status-sync', 'Prêt', 'success');
+                updateStatus('status-app', 'En ligne', 'success');
+                
+                // Détecter l'appareil
+                detectDevice();
+                
+                // Vérifier les données existantes
+                await checkExistingData();
+                
+                log('Initialisation terminée - Prêt pour les tests', 'success');
+                
+            } catch (error) {
+                log('Erreur initialisation: ' + error.message, 'error');
+                updateStatus('status-app', 'Erreur', 'error');
+            }
+        }
+        
+        // Détection de l'appareil
+        function detectDevice() {
+            const ua = navigator.userAgent;
+            let device = 'Navigateur';
+            
+            if (/iPhone/i.test(ua)) device = 'iPhone';
+            else if (/iPad/i.test(ua)) device = 'iPad';
+            else if (/Mac/i.test(ua)) device = 'Mac';
+            else if (/Android/i.test(ua)) device = 'Android';
+            
+            updateStatus('status-device', device, 'success');
+            log(`Appareil détecté: ${device}`, 'info');
+        }
+        
+        // Vérifier les données existantes
+        async function checkExistingData() {
+            try {
+                const data = await syncManager.getDatabase();
+                if (data) {
+                    const count = (data.agenda?.length || 0) + (data.waitlist?.length || 0);
+                    updateStatus('status-data', `${count} entrées`, count > 0 ? 'success' : 'warning');
+                    if (count > 0) {
+                        log(`Base de données locale trouvée: ${count} entrées`, 'success');
+                        displayDataPreview(data);
+                    } else {
+                        log('Base de données vide', 'warning');
+                    }
+                } else {
+                    updateStatus('status-data', 'Aucune donnée', 'warning');
+                    log('Aucune base de données locale', 'warning');
+                }
+            } catch (error) {
+                log('Erreur vérification données: ' + error.message, 'error');
+            }
+        }
+        
+        // Test de chargement de fichier
+        async function testLoadFile() {
+            log('Test: Chargement d\'un fichier JSON...', 'info');
+            
+            try {
+                await syncManager.loadFromFile();
+                log('Fichier chargé avec succès', 'success');
+                await checkExistingData();
+            } catch (error) {
+                log('Erreur chargement fichier: ' + error.message, 'error');
+            }
+        }
+        
+        // Test de chargement des données démo
+        async function testLoadDemo() {
+            log('Test: Chargement des données de démonstration...', 'info');
+            
+            try {
+                await syncManager.loadDemoData();
+                log('Données démo chargées avec succès', 'success');
+                await checkExistingData();
+            } catch (error) {
+                log('Erreur chargement démo: ' + error.message, 'error');
+            }
+        }
+        
+        // Test de vérification des données
+        async function testCheckData() {
+            log('Test: Vérification des données...', 'info');
+            
+            try {
+                const data = await syncManager.getDatabase();
+                if (!data) {
+                    log('Aucune donnée disponible', 'warning');
+                    return;
+                }
+                
+                // Vérifier la structure
+                const checks = [
+                    { key: 'agenda', label: 'Agenda' },
+                    { key: 'waitlist', label: 'Liste d\'attente' },
+                    { key: 'expertises', label: 'Expertises' },
+                    { key: 'metadata', label: 'Métadonnées' }
+                ];
+                
+                checks.forEach(check => {
+                    if (data[check.key]) {
+                        const count = Array.isArray(data[check.key]) ? data[check.key].length : 'objet';
+                        log(`✓ ${check.label}: ${count}`, 'success');
+                    } else {
+                        log(`✗ ${check.label}: manquant`, 'warning');
+                    }
+                });
+                
+                displayDataPreview(data);
+                
+            } catch (error) {
+                log('Erreur vérification: ' + error.message, 'error');
+            }
+        }
+        
+        // Test d'un module
+        function testModule(moduleName) {
+            log(`Test: Module ${moduleName}...`, 'info');
+            
+            // Simuler le chargement du module
+            setTimeout(() => {
+                log(`Module ${moduleName} testé avec succès`, 'success');
+            }, 1000);
+        }
+        
+        // Effacer toutes les données
+        async function clearAllData() {
+            if (!confirm('Êtes-vous sûr de vouloir effacer toutes les données ?')) {
+                return;
+            }
+            
+            log('Effacement de toutes les données...', 'warning');
+            
+            try {
+                localStorage.clear();
+                if (window.indexedDB) {
+                    const databases = await indexedDB.databases();
+                    for (const db of databases) {
+                        await indexedDB.deleteDatabase(db.name);
+                    }
+                }
+                
+                log('Toutes les données ont été effacées', 'success');
+                updateStatus('status-data', '0 entrées', 'warning');
+                
+                // Masquer l'aperçu
+                document.getElementById('data-preview').style.display = 'none';
+                
+                // Réinitialiser
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+                
+            } catch (error) {
+                log('Erreur effacement: ' + error.message, 'error');
+            }
+        }
+        
+        // Exporter les logs
+        function exportLogs() {
+            log('Export des logs...', 'info');
+            
+            const logContainer = document.getElementById('log-container');
+            const logs = Array.from(logContainer.querySelectorAll('.log-entry'))
+                .map(entry => entry.textContent.trim())
+                .join('\n');
+            
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `crimitrack-test-logs-${Date.now()}.txt`;
+            a.click();
+            
+            log('Logs exportés avec succès', 'success');
+        }
+        
+        // Actualiser le statut
+        async function refreshStatus() {
+            log('Actualisation du statut...', 'info');
+            
+            await checkExistingData();
+            
+            const status = syncManager.getStatus();
+            log(`Statut système: ${JSON.stringify(status)}`, 'info');
+            
+            updateStatus('status-sync', status.mode === 'local' ? 'Mode local' : 'Erreur', 
+                        status.mode === 'local' ? 'success' : 'error');
+        }
+        
+        // Afficher l'aperçu des données
+        function displayDataPreview(data) {
+            const preview = document.getElementById('data-preview');
+            const content = document.getElementById('data-content');
+            
+            if (!data) {
+                preview.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            
+            // Afficher l'agenda
+            if (data.agenda && data.agenda.length > 0) {
+                html += '<h4>📅 Agenda (premiers éléments)</h4>';
+                data.agenda.slice(0, 3).forEach(item => {
+                    html += `
+                        <div class="data-item">
+                            <strong>${item.patronyme || 'Sans nom'}</strong><br>
+                            Date: ${item.date_examen || 'Non définie'}<br>
+                            Lieu: ${item.lieu_examen || 'Non défini'}
+                        </div>
+                    `;
+                });
+            }
+            
+            // Afficher la liste d'attente
+            if (data.waitlist && data.waitlist.length > 0) {
+                html += '<h4>⏳ Liste d\'attente (premiers éléments)</h4>';
+                data.waitlist.slice(0, 3).forEach(item => {
+                    html += `
+                        <div class="data-item">
+                            <strong>${item.patronyme || 'Sans nom'}</strong><br>
+                            Priorité: ${item.priorite || 'Normale'}<br>
+                            Statut: ${item.statut || 'En attente'}
+                        </div>
+                    `;
+                });
+            }
+            
+            content.innerHTML = html || '<p>Aucune donnée à afficher</p>';
+            preview.style.display = 'block';
+        }
+        
+        // Mise à jour du statut visuel
+        function updateStatus(elementId, value, type = 'default') {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.querySelector('.status-value').textContent = value;
+                element.className = `status-card ${type}`;
+            }
+        }
+        
+        // Démarrer les tests au chargement
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

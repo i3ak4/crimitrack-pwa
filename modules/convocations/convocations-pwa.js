@@ -160,7 +160,10 @@ class ConvocationsPWA {
   
   renderConvocationsList(data) {
     const contentContainer = document.getElementById('convocations-content');
-    if (!contentContainer) return;
+    if (!contentContainer) {
+      console.warn('Element convocations-content non trouvé');
+      return;
+    }
     
     if (!data || data.length === 0) {
       contentContainer.innerHTML = `

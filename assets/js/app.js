@@ -27,6 +27,10 @@ class CrimiTrackPWA {
     this.notificationManager = null;
     this.animationEngine = null;
     
+    // Mode local uniquement - pas de serveur
+    this.offlineMode = true;
+    this.serverRequired = false;
+    
     // Éléments DOM principaux
     this.elements = {};
     
@@ -219,8 +223,8 @@ class CrimiTrackPWA {
       // Afficher le statut des données
       await this.showDatabaseStatus();
       
-      // Sync Manager - Synchronisation iCloud/serveur (sans paramètre dataManager car il l'obtient autrement)
-      this.syncManager = new window.SyncManager();
+      // Sync Manager Simple - Mode local uniquement, pas de serveur
+      this.syncManager = new window.SyncManagerSimple();
       await this.syncManager.initialize();
       
       // Connection Manager - Gestion de la connectivité
@@ -259,7 +263,7 @@ class CrimiTrackPWA {
   verifyManagerClasses() {
     const requiredClasses = [
       'RealDataManager',
-      'SyncManager', 
+      'SyncManagerSimple', 
       'ConnectionManager',
       'OfflineManager',
       'LogManager',
@@ -280,10 +284,10 @@ class CrimiTrackPWA {
     console.log('🔄 Utilisation des gestionnaires de fallback...');
     
     // Gestionnaires simplifiés pour éviter les crashes
-    this.dataManager = this.dataManager || new DataManager();
-    this.syncManager = this.syncManager || new SyncManager();
-    this.notificationManager = this.notificationManager || new NotificationManager();
-    this.animationEngine = this.animationEngine || new AnimationEngine(this.device);
+    this.dataManager = this.dataManager || { getStatus: () => ({ counts: { expertises: 0 } }) };
+    this.syncManager = this.syncManager || new window.SyncManagerSimple();
+    this.notificationManager = this.notificationManager || { showToast: () => {} };
+    this.animationEngine = this.animationEngine || { activate: () => {}, initialize: () => {} };
   }
   
   async setupUI() {
