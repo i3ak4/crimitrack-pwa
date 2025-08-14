@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Buttons - CrimiTrack PWA</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status.ok { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .button-test {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #7c3aed;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #6d28d9;
+        }
+        .log {
+            background: #1a202c;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test des Boutons - CrimiTrack PWA</h1>
+        <p style="color: #666;">Version 5.1.0 - Test d'événements</p>
+        
+        <div class="test-section">
+            <h2>Test 1: Boutons d'Actions Rapides <span id="status1" class="status">En attente</span></h2>
+            <div class="button-test">
+                <button class="quick-action" data-action="new-patient">Nouveau Patient</button>
+                <button class="quick-action" data-action="search">Rechercher</button>
+                <button class="quick-action" data-action="export">Exporter</button>
+            </div>
+            <div id="log1" class="log"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 2: Cartes d'Actions Dashboard <span id="status2" class="status">En attente</span></h2>
+            <div class="button-test">
+                <button class="action-card" data-action="nouvelle-mission">Nouvelle Mission</button>
+                <button class="action-card" data-action="charger-db">Charger Base</button>
+                <button class="action-card" data-action="sauvegarder-db">Sauvegarder</button>
+            </div>
+            <div id="log2" class="log"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test 3: Test Direct Click <span id="status3" class="status">En attente</span></h2>
+            <button onclick="testDirectClick()">Test Click Direct</button>
+            <button id="test-listener">Test avec Listener</button>
+            <div id="log3" class="log"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Résultats Globaux</h2>
+            <div id="global-log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(logId, message, type = 'info') {
+            const logEl = document.getElementById(logId);
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.style.color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6';
+            entry.textContent = `[${time}] ${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function globalLog(message, type = 'info') {
+            log('global-log', message, type);
+        }
+
+        // Test 1: Quick Actions
+        document.addEventListener('click', (e) => {
+            const quickAction = e.target.closest('.quick-action');
+            if (quickAction) {
+                e.preventDefault();
+                const action = quickAction.getAttribute('data-action');
+                log('log1', `✅ Quick action cliqué: ${action}`, 'success');
+                document.getElementById('status1').className = 'status ok';
+                document.getElementById('status1').textContent = 'OK';
+                globalLog(`Quick action '${action}' fonctionne`, 'success');
+            }
+        });
+
+        // Test 2: Action Cards
+        document.addEventListener('click', (e) => {
+            const actionCard = e.target.closest('.action-card');
+            if (actionCard) {
+                e.preventDefault();
+                const action = actionCard.getAttribute('data-action');
+                log('log2', `✅ Action card cliqué: ${action}`, 'success');
+                document.getElementById('status2').className = 'status ok';
+                document.getElementById('status2').textContent = 'OK';
+                globalLog(`Action card '${action}' fonctionne`, 'success');
+            }
+        });
+
+        // Test 3: Direct Click
+        function testDirectClick() {
+            log('log3', '✅ Click direct fonctionne!', 'success');
+            document.getElementById('status3').className = 'status ok';
+            document.getElementById('status3').textContent = 'OK';
+            globalLog('Click direct fonctionne', 'success');
+        }
+
+        document.getElementById('test-listener').addEventListener('click', () => {
+            log('log3', '✅ Event listener fonctionne!', 'success');
+            document.getElementById('status3').className = 'status ok';
+            document.getElementById('status3').textContent = 'OK';
+            globalLog('Event listener fonctionne', 'success');
+        });
+
+        // Test au chargement
+        window.addEventListener('DOMContentLoaded', () => {
+            globalLog('Page chargée, tests prêts', 'info');
+            
+            // Vérifier si Safari
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            if (isSafari) {
+                globalLog('Safari détecté', 'info');
+            }
+            
+            // Vérifier si iOS
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS) {
+                globalLog('iOS détecté', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

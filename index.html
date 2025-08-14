@@ -2,13 +2,13 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#7c3aed">
     <meta name="description" content="CrimiTrack - Expertise Criminologique Mobile">
     <meta name="cache-control" content="no-cache">
-    <meta name="version" content="5.0.0-20250813">
+    <meta name="version" content="5.1.0-20250814">
     
     <title>CrimiTrack PWA - Expertise Criminologique</title>
     
@@ -107,42 +107,13 @@
             <button id="notifications" class="notifications-button glass-button" aria-label="Notifications">
                 <i class="fas fa-bell"></i>
                 <span class="notification-badge" id="notification-badge">3</span>
-                <div class="notification-tooltip">Notifications</div>
+                <span class="notification-text">Notifications</span>
             </button>
             
-            <!-- Profil utilisateur -->
-            <div class="user-profile">
-                <button class="profile-button glass-button" id="profile-button">
-                    <div class="avatar-container">
-                        <img src="../CrimiTrack/assets/img/icone.jpg" alt="Dr. Gautrelet" class="user-avatar">
-                        <div class="status-indicator online"></div>
-                    </div>
-                    <span class="username">Dr. Gautrelet</span>
-                </button>
-                <div class="profile-dropdown" id="profile-dropdown">
-                    <div class="profile-info">
-                        <img src="../CrimiTrack/assets/img/icone.jpg" alt="Dr. Gautrelet" class="profile-avatar">
-                        <div class="profile-details">
-                            <h3>Dr. Gautrelet</h3>
-                            <p>Expert Criminologue</p>
-                        </div>
-                    </div>
-                    <hr class="dropdown-divider">
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-user"></i>
-                        <span>Mon profil</span>
-                    </a>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-cog"></i>
-                        <span>Paramètres</span>
-                    </a>
-                    <hr class="dropdown-divider">
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Déconnexion</span>
-                    </a>
-                </div>
-            </div>
+            <!-- Menu paramètres simplifié -->
+            <button id="settings-menu" class="settings-button glass-button" aria-label="Paramètres">
+                <i class="fas fa-cog"></i>
+            </button>
         </div>
     </header>
 

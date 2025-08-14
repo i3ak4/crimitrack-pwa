@@ -57,11 +57,12 @@
   --desktop: 1024px;
   --wide: 1440px;
   
-  /* Z-index scale */
+  /* Z-index scale - iOS Compatible */
   --z-splash: 10000;
   --z-modal: 9000;
   --z-header: 1000;
   --z-sidebar: 900;
+  --z-sidebar-overlay: 850; /* Nouveau: spécifique pour l'overlay */
   --z-fab: 800;
   --z-dropdown: 700;
   --z-toast: 600;
@@ -269,7 +270,7 @@ body.offline {
 .header-right {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs);
 }
 
 /* Sync Status */
@@ -324,6 +325,34 @@ body.offline {
 /* Notifications */
 .notifications-button {
   position: relative;
+  min-width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: var(--gray-600);
+  font-size: 1.1rem;
+}
+
+.notification-text {
+  display: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Afficher le texte sur tablette et desktop */
+@media (min-width: 768px) {
+  .notification-text {
+    display: inline;
+  }
+}
+
+/* Bouton paramètres */
+.settings-button {
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -977,22 +1006,24 @@ body.offline {
 }
 
 /* ============================================
-   🖱️ SIDEBAR OVERLAY
+   🖱️ SIDEBAR OVERLAY - iOS TOUCH OPTIMISÉ
    ============================================ */
 
 .sidebar-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: calc(var(--z-sidebar) - 1);
+  z-index: var(--z-sidebar-overlay); /* 🎯 Z-index spécifique et sécurisé */
   opacity: 0;
   visibility: hidden;
+  pointer-events: none; /* 🎯 CRITIQUE: Empêche les clics quand inactif */
   transition: all 0.3s ease;
 }
 
 .sidebar-overlay.active {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto; /* 🎯 CRITIQUE: Autorise les clics quand actif */
 }
 
 /* ============================================

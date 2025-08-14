@@ -8,8 +8,8 @@
 class CrimiTrackPWA {
   constructor() {
     // Configuration de base
-    this.version = '4.0.0';
-    this.buildDate = '2025-08-13';
+    this.version = '5.1.0';
+    this.buildDate = '2025-08-14';
     
     // État de l'application
     this.currentModule = 'dashboard';
@@ -632,16 +632,17 @@ class CrimiTrackPWA {
   }
   
   /* ============================================
-     🧭 SYSTÈME DE NAVIGATION
+     🧭 SYSTÈME DE NAVIGATION - iOS TOUCH OPTIMISÉ
      ============================================ */
   
   setupSidebarNavigation() {
     const navItems = this.elements.sidebar.querySelectorAll('.nav-item');
     
     navItems.forEach(item => {
-      item.addEventListener('click', (e) => {
+      this.onTap(item, (e) => {
         e.preventDefault();
         const moduleName = item.getAttribute('data-module');
+        console.log(`🎯 Navigation sidebar vers: ${moduleName}`);
         this.showModule(moduleName);
         
         // Animation de sélection
@@ -654,9 +655,10 @@ class CrimiTrackPWA {
     const navItems = this.elements.bottomNav.querySelectorAll('.bottom-nav-item');
     
     navItems.forEach(item => {
-      item.addEventListener('click', (e) => {
+      this.onTap(item, (e) => {
         e.preventDefault();
         const moduleName = item.getAttribute('data-module');
+        console.log(`🎯 Navigation bottom vers: ${moduleName}`);
         this.showModule(moduleName);
         
         // Animation ripple
@@ -665,12 +667,49 @@ class CrimiTrackPWA {
     });
   }
   
+  /**
+   * 🎯 Fonction utilitaire pour gérer les événements tactiles iOS
+   * Résout le délai de 300ms et les problèmes de click fantômes
+   */
+  onTap(element, callback) {
+    let touchStartTime = 0;
+    let touchStarted = false;
+    
+    // Pour les événements tactiles (iOS)
+    element.addEventListener('touchstart', (e) => {
+      touchStartTime = Date.now();
+      touchStarted = true;
+      console.log('👆 TouchStart détecté');
+    }, { passive: true });
+    
+    element.addEventListener('touchend', (e) => {
+      if (touchStarted && (Date.now() - touchStartTime < 500)) {
+        e.preventDefault(); // Empêcher le click fantôme
+        console.log('👆 TouchEnd -> callback exécuté');
+        callback(e);
+      }
+      touchStarted = false;
+    }, { passive: false });
+    
+    // Pour les appareils non-tactiles (fallback)
+    element.addEventListener('click', (e) => {
+      if (!touchStarted && (Date.now() - touchStartTime > 100)) {
+        console.log('🖱️ Click détecté (non-touch)');
+        callback(e);
+      }
+    });
+  }
+  
   setupMobileMenu() {
-    this.elements.menuToggle.addEventListener('click', () => {
+    // Menu toggle avec onTap pour iOS
+    this.onTap(this.elements.menuToggle, () => {
+      console.log('🍔 Menu toggle activé');
       this.toggleSidebar();
     });
     
-    this.elements.sidebarOverlay.addEventListener('click', () => {
+    // Overlay avec onTap pour iOS
+    this.onTap(this.elements.sidebarOverlay, () => {
+      console.log('🫥 Overlay cliqué - fermeture sidebar');
       this.hideSidebar();
     });
   }
@@ -872,13 +911,25 @@ class CrimiTrackPWA {
      ============================================ */
   
   setupQuickActions() {
-    // Gestionnaire pour toutes les actions rapides
-    document.addEventListener('click', (e) => {
-      const actionCard = e.target.closest('.action-card');
-      if (!actionCard) return;
-      
-      const action = actionCard.getAttribute('data-action');
-      this.handleQuickAction(action);
+    // Gestionnaire pour toutes les actions rapides du dashboard avec onTap iOS
+    const actionCards = document.querySelectorAll('.action-card');
+    actionCards.forEach(actionCard => {
+      this.onTap(actionCard, (e) => {
+        const action = actionCard.getAttribute('data-action');
+        console.log(`⚡ Action rapide: ${action}`);
+        this.handleQuickAction(action);
+      });
+    });
+    
+    // Gestionnaire pour les boutons d'action rapide du header avec onTap iOS  
+    const quickActions = document.querySelectorAll('.quick-action');
+    quickActions.forEach(quickAction => {
+      this.onTap(quickAction, (e) => {
+        e.preventDefault();
+        const action = quickAction.getAttribute('data-action');
+        console.log(`⚡ Action header: ${action}`);
+        this.handleHeaderAction(action);
+      });
     });
   }
   
@@ -898,6 +949,24 @@ class CrimiTrackPWA {
         break;
       default:
         console.log(`Action non implémentée: ${action}`);
+    }
+  }
+  
+  async handleHeaderAction(action) {
+    console.log(`Exécution action header: ${action}`);
+    switch (action) {
+      case 'new-patient':
+        this.showNouvelleExpertiseModal();
+        break;
+      case 'search':
+        // Focus sur la recherche globale
+        this.elements.globalSearch?.focus();
+        break;
+      case 'export':
+        await this.sauvegarderBaseDonnees();
+        break;
+      default:
+        console.log(`Action header non implémentée: ${action}`);
     }
   }
   
@@ -1425,23 +1494,24 @@ class CrimiTrackPWA {
      ============================================ */
   
   enableMobileOptimizations() {
-    // Optimisations pour mobile
-    document.body.style.webkitUserSelect = 'none';
-    document.body.style.webkitTouchCallout = 'none';
+    // Optimisations mobiles MODÉRÉES pour iOS
+    // 🎯 CORRECTION: Appliquer seulement aux éléments texte, pas à body entier
+    const textElements = document.querySelectorAll('.brand-text, .nav-text, .stat-label, .section-title');
+    textElements.forEach(element => {
+      element.style.webkitUserSelect = 'none';
+      element.style.webkitTouchCallout = 'none';
+    });
     
-    // Désactiver le zoom sur les inputs
+    // 🎯 CORRECTION: Désactiver le zoom sur les inputs SANS modifications dynamiques du viewport
     const inputs = document.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
-      input.addEventListener('focus', () => {
-        document.querySelector('meta[name=viewport]').setAttribute('content', 
-          'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-      });
-      
-      input.addEventListener('blur', () => {
-        document.querySelector('meta[name=viewport]').setAttribute('content',
-          'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-      });
+      // Utiliser font-size 16px pour éviter le zoom automatique iOS
+      if (window.parseFloat(getComputedStyle(input).fontSize) < 16) {
+        input.style.fontSize = '16px';
+      }
     });
+    
+    console.log('📱 Optimisations mobiles iOS appliquées (version modérée)');
   }
   
   enableTouchOptimizations() {
