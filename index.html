@@ -2,936 +2,308 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#7c3aed">
-    <meta name="description" content="CrimiTrack - Expertise Criminologique Mobile">
-    <meta name="cache-control" content="no-cache">
-    <meta name="version" content="5.1.0-20250814">
-    
-    <title>CrimiTrack PWA - Expertise Criminologique</title>
-    
-    <!-- PWA Manifest -->
+    <meta name="theme-color" content="#2c3e50">
+    <title>CrimiTrack Portable</title>
     <link rel="manifest" href="manifest.json">
-    
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <link rel="apple-touch-startup-image" href="assets/images/apple-touch-icon.png">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
-    <link rel="mask-icon" href="assets/images/favicon.svg" color="#7c3aed">
-    
-    <!-- Styles PWA Optimisés -->
-    <link rel="stylesheet" href="assets/css/pwa-styles.css">
-    <link rel="stylesheet" href="assets/css/pwa-modules.css">
-    <link rel="stylesheet" href="assets/css/pwa-animations.css">
-    
-    <!-- Font Awesome pour les icônes -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Splash Screen avec Animation Fantastique -->
-    <div id="splash-screen" class="splash-screen">
-        <div class="splash-content">
-            <div class="splash-logo-container">
-                <div class="logo-circle">
-                    <i class="fas fa-balance-scale splash-icon"></i>
-                </div>
-                <div class="logo-ripple"></div>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>CrimiTrack Portable</h1>
+            <div class="header-actions">
+                <button id="import-db" class="btn-icon" title="Importer BDD">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
+                <button id="export-db" class="btn-icon" title="Exporter BDD">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </button>
+                <button id="add-entry" class="btn-icon btn-primary" title="Nouvelle entrée">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                </button>
             </div>
-            <h1 class="splash-title">CrimiTrack</h1>
-            <p class="splash-subtitle">Expertise Criminologique</p>
-            <div class="splash-loader">
-                <div class="loader-track">
-                    <div class="loader-progress"></div>
-                </div>
-            </div>
-            <p class="splash-status" id="splash-status">Initialisation de l'expertise...</p>
-        </div>
-        <div class="splash-particles">
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-        </div>
-    </div>
+        </header>
 
-    <!-- Header Adaptatif avec Micro-interactions -->
-    <header id="app-header" class="app-header">
-        <div class="header-left">
-            <button id="menu-toggle" class="menu-toggle glass-button" aria-label="Menu">
-                <div class="hamburger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <div class="menu-tooltip">Menu</div>
+        <!-- Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="agenda">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Agenda</span>
             </button>
-            <div class="app-branding">
-                <div class="brand-icon">
-                    <i class="fas fa-balance-scale"></i>
-                </div>
-                <div class="brand-text">
-                    <span class="brand-title">CrimiTrack</span>
-                    <span class="brand-subtitle">PWA</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="header-center">
-            <div class="search-container glass-panel">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" 
-                       id="global-search" 
-                       class="search-input" 
-                       placeholder="Rechercher patient, dossier..."
-                       autocomplete="off">
-                <div class="search-results" id="search-results"></div>
-            </div>
-        </div>
-        
-        <div class="header-right">
-            <!-- Indicateur de synchronisation -->
-            <div id="sync-status" class="sync-status glass-button">
-                <div class="sync-icon-container">
-                    <i class="fas fa-sync-alt sync-icon" id="sync-icon"></i>
-                    <div class="sync-progress" id="sync-progress"></div>
-                </div>
-                <span class="sync-text" id="sync-text">Synchro</span>
-                <span class="sync-badge" id="sync-badge">0</span>
-            </div>
-            
-            <!-- Notifications -->
-            <button id="notifications" class="notifications-button glass-button" aria-label="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge" id="notification-badge">3</span>
-                <span class="notification-text">Notifications</span>
+            <button class="tab-btn" data-tab="waitlist">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11H3v2h6v-2zm0-4H3v2h6V7zm0 8H3v2h6v-2zm12-8h-6v2h6V7zm0 4h-6v2h6v-2zm0 4h-6v2h6v-2z"/>
+                </svg>
+                <span>Liste d'attente</span>
             </button>
-            
-            <!-- Menu paramètres simplifié -->
-            <button id="settings-menu" class="settings-button glass-button" aria-label="Paramètres">
-                <i class="fas fa-cog"></i>
+            <button class="tab-btn" data-tab="publipostage">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                <span>Publipostage</span>
             </button>
-        </div>
-    </header>
-
-    <!-- Navigation Sidebar (Desktop/iPad) -->
-    <nav id="sidebar" class="sidebar glass-panel">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="logo-icon-container">
-                    <i class="fas fa-balance-scale logo-icon"></i>
-                </div>
-                <h2>Navigation</h2>
-            </div>
-            <button id="sidebar-close" class="sidebar-close" aria-label="Fermer">
-                <i class="fas fa-times"></i>
+            <button class="tab-btn" data-tab="stats">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span>Statistiques</span>
             </button>
-        </div>
-        
-        <div class="sidebar-content">
-            <!-- Section Navigation Principale -->
-            <div class="nav-section">
-                <h3 class="section-title">PRINCIPAL</h3>
-                <ul class="nav-list">
-                    <!-- Dashboard -->
-                    <li class="nav-item active" data-module="dashboard">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-tachometer-alt nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Tableau de bord</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
-                    <!-- Agenda -->
-                    <li class="nav-item" data-module="agenda">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-calendar nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Agenda</span>
-                            <span class="nav-badge" id="nav-agenda-count">12</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
-                    <!-- Liste d'attente -->
-                    <li class="nav-item" data-module="waitlist">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-clock nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Liste d'attente</span>
-                            <span class="nav-badge priority" id="nav-waitlist-count">5</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
-                </ul>
-            </div>
+        </nav>
 
-            <!-- Section Communication -->
-            <div class="nav-section">
-                <h3 class="section-title">COMMUNICATION</h3>
-                <ul class="nav-list">
-                    <!-- Convocations -->
-                    <li class="nav-item" data-module="convocations">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-paper-plane nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Convocations</span>
-                            <span class="nav-badge warning" id="nav-convocations-count">3</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
-                    <!-- Publipostage -->
-                    <li class="nav-item" data-module="mailing">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-envelope nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Publipostage</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Section Gestion -->
-            <div class="nav-section">
-                <h3 class="section-title">GESTION</h3>
-                <ul class="nav-list">
-                    <!-- Statistiques -->
-                    <li class="nav-item" data-module="statistiques">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-chart-line nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Statistiques</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
-                    <!-- Facturation -->
-                    <li class="nav-item" data-module="billing">
-                        <div class="nav-link">
-                            <div class="nav-icon-container">
-                                <i class="fas fa-credit-card nav-icon"></i>
-                                <div class="icon-glow"></div>
-                            </div>
-                            <span class="nav-text">Facturation</span>
-                            <span class="nav-badge success" id="nav-billing-count">187</span>
-                            <div class="nav-indicator"></div>
-                        </div>
-                    </li>
-                    
-                </ul>
-            </div>
-        </div>
-        
-        <!-- Footer de la sidebar -->
-        <div class="sidebar-footer">
-            <div class="sync-status-sidebar">
-                <div class="sync-indicator pulsing"></div>
-                <div class="sync-info">
-                    <span class="sync-time">Dernière sync: 13:45</span>
-                    <span class="sync-status-text">iCloud actif</span>
+        <!-- Content -->
+        <main class="tab-content">
+            <!-- Agenda Tab -->
+            <div id="agenda" class="tab-pane active">
+                <div class="toolbar">
+                    <input type="date" id="agenda-date" class="date-picker">
+                    <select id="agenda-filter" class="filter-select">
+                        <option value="all">Toutes les expertises</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="week">Cette semaine</option>
+                        <option value="month">Ce mois</option>
+                        <option value="passees">Passées</option>
+                        <option value="programmees">Programmées</option>
+                        <option value="attente">En attente</option>
+                    </select>
                 </div>
+                <div class="search-toolbar">
+                    <input type="search" id="search-name" placeholder="Nom de l'expertisé..." class="search-input">
+                    <input type="search" id="search-magistrat" placeholder="Nom du juge/magistrat..." class="search-input">
+                    <input type="search" id="search-tribunal" placeholder="Tribunal..." class="search-input">
+                    <button id="clear-filters" class="btn btn-secondary">Effacer filtres</button>
+                </div>
+                <div id="agenda-list" class="card-list"></div>
             </div>
-            
-            <div class="footer-actions">
-                <button class="footer-action" title="Synchroniser maintenant">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                <button class="footer-action" title="Mode sombre">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <button class="footer-action" title="Paramètres">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Contenu principal -->
-    <main id="main-content" class="main-content">
-        <!-- Onglets visuels adaptatifs -->
-        <div class="content-header">
-            <div class="breadcrumb">
-                <span class="breadcrumb-item">CrimiTrack</span>
-                <i class="fas fa-chevron-right breadcrumb-separator"></i>
-                <span class="breadcrumb-item active" id="current-module">Tableau de bord</span>
-            </div>
-            
-            <div class="quick-actions">
-                <button class="quick-action glass-button" data-action="new-patient" title="Nouveau patient">
-                    <i class="fas fa-user-plus"></i>
-                    <span>Nouveau</span>
-                </button>
-                <button class="quick-action glass-button" data-action="search" title="Recherche avancée">
-                    <i class="fas fa-search"></i>
-                    <span>Rechercher</span>
-                </button>
-                <button class="quick-action glass-button" data-action="export" title="Export données">
-                    <i class="fas fa-download"></i>
-                    <span>Export</span>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Container des modules avec animations -->
-        <div id="module-container" class="module-container">
-            <!-- Dashboard par défaut -->
-            <div id="dashboard-module" class="module-content active" data-module="dashboard">
-                <div class="dashboard-grid">
-                    <!-- Statistiques rapides -->
-                    <div class="stats-overview glass-panel">
-                        <h2 class="section-title">
-                            <i class="fas fa-chart-pulse"></i>
-                            Vue d'ensemble
-                        </h2>
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-icon agenda">
-                                    <i class="fas fa-calendar-check"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <span class="stat-value" id="stat-agenda">12</span>
-                                    <span class="stat-label">RDV aujourd'hui</span>
-                                </div>
-                                <div class="stat-trend positive">
-                                    <i class="fas fa-arrow-up"></i>
-                                    <span>+2</span>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon waitlist">
-                                    <i class="fas fa-clock"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <span class="stat-value" id="stat-waitlist">5</span>
-                                    <span class="stat-label">En attente</span>
-                                </div>
-                                <div class="stat-trend negative">
-                                    <i class="fas fa-arrow-down"></i>
-                                    <span>-1</span>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon billing">
-                                    <i class="fas fa-euro-sign"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <span class="stat-value" id="stat-revenue">187</span>
-                                    <span class="stat-label">Factures</span>
-                                </div>
-                                <div class="stat-trend positive">
-                                    <i class="fas fa-arrow-up"></i>
-                                    <span>+12</span>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon sync">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <span class="stat-value" id="stat-sync">100%</span>
-                                    <span class="stat-label">Synchronisé</span>
-                                </div>
-                                <div class="stat-trend stable">
-                                    <i class="fas fa-check"></i>
-                                    <span>OK</span>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Liste d'attente Tab -->
+            <div id="waitlist" class="tab-pane">
+                <div class="toolbar">
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-status="programmees">Programmées</button>
+                        <button class="toggle-btn" data-status="attente">En attente</button>
                     </div>
-                    
-                    <!-- Actions rapides -->
-                    <div class="quick-actions-panel glass-panel">
-                        <h2 class="section-title">
-                            <i class="fas fa-bolt"></i>
-                            Actions rapides
-                        </h2>
-                        <div class="actions-grid">
-                            <button class="action-card" data-action="nouvelle-mission">
-                                <div class="action-icon">
-                                    <i class="fas fa-plus-circle"></i>
-                                </div>
-                                <div class="action-content">
-                                    <span class="action-title">Nouvelle Mission</span>
-                                    <span class="action-desc">Créer une expertise</span>
-                                </div>
-                            </button>
-                            
-                            <button class="action-card" data-action="charger-db">
-                                <div class="action-icon">
-                                    <i class="fas fa-upload"></i>
-                                </div>
-                                <div class="action-content">
-                                    <span class="action-title">Charger Base</span>
-                                    <span class="action-desc">Importer JSON database</span>
-                                </div>
-                            </button>
-                            
-                            <button class="action-card" data-action="sauvegarder-db">
-                                <div class="action-icon">
-                                    <i class="fas fa-download"></i>
-                                </div>
-                                <div class="action-content">
-                                    <span class="action-title">Sauvegarder Base</span>
-                                    <span class="action-desc">Exporter JSON database</span>
-                                </div>
-                            </button>
-                            
-                            <button class="action-card" data-action="send-convocation">
-                                <div class="action-icon">
-                                    <i class="fas fa-paper-plane"></i>
-                                </div>
-                                <div class="action-content">
-                                    <span class="action-title">Publipostage</span>
-                                    <span class="action-desc">Envoyer convocations</span>
-                                </div>
-                            </button>
+                    <input type="search" id="waitlist-search" placeholder="Rechercher..." class="search-input">
+                </div>
+                <div id="waitlist-content" class="card-list"></div>
+            </div>
+
+            <!-- Publipostage Tab -->
+            <div id="publipostage" class="tab-pane">
+                <div class="toolbar">
+                    <label for="template-upload" class="btn btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        Choisir template Word
+                    </label>
+                    <input type="file" id="template-upload" accept=".docx" style="display: none;">
+                    <span id="template-name" class="template-info">Aucun template sélectionné</span>
+                    <button id="generate-doc" class="btn btn-primary" disabled>Générer le document</button>
+                </div>
+                <div class="publi-container">
+                    <div class="selection-panel">
+                        <h3>Expertises sélectionnées</h3>
+                        <div class="selection-info">
+                            <span id="selection-count">0</span> expertise(s) sélectionnée(s)
                         </div>
+                        <div id="publi-list" class="selection-list"></div>
                     </div>
-                    
-                    <!-- Agenda aperçu -->
-                    <div class="agenda-preview glass-panel">
-                        <h2 class="section-title">
-                            <i class="fas fa-calendar-day"></i>
-                            Agenda aujourd'hui
-                        </h2>
-                        <div class="agenda-timeline" id="agenda-preview">
-                            <!-- Sera rempli dynamiquement -->
-                            <div class="timeline-loading">
-                                <div class="loading-skeleton"></div>
-                                <div class="loading-skeleton"></div>
-                                <div class="loading-skeleton"></div>
-                            </div>
+                    <div class="preview-panel">
+                        <h3>Variables disponibles</h3>
+                        <div id="doc-preview" class="preview-content">
+                            <p>Variables utilisables dans votre template Word :</p>
+                            <ul class="variable-list">
+                                <li><code>{patronyme}</code> - Nom de l'expertisé</li>
+                                <li><code>{date_examen}</code> - Date de l'examen</li>
+                                <li><code>{lieu_examen}</code> - Lieu de l'examen</li>
+                                <li><code>{magistrat}</code> - Nom du magistrat</li>
+                                <li><code>{tribunal}</code> - Tribunal</li>
+                                <li><code>{numero_parquet}</code> - N° Parquet</li>
+                                <li><code>{numero_instruction}</code> - N° Instruction</li>
+                                <li><code>{chefs_accusation}</code> - Chefs d'accusation</li>
+                                <li><code>{date_naissance}</code> - Date de naissance</li>
+                                <li><code>{age}</code> - Âge</li>
+                                <li><code>{profession}</code> - Profession</li>
+                                <li><code>{domicile}</code> - Domicile</li>
+                                <li><code>{opj_greffier}</code> - OPJ/Greffier</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Autres modules seront chargés dynamiquement -->
-        </div>
-    </main>
 
-    <!-- Navigation bottom pour mobile uniquement -->
-    <nav id="bottom-nav" class="bottom-nav glass-panel">
-        <button class="bottom-nav-item active" data-module="dashboard">
-            <div class="nav-icon-wrapper">
-                <i class="fas fa-tachometer-alt"></i>
-                <div class="nav-ripple"></div>
+            <!-- Statistiques Tab -->
+            <div id="stats" class="tab-pane">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Réalisées</h3>
+                        <div class="stat-number" id="stat-total-completed">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Ce mois</h3>
+                        <div class="stat-number" id="stat-current-month">0</div>
+                        <div class="stat-label" id="stat-month-label"></div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Moyenne/mois</h3>
+                        <div class="stat-number" id="stat-monthly-average">0</div>
+                        <div class="stat-label">Depuis janvier</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Cette année</h3>
+                        <div class="stat-number" id="stat-current-year">0</div>
+                        <div class="stat-label" id="stat-year-label"></div>
+                    </div>
+                </div>
+                
+                <div class="tribunal-stats">
+                    <h2>Expertises par Tribunal Judiciaire (année en cours)</h2>
+                    <div class="tribunal-grid">
+                        <div class="tribunal-card">
+                            <h4>Paris</h4>
+                            <div class="tribunal-number" id="tj-paris">0</div>
+                            <div class="tribunal-bar">
+                                <div class="bar-fill" id="bar-paris"></div>
+                            </div>
+                        </div>
+                        <div class="tribunal-card">
+                            <h4>Créteil</h4>
+                            <div class="tribunal-number" id="tj-creteil">0</div>
+                            <div class="tribunal-bar">
+                                <div class="bar-fill" id="bar-creteil"></div>
+                            </div>
+                        </div>
+                        <div class="tribunal-card">
+                            <h4>Bobigny</h4>
+                            <div class="tribunal-number" id="tj-bobigny">0</div>
+                            <div class="tribunal-bar">
+                                <div class="bar-fill" id="bar-bobigny"></div>
+                            </div>
+                        </div>
+                        <div class="tribunal-card">
+                            <h4>Autres</h4>
+                            <div class="tribunal-number" id="tj-autres">0</div>
+                            <div class="tribunal-bar">
+                                <div class="bar-fill" id="bar-autres"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h2>Évolution mensuelle (année en cours)</h2>
+                    <canvas id="stats-chart"></canvas>
+                </div>
             </div>
-            <span>Accueil</span>
-        </button>
-        
-        <button class="bottom-nav-item" data-module="agenda">
-            <div class="nav-icon-wrapper">
-                <i class="fas fa-calendar"></i>
-                <div class="nav-ripple"></div>
-            </div>
-            <span>Agenda</span>
-            <span class="mobile-badge">12</span>
-        </button>
-        
-        <button class="bottom-nav-item" data-module="waitlist">
-            <div class="nav-icon-wrapper">
-                <i class="fas fa-clock"></i>
-                <div class="nav-ripple"></div>
-            </div>
-            <span>Attente</span>
-            <span class="mobile-badge priority">5</span>
-        </button>
-        
-        <button class="bottom-nav-item" data-module="convocations">
-            <div class="nav-icon-wrapper">
-                <i class="fas fa-paper-plane"></i>
-                <div class="nav-ripple"></div>
-            </div>
-            <span>Convoc</span>
-            <span class="mobile-badge warning">3</span>
-        </button>
-        
-        <button class="bottom-nav-item" data-module="more">
-            <div class="nav-icon-wrapper">
-                <i class="fas fa-ellipsis-h"></i>
-                <div class="nav-ripple"></div>
-            </div>
-            <span>Plus</span>
-        </button>
-    </nav>
+        </main>
 
-    <!-- Overlay pour la navigation mobile -->
-    <div id="sidebar-overlay" class="sidebar-overlay"></div>
-
-    <!-- Modal système pour interactions importantes -->
-    <div id="modal-system" class="modal-system">
-        <div class="modal-backdrop"></div>
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3 id="modal-title">Titre</h3>
-                <button class="modal-close" id="modal-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Contenu dynamique -->
-            </div>
-            <div class="modal-actions" id="modal-actions">
-                <!-- Actions dynamiques -->
+        <!-- Modal pour nouvelle entrée -->
+        <div id="entry-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Nouvelle Expertise</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <form id="entry-form" class="modal-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date d'examen</label>
+                            <input type="date" name="date_examen" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Lieu d'examen</label>
+                            <input type="text" name="lieu_examen" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Patronyme</label>
+                            <input type="text" name="patronyme" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date de naissance</label>
+                            <input type="date" name="date_naissance">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>N° Parquet</label>
+                            <input type="text" name="numero_parquet">
+                        </div>
+                        <div class="form-group">
+                            <label>N° Instruction</label>
+                            <input type="text" name="numero_instruction">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Chefs d'accusation</label>
+                        <textarea name="chefs_accusation" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Magistrat</label>
+                            <input type="text" name="magistrat">
+                        </div>
+                        <div class="form-group">
+                            <label>Tribunal</label>
+                            <input type="text" name="tribunal">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <select name="statut">
+                            <option value="attente">En attente</option>
+                            <option value="programmee">Programmée</option>
+                            <option value="realisee">Réalisée</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-entry">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Input file caché pour charger la base de données -->
-    <input type="file" id="db-file-input" accept=".json" style="display: none;">
-
-    <!-- Toast notifications -->
-    <div id="toast-container" class="toast-container"></div>
-
-    <!-- Installation PWA prompt -->
-    <div id="install-prompt" class="install-prompt glass-panel">
-        <div class="install-content">
-            <div class="install-icon">
-                <i class="fas fa-mobile-alt"></i>
-            </div>
-            <div class="install-text">
-                <h3>Installer CrimiTrack</h3>
-                <p>Accédez rapidement à vos expertises depuis votre écran d'accueil</p>
-            </div>
-        </div>
-        <div class="install-actions">
-            <button id="install-accept" class="install-btn primary">
-                <i class="fas fa-download"></i>
-                Installer
-            </button>
-            <button id="install-dismiss" class="install-btn secondary">
-                Plus tard
-            </button>
-        </div>
-    </div>
-
-    <!-- Protection DOM contre les erreurs -->
-    <script src="assets/js/dom-safe.js"></script>
+    <input type="file" id="file-input" accept=".json" style="display: none;">
     
-    <!-- Scripts PWA optimisés -->
-    <script src="assets/js/real-data-manager.js"></script>
-    <!-- Temporaire: version simplifiée pour Safari iOS -->
-    <script src="assets/js/sync-manager-simple.js?v=2.0.1"></script>
+    <!-- Bibliothèques pour le publipostage Word -->
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip-utils.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.42.0/build/docxtemplater.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     
-    <!-- Fallback inline si l'ancienne version est chargée -->
-    <script>
-    // Vérification et remplacement du SyncManager si nécessaire
-    setTimeout(() => {
-        // Si la classe n'a pas les bonnes méthodes, on la remplace
-        if (window.SyncManagerSimple && !window.SyncManagerSimple.prototype.loadDemoData) {
-            console.warn('[Fallback] Remplacement du SyncManager incomplet...');
-            
-            class SyncManagerFixed {
-                constructor() {
-                    this.database = null;
-                    this.initialized = false;
-                    this.deviceId = localStorage.getItem('device-id') || 'device-' + Date.now();
-                    console.log('[SyncManager] Mode local - Fallback activé');
-                }
-                
-                async initialize() {
-                    if (this.initialized) return;
-                    try {
-                        await this.loadLocalDatabase();
-                        this.createLoadButtons();
-                        this.initialized = true;
-                        if (!this.database || Object.keys(this.database).length === 0) {
-                            this.showWelcomeMessage();
-                        }
-                    } catch (error) {
-                        console.error('[SyncManager] Erreur init:', error);
-                        this.showWelcomeMessage();
-                    }
-                }
-                
-                async loadLocalDatabase() {
-                    try {
-                        const localData = localStorage.getItem('crimitrack-database');
-                        if (localData) {
-                            this.database = JSON.parse(localData);
-                            console.log('[SyncManager] Base locale chargée');
-                            return this.database;
-                        }
-                    } catch (error) {
-                        console.error('[SyncManager] Erreur chargement:', error);
-                    }
-                    return null;
-                }
-                
-                async loadDemoData() {
-                    console.log('[SyncManager] Chargement démo...');
-                    const demoData = {
-                        agenda: [
-                            {
-                                id: 'demo_1',
-                                patronyme: 'Catherine CARON',
-                                date_examen: '2025-02-15',
-                                lieu_examen: 'CJ',
-                                type_mission: 'instruction',
-                                statut: 'programmee'
-                            },
-                            {
-                                id: 'demo_2',
-                                patronyme: 'Jean MARTIN',
-                                date_examen: '2025-02-20',
-                                lieu_examen: 'CJ',
-                                type_mission: 'correctionnel',
-                                statut: 'programmee'
-                            }
-                        ],
-                        waitlist: [
-                            {
-                                id: 'wait_1',
-                                patronyme: 'Philippe ECHARD',
-                                statut: 'attente'
-                            }
-                        ],
-                        metadata: {
-                            version: '2.0.0',
-                            lastUpdate: new Date().toISOString()
-                        }
-                    };
-                    
-                    await this.saveDatabase(demoData);
-                    this.showNotification('Données démo chargées !', 'success');
-                    setTimeout(() => window.location.reload(), 1500);
-                    return demoData;
-                }
-                
-                async loadFromFile() {
-                    return new Promise((resolve, reject) => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = '.json';
-                        input.style.display = 'none';
-                        
-                        input.onchange = async (e) => {
-                            try {
-                                const file = e.target.files[0];
-                                if (!file) {
-                                    reject(new Error('Aucun fichier'));
-                                    return;
-                                }
-                                const text = await file.text();
-                                const data = JSON.parse(text);
-                                await this.saveDatabase(data);
-                                this.showNotification('Base chargée !', 'success');
-                                setTimeout(() => window.location.reload(), 1500);
-                                resolve(data);
-                            } catch (error) {
-                                this.showNotification('Erreur: ' + error.message, 'error');
-                                reject(error);
-                            } finally {
-                                document.body.removeChild(input);
-                            }
-                        };
-                        
-                        document.body.appendChild(input);
-                        input.click();
-                    });
-                }
-                
-                async saveDatabase(data) {
-                    try {
-                        localStorage.setItem('crimitrack-database', JSON.stringify(data));
-                        localStorage.setItem('crimitrack-lastsync', Date.now().toString());
-                        this.database = data;
-                        window.dispatchEvent(new CustomEvent('databaseloaded', {
-                            detail: { data, timestamp: Date.now() }
-                        }));
-                        return true;
-                    } catch (error) {
-                        console.error('[SyncManager] Erreur sauvegarde:', error);
-                        throw error;
-                    }
-                }
-                
-                async getDatabase() {
-                    if (!this.database) {
-                        await this.loadLocalDatabase();
-                    }
-                    return this.database;
-                }
-                
-                getStatus() {
-                    return {
-                        mode: 'local',
-                        hasData: !!this.database,
-                        entriesCount: this.database ? 
-                            (this.database.agenda?.length || 0) + (this.database.waitlist?.length || 0) : 0,
-                        lastUpdate: localStorage.getItem('crimitrack-lastsync'),
-                        deviceId: this.deviceId
-                    };
-                }
-                
-                createLoadButtons() {
-                    try {
-                        if (document.getElementById('load-file-button')) return;
-                        
-                        const container = document.createElement('div');
-                        container.className = 'sync-buttons-container';
-                        container.style.cssText = `
-                            display: flex;
-                            gap: 10px;
-                            align-items: center;
-                            position: fixed;
-                            top: 10px;
-                            right: 10px;
-                            z-index: 1000;
-                            background: white;
-                            padding: 10px;
-                            border-radius: 8px;
-                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                        `;
-                        
-                        const loadButton = document.createElement('button');
-                        loadButton.id = 'load-file-button';
-                        loadButton.className = 'sync-button primary';
-                        loadButton.innerHTML = '📁 Charger Base de Données';
-                        loadButton.style.cssText = `
-                            padding: 8px 16px;
-                            background: #667eea;
-                            color: white;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-weight: 500;
-                        `;
-                        loadButton.onclick = () => this.loadFromFile();
-                        
-                        const demoButton = document.createElement('button');
-                        demoButton.id = 'load-demo-button';
-                        demoButton.className = 'sync-button secondary';
-                        demoButton.innerHTML = '🎭 Données Démo';
-                        demoButton.style.cssText = `
-                            padding: 8px 16px;
-                            background: #10b981;
-                            color: white;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-weight: 500;
-                        `;
-                        demoButton.onclick = () => this.loadDemoData();
-                        
-                        const status = document.createElement('div');
-                        status.id = 'sync-status';
-                        status.style.cssText = `
-                            padding: 5px 10px;
-                            border-radius: 5px;
-                            font-size: 12px;
-                            background: #f0f0f0;
-                        `;
-                        
-                        if (this.database) {
-                            const count = (this.database.agenda?.length || 0) + (this.database.waitlist?.length || 0);
-                            status.innerHTML = `✅ ${count} entrées`;
-                        } else {
-                            status.innerHTML = `📱 Mode local`;
-                        }
-                        
-                        container.appendChild(loadButton);
-                        container.appendChild(demoButton);
-                        container.appendChild(status);
-                        
-                        document.body.appendChild(container);
-                        
-                    } catch (error) {
-                        console.error('[SyncManager] Erreur boutons:', error);
-                    }
-                }
-                
-                showWelcomeMessage() {
-                    const existing = document.querySelector('.welcome-message');
-                    if (existing) return;
-                    
-                    const message = document.createElement('div');
-                    message.className = 'welcome-message';
-                    message.style.cssText = `
-                        position: fixed;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background: white;
-                        padding: 30px;
-                        border-radius: 12px;
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-                        text-align: center;
-                        max-width: 400px;
-                        z-index: 1000;
-                    `;
-                    message.innerHTML = `
-                        <h2>🎯 Bienvenue dans CrimiTrack PWA</h2>
-                        <p>Application de gestion d'expertises</p>
-                        <p style="margin: 20px 0;">Pour commencer :</p>
-                        <button onclick="window.syncManager.loadFromFile()" style="margin: 5px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                            📁 Charger ma base
-                        </button>
-                        <button onclick="window.syncManager.loadDemoData()" style="margin: 5px; padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                            🎭 Essayer la démo
-                        </button>
-                    `;
-                    
-                    document.body.appendChild(message);
-                    
-                    setTimeout(() => {
-                        document.addEventListener('click', (e) => {
-                            if (!message.contains(e.target)) {
-                                message.remove();
-                            }
-                        }, { once: true });
-                    }, 100);
-                }
-                
-                showNotification(message, type = 'info') {
-                    const notification = document.createElement('div');
-                    notification.style.cssText = `
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        padding: 15px 20px;
-                        background: ${type === 'error' ? '#ef4444' : '#10b981'};
-                        color: white;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                        z-index: 2000;
-                        animation: slideIn 0.3s ease;
-                    `;
-                    notification.textContent = message;
-                    document.body.appendChild(notification);
-                    
-                    setTimeout(() => {
-                        notification.style.animation = 'slideOut 0.3s ease';
-                        setTimeout(() => notification.remove(), 300);
-                    }, 3000);
-                }
-            }
-            
-            // Remplacer les classes
-            window.SyncManagerSimple = SyncManagerFixed;
-            window.SyncManager = SyncManagerFixed;
-            
-            // Créer l'instance globale
-            window.syncManager = new SyncManagerFixed();
-            window.syncManager.initialize().catch(console.error);
-            
-            console.log('[Fallback] SyncManager remplacé avec succès');
-        }
-    }, 100);
-    </script>
-    <script src="assets/js/offline-manager.js"></script>
-    <script src="assets/js/connection-manager.js"></script>
-    <script src="assets/js/log-manager.js"></script>
-    <script src="assets/js/publipostage-manager.js"></script>
-    
-    <!-- Modules PWA -->
-    <script src="modules/dashboard/dashboard-pwa.js"></script>
-    <script src="modules/agenda/agenda-pwa.js"></script>
-    <script src="modules/waitlist/waitlist-pwa.js"></script>
-    <script src="modules/planning/planning-pwa.js"></script>
-    <script src="modules/convocations/convocations-pwa.js"></script>
-    <script src="modules/mailing/mailing-pwa.js"></script>
-    <script src="modules/import/import-pwa.js"></script>
-    <script src="modules/synthese/synthese-pwa.js"></script>
-    <script src="modules/statistiques/statistiques-pwa.js"></script>
-    <script src="modules/billing/billing-pwa.js"></script>
-    <script src="modules/anonymisation/anonymisation-pwa.js"></script>
-    <script src="modules/prompt-mastering/prompt-mastering-pwa.js"></script>
-    
-    <!-- Application principale -->
-    <script src="assets/js/app.js"></script>
-    
-    <!-- Service Worker -->
-    <script>
-        // Service Worker avec gestion d'erreur robuste
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
-                try {
-                    const registration = await navigator.serviceWorker.register('service-worker.js');
-                    console.log('✅ Service Worker enregistré:', registration.scope);
-                    
-                    // Gestion des mises à jour
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        if (newWorker) {
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    showToast('Nouvelle version disponible. Veuillez rafraîchir.', 'info', {
-                                        action: { text: 'Rafraîchir', callback: () => window.location.reload() }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                    
-                } catch (error) {
-                    console.error('❌ Erreur Service Worker:', error);
-                }
-            });
-        }
-        
-        // Gestion de l'installation PWA
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            // Montrer le prompt personnalisé après un délai
-            setTimeout(() => {
-                document.getElementById('install-prompt').style.display = 'flex';
-                document.getElementById('install-prompt').classList.add('show');
-            }, 10000); // 10 secondes après le chargement
-        });
-        
-        // Actions installation
-        document.getElementById('install-accept')?.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log('🔧 Installation PWA:', outcome);
-                deferredPrompt = null;
-                document.getElementById('install-prompt').classList.remove('show');
-            }
-        });
-        
-        document.getElementById('install-dismiss')?.addEventListener('click', () => {
-            document.getElementById('install-prompt').classList.remove('show');
-        });
-        
-        // Gestion de l'état online/offline
-        window.addEventListener('online', () => {
-            showToast('Connexion rétablie', 'success');
-            document.body.classList.remove('offline');
-        });
-        
-        window.addEventListener('offline', () => {
-            showToast('Mode hors-ligne activé', 'info');
-            document.body.classList.add('offline');
-        });
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
