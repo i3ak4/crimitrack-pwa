@@ -5,6 +5,7 @@ class CrimiTrackApp {
     this.currentTab = 'agenda';
     this.selectedExpertises = new Set();
     this.currentTemplate = null;
+    this.db = null; // IndexedDB instance
     this.init();
   }
 
@@ -19,8 +20,14 @@ class CrimiTrackApp {
       }
     }
 
-    // Charger la base de données locale
+    // Initialiser IndexedDB
+    await this.initIndexedDB();
+    
+    // Charger la base de données
     await this.loadDatabase();
+    
+    // Migrer depuis localStorage si nécessaire
+    await this.migrateFromLocalStorage();
     
     // Initialiser les event listeners
     this.initEventListeners();
@@ -32,30 +39,126 @@ class CrimiTrackApp {
     this.updateStatistics();
   }
 
-  async loadDatabase() {
-    try {
-      // Essayer de charger depuis localStorage
-      const savedData = localStorage.getItem('crimitrack_database');
-      if (savedData) {
-        this.database = JSON.parse(savedData);
-      } else {
-        // Charger le fichier par défaut
-        const response = await fetch('/database.json');
-        if (response.ok) {
-          this.database = await response.json();
-          this.saveDatabase();
+  async initIndexedDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('CrimiTrackDB', 2);
+      
+      request.onerror = () => {
+        console.error('Erreur ouverture IndexedDB');
+        reject(request.error);
+      };
+      
+      request.onsuccess = () => {
+        this.db = request.result;
+        console.log('IndexedDB initialisé');
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        
+        // Créer le store pour la base de données
+        if (!db.objectStoreNames.contains('database')) {
+          db.createObjectStore('database', { keyPath: 'id' });
         }
+      };
+    });
+  }
+
+  async migrateFromLocalStorage() {
+    // Vérifier s'il y a des données dans localStorage
+    const localData = localStorage.getItem('crimitrack_database');
+    if (localData && this.database.expertises.length === 0) {
+      try {
+        const parsedData = JSON.parse(localData);
+        this.database = parsedData;
+        await this.saveDatabase();
+        // Supprimer de localStorage après migration réussie
+        localStorage.removeItem('crimitrack_database');
+        console.log('Migration depuis localStorage réussie');
+      } catch (error) {
+        console.error('Erreur migration localStorage:', error);
       }
+    }
+  }
+
+  async loadDatabase() {
+    if (!this.db) {
+      console.error('IndexedDB non initialisé');
+      this.database = { expertises: [] };
+      return;
+    }
+    
+    try {
+      // Charger depuis IndexedDB
+      const transaction = this.db.transaction(['database'], 'readonly');
+      const store = transaction.objectStore('database');
+      const request = store.get('main');
+      
+      return new Promise((resolve) => {
+        request.onsuccess = async () => {
+          if (request.result) {
+            this.database = request.result.data;
+            console.log('Base de données chargée depuis IndexedDB');
+          } else {
+            // Charger le fichier par défaut si aucune donnée
+            try {
+              const response = await fetch('/database.json');
+              if (response.ok) {
+                this.database = await response.json();
+                await this.saveDatabase();
+              }
+            } catch (error) {
+              console.log('Pas de fichier database.json par défaut');
+              this.database = { expertises: [] };
+            }
+          }
+          resolve();
+        };
+        
+        request.onerror = () => {
+          console.error('Erreur chargement IndexedDB:', request.error);
+          this.database = { expertises: [] };
+          resolve();
+        };
+      });
     } catch (error) {
       console.error('Erreur chargement BDD:', error);
-      // Créer une base vide si erreur
       this.database = { expertises: [] };
     }
   }
 
-  saveDatabase() {
-    localStorage.setItem('crimitrack_database', JSON.stringify(this.database));
-    this.showNotification('Base de données sauvegardée');
+  async saveDatabase() {
+    if (!this.db) {
+      console.error('IndexedDB non initialisé');
+      return;
+    }
+    
+    try {
+      const transaction = this.db.transaction(['database'], 'readwrite');
+      const store = transaction.objectStore('database');
+      const request = store.put({
+        id: 'main',
+        data: this.database,
+        timestamp: new Date().toISOString()
+      });
+      
+      return new Promise((resolve, reject) => {
+        request.onsuccess = () => {
+          this.showNotification('Base de données sauvegardée');
+          resolve();
+        };
+        
+        request.onerror = () => {
+          console.error('Erreur sauvegarde IndexedDB:', request.error);
+          this.showNotification('Erreur lors de la sauvegarde', 'danger');
+          reject(request.error);
+        };
+      });
+    } catch (error) {
+      console.error('Erreur sauvegarde:', error);
+      this.showNotification('Erreur lors de la sauvegarde', 'danger');
+    }
   }
 
 
@@ -680,7 +783,7 @@ class CrimiTrackApp {
     }
   }
 
-  handleEntrySubmit(e) {
+  async handleEntrySubmit(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
@@ -698,7 +801,7 @@ class CrimiTrackApp {
     this.database.expertises.push(expertise);
     
     // Sauvegarder
-    this.saveDatabase();
+    await this.saveDatabase();
     
     // Fermer la modal
     this.hideModal();
@@ -713,12 +816,12 @@ class CrimiTrackApp {
     this.showEntryModal(id);
   }
 
-  deleteExpertise(id) {
+  async deleteExpertise(id) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette expertise ?')) {
       const index = this.database.expertises.findIndex(exp => exp._uniqueId === id);
       if (index > -1) {
         this.database.expertises.splice(index, 1);
-        this.saveDatabase();
+        await this.saveDatabase();
         this.showTab(this.currentTab);
         this.showNotification('Expertise supprimée', 'success');
       }
@@ -729,27 +832,33 @@ class CrimiTrackApp {
     document.getElementById('file-input')?.click();
   }
 
-  handleFileImport(e) {
+  async handleFileImport(e) {
     const file = e.target.files[0];
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = JSON.parse(event.target.result);
         if (data.expertises && Array.isArray(data.expertises)) {
           this.database = data;
-          this.saveDatabase();
+          await this.saveDatabase();
           this.showTab(this.currentTab);
           this.updateStatistics();
-          this.showNotification('Base de données importée avec succès', 'success');
+          this.showNotification(`Base de données importée avec succès (${data.expertises.length} expertises)`, 'success');
         } else {
           throw new Error('Format invalide');
         }
       } catch (error) {
-        this.showNotification('Erreur lors de l\'import: ' + error.message, 'danger');
+        console.error('Erreur import:', error);
+        this.showNotification('Erreur lors de l\'import. Vérifiez le format du fichier.', 'danger');
       }
     };
+    
+    reader.onerror = () => {
+      this.showNotification('Erreur de lecture du fichier', 'danger');
+    };
+    
     reader.readAsText(file);
   }
 
