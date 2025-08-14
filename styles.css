@@ -494,6 +494,22 @@ body {
   font-weight: 500;
 }
 
+.search-box {
+  margin-bottom: 1rem;
+}
+
+.quick-select {
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.quick-select h4 {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 .selection-info #selection-count {
   color: var(--secondary-color);
   font-size: 1.25rem;
@@ -746,6 +762,34 @@ body {
   input, select, textarea {
     font-size: 16px; /* Prevent zoom on iOS */
   }
+}
+
+/* Details modal */
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.detail-row {
+  padding: 0.75rem;
+  background: var(--light-bg);
+  border-radius: calc(var(--radius) - 4px);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-row strong {
+  color: var(--text-secondary);
+  min-width: 150px;
+  font-size: 0.875rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 /* Dark mode support */

@@ -206,6 +206,7 @@ class CrimiTrackApp {
     // Publipostage
     document.getElementById('template-upload')?.addEventListener('change', (e) => this.handleTemplateUpload(e));
     document.getElementById('generate-doc')?.addEventListener('click', () => this.generateDocument());
+    document.getElementById('publi-search')?.addEventListener('input', (e) => this.filterPublipostage(e.target.value));
     
     // File input pour import
     const fileInput = document.getElementById('file-input');
@@ -261,47 +262,55 @@ class CrimiTrackApp {
     
     let expertises = [...this.database.expertises];
     
-    // Filtrer par date spécifique
-    if (dateFilter) {
-      expertises = expertises.filter(exp => exp.date_examen === dateFilter);
-    }
-    
-    // Filtrer par période ou statut
+    // Par défaut, afficher les prochaines expertises (aujourd'hui et futur)
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const todayStr = today.toISOString().split('T')[0];
     
-    switch(filterType) {
-      case 'today':
-        expertises = expertises.filter(exp => exp.date_examen === todayStr);
-        break;
-      case 'week':
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay());
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        expertises = expertises.filter(exp => {
-          const date = new Date(exp.date_examen);
-          return date >= weekStart && date <= weekEnd;
-        });
-        break;
-      case 'month':
-        expertises = expertises.filter(exp => {
-          const date = new Date(exp.date_examen);
-          return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
-        });
-        break;
-      case 'passees':
-        expertises = expertises.filter(exp => {
-          const date = new Date(exp.date_examen);
-          return date < today || exp.statut === 'realisee';
-        });
-        break;
-      case 'programmees':
-        expertises = expertises.filter(exp => exp.statut === 'programmee');
-        break;
-      case 'attente':
-        expertises = expertises.filter(exp => exp.statut === 'attente' || !exp.statut);
-        break;
+    // Si pas de filtre spécifique ou "all", afficher les prochaines expertises
+    if (filterType === 'all' && !dateFilter) {
+      expertises = expertises.filter(exp => {
+        if (!exp.date_examen) return false;
+        const date = new Date(exp.date_examen);
+        return date >= today && exp.statut !== 'realisee';
+      });
+    } else if (dateFilter) {
+      // Filtrer par date spécifique
+      expertises = expertises.filter(exp => exp.date_examen === dateFilter);
+    } else {
+      // Appliquer les autres filtres
+      switch(filterType) {
+        case 'today':
+          expertises = expertises.filter(exp => exp.date_examen === todayStr);
+          break;
+        case 'week':
+          const weekEnd = new Date(today);
+          weekEnd.setDate(today.getDate() + 7);
+          expertises = expertises.filter(exp => {
+            if (!exp.date_examen) return false;
+            const date = new Date(exp.date_examen);
+            return date >= today && date <= weekEnd;
+          });
+          break;
+        case 'month':
+          expertises = expertises.filter(exp => {
+            const date = new Date(exp.date_examen);
+            return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+          });
+          break;
+        case 'passees':
+          expertises = expertises.filter(exp => {
+            const date = new Date(exp.date_examen);
+            return date < today || exp.statut === 'realisee';
+          });
+          break;
+        case 'programmees':
+          expertises = expertises.filter(exp => exp.statut === 'programmee');
+          break;
+        case 'attente':
+          expertises = expertises.filter(exp => exp.statut === 'attente' || !exp.statut);
+          break;
+      }
     }
     
     // Filtrer par recherche de nom
@@ -326,13 +335,13 @@ class CrimiTrackApp {
       );
     }
     
-    // Trier par date
-    expertises.sort((a, b) => new Date(a.date_examen) - new Date(b.date_examen));
+    // Trier par date (prochaines en premier)
+    expertises.sort((a, b) => new Date(a.date_examen || '2099-12-31') - new Date(b.date_examen || '2099-12-31'));
     
-    // Afficher les expertises
+    // Afficher les expertises avec possibilité de cliquer pour voir les détails
     container.innerHTML = expertises.length ? 
-      expertises.map(exp => this.createExpertiseCard(exp)).join('') :
-      '<p style="text-align: center; color: var(--text-secondary);">Aucune expertise trouvée</p>';
+      expertises.map(exp => this.createExpertiseCard(exp, false, true)).join('') :
+      '<p style="text-align: center; color: var(--text-secondary);">Aucune expertise à venir</p>';
   }
   
   clearFilters() {
@@ -350,12 +359,34 @@ class CrimiTrackApp {
     
     let expertises = [...this.database.expertises];
     
-    // Filtrer par statut
+    // Filtrer par statut - corriger la logique
     if (status === 'programmees') {
-      expertises = expertises.filter(exp => exp.statut === 'programmee');
+      // Programmées = celles qui ont une date d'examen dans le futur ou statut programmée
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      expertises = expertises.filter(exp => {
+        if (exp.statut === 'programmee') return true;
+        if (exp.date_examen) {
+          const examDate = new Date(exp.date_examen);
+          return examDate >= today && exp.statut !== 'realisee';
+        }
+        return false;
+      });
     } else {
-      expertises = expertises.filter(exp => exp.statut === 'attente' || !exp.statut);
+      // En attente = pas de statut ou statut "attente" ou pas de date d'examen
+      expertises = expertises.filter(exp => {
+        return exp.statut === 'attente' || 
+               (!exp.statut && exp.statut !== 'realisee' && exp.statut !== 'programmee') ||
+               (!exp.date_examen && exp.statut !== 'realisee');
+      });
     }
+    
+    // Trier par date
+    expertises.sort((a, b) => {
+      const dateA = new Date(a.date_examen || '2099-12-31');
+      const dateB = new Date(b.date_examen || '2099-12-31');
+      return dateA - dateB;
+    });
     
     // Afficher les expertises
     container.innerHTML = expertises.length ? 
@@ -371,7 +402,7 @@ class CrimiTrackApp {
     });
   }
 
-  updatePublipostage() {
+  updatePublipostage(searchTerm = '') {
     const container = document.getElementById('publi-list');
     const selectionCount = document.getElementById('selection-count');
     if (!container) return;
@@ -387,8 +418,25 @@ class CrimiTrackApp {
       generateBtn.disabled = !this.currentTemplate || this.selectedExpertises.size === 0;
     }
     
-    // Afficher toutes les expertises avec checkbox
-    container.innerHTML = this.database.expertises.map(exp => `
+    // Trier les expertises par date (plus récentes en premier)
+    let expertises = [...this.database.expertises].sort((a, b) => {
+      const dateA = new Date(a.date_examen || '1900-01-01');
+      const dateB = new Date(b.date_examen || '1900-01-01');
+      return dateB - dateA;
+    });
+    
+    // Filtrer par recherche si un terme est fourni
+    if (searchTerm) {
+      expertises = expertises.filter(exp => 
+        exp.patronyme?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    } else {
+      // Si pas de recherche, limiter aux 10 dernières
+      expertises = expertises.slice(0, 10);
+    }
+    
+    // Afficher les expertises
+    container.innerHTML = expertises.length ? expertises.map(exp => `
       <div class="expertise-card ${this.selectedExpertises.has(exp._uniqueId) ? 'selected' : ''}" 
            onclick="app.toggleExpertiseSelection('${exp._uniqueId}')">
         <div class="card-header">
@@ -408,7 +456,11 @@ class CrimiTrackApp {
           </div>
         </div>
       </div>
-    `).join('');
+    `).join('') : '<p style="text-align: center; color: var(--text-secondary);">Aucune expertise trouvée</p>';
+  }
+  
+  filterPublipostage(searchTerm) {
+    this.updatePublipostage(searchTerm);
   }
 
   toggleExpertiseSelection(id) {
@@ -697,12 +749,13 @@ class CrimiTrackApp {
     ctx.restore();
   }
 
-  createExpertiseCard(expertise, showActions = false) {
+  createExpertiseCard(expertise, showActions = false, clickable = false) {
     const statusClass = expertise.statut ? `badge-${expertise.statut}` : 'badge-attente';
     const statusText = expertise.statut || 'attente';
     
     return `
-      <div class="expertise-card" data-id="${expertise._uniqueId}">
+      <div class="expertise-card" data-id="${expertise._uniqueId}" 
+           ${clickable ? `onclick="app.showExpertiseDetails('${expertise._uniqueId}')" style="cursor: pointer;"` : ''}>
         <div class="card-header">
           <span class="card-title">${expertise.patronyme || 'Sans nom'}</span>
           <span class="card-badge ${statusClass}">${statusText}</span>
@@ -750,6 +803,86 @@ class CrimiTrackApp {
         ` : ''}
       </div>
     `;
+  }
+  
+  showExpertiseDetails(id) {
+    const expertise = this.database.expertises.find(exp => exp._uniqueId === id);
+    if (!expertise) return;
+    
+    // Créer une modal avec tous les détails
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+          <h2>Détails de l'expertise</h2>
+          <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 1.5rem;">
+          <div class="details-grid">
+            <div class="detail-row">
+              <strong>Patronyme:</strong> ${expertise.patronyme || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Date d'examen:</strong> ${this.formatDate(expertise.date_examen)}
+            </div>
+            <div class="detail-row">
+              <strong>Lieu d'examen:</strong> ${expertise.lieu_examen || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Date de naissance:</strong> ${this.formatDate(expertise.date_naissance)}
+            </div>
+            <div class="detail-row">
+              <strong>Âge:</strong> ${expertise.age || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Profession:</strong> ${expertise.profession || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Domicile:</strong> ${expertise.domicile || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Magistrat:</strong> ${expertise.magistrat || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Tribunal:</strong> ${expertise.tribunal || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>OPJ/Greffier:</strong> ${expertise.opj_greffier || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>N° Parquet:</strong> ${expertise.numero_parquet || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>N° Instruction:</strong> ${expertise.numero_instruction || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Chefs d'accusation:</strong> ${expertise.chefs_accusation || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Date OCE:</strong> ${this.formatDate(expertise.date_oce)}
+            </div>
+            <div class="detail-row">
+              <strong>Limite OCE:</strong> ${this.formatDate(expertise.limite_oce)}
+            </div>
+            <div class="detail-row">
+              <strong>Type de mission:</strong> ${expertise.type_mission || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Kilomètres:</strong> ${expertise.kilometres || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Statut:</strong> <span class="card-badge badge-${expertise.statut || 'attente'}">${expertise.statut || 'attente'}</span>
+            </div>
+          </div>
+          <div class="modal-actions" style="margin-top: 2rem;">
+            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Fermer</button>
+            <button class="btn btn-primary" onclick="app.editExpertise('${expertise._uniqueId}'); this.closest('.modal').remove()">Modifier</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
   }
 
   showEntryModal(expertiseId = null) {
