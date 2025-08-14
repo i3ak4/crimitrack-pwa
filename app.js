@@ -188,10 +188,8 @@ class CrimiTrackApp {
     document.getElementById('agenda-filter')?.addEventListener('change', () => this.updateAgenda());
     document.getElementById('waitlist-search')?.addEventListener('input', (e) => this.filterWaitlist(e.target.value));
     
-    // Nouveaux filtres de recherche
-    document.getElementById('search-name')?.addEventListener('input', () => this.updateAgenda());
-    document.getElementById('search-magistrat')?.addEventListener('input', () => this.updateAgenda());
-    document.getElementById('search-tribunal')?.addEventListener('input', () => this.updateAgenda());
+    // Filtre de recherche unifié
+    document.getElementById('search-global')?.addEventListener('input', () => this.updateAgenda());
     document.getElementById('clear-filters')?.addEventListener('click', () => this.clearFilters());
     
     // Toggle liste d'attente
@@ -256,9 +254,7 @@ class CrimiTrackApp {
     
     const dateFilter = document.getElementById('agenda-date')?.value;
     const filterType = document.getElementById('agenda-filter')?.value || 'all';
-    const searchName = document.getElementById('search-name')?.value?.toLowerCase() || '';
-    const searchMagistrat = document.getElementById('search-magistrat')?.value?.toLowerCase() || '';
-    const searchTribunal = document.getElementById('search-tribunal')?.value?.toLowerCase() || '';
+    const searchGlobal = document.getElementById('search-global')?.value?.toLowerCase() || '';
     
     let expertises = [...this.database.expertises];
     
@@ -313,25 +309,13 @@ class CrimiTrackApp {
       }
     }
     
-    // Filtrer par recherche de nom
-    if (searchName) {
+    // Filtrer par recherche globale (nom, magistrat, tribunal)
+    if (searchGlobal) {
       expertises = expertises.filter(exp => 
-        exp.patronyme?.toLowerCase().includes(searchName)
-      );
-    }
-    
-    // Filtrer par recherche de magistrat
-    if (searchMagistrat) {
-      expertises = expertises.filter(exp => 
-        exp.magistrat?.toLowerCase().includes(searchMagistrat)
-      );
-    }
-    
-    // Filtrer par recherche de tribunal
-    if (searchTribunal) {
-      expertises = expertises.filter(exp => 
-        exp.tribunal?.toLowerCase().includes(searchTribunal) ||
-        exp.lieu_examen?.toLowerCase().includes(searchTribunal)
+        exp.patronyme?.toLowerCase().includes(searchGlobal) ||
+        exp.magistrat?.toLowerCase().includes(searchGlobal) ||
+        exp.tribunal?.toLowerCase().includes(searchGlobal) ||
+        exp.lieu_examen?.toLowerCase().includes(searchGlobal)
       );
     }
     
@@ -347,9 +331,8 @@ class CrimiTrackApp {
   clearFilters() {
     document.getElementById('agenda-date').value = '';
     document.getElementById('agenda-filter').value = 'all';
-    document.getElementById('search-name').value = '';
-    document.getElementById('search-magistrat').value = '';
-    document.getElementById('search-tribunal').value = '';
+    const searchGlobal = document.getElementById('search-global');
+    if (searchGlobal) searchGlobal.value = '';
     this.updateAgenda();
   }
 
