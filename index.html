@@ -534,8 +534,314 @@
     <!-- Scripts PWA optimisés -->
     <script src="assets/js/real-data-manager.js"></script>
     <!-- Temporaire: version simplifiée pour Safari iOS -->
-    <script src="assets/js/sync-manager-simple.js?v=2.0.0"></script>
-    <!-- <script src="assets/js/sync-manager.js"></script> -->
+    <script src="assets/js/sync-manager-simple.js?v=2.0.1"></script>
+    
+    <!-- Fallback inline si l'ancienne version est chargée -->
+    <script>
+    // Vérification et remplacement du SyncManager si nécessaire
+    setTimeout(() => {
+        // Si la classe n'a pas les bonnes méthodes, on la remplace
+        if (window.SyncManagerSimple && !window.SyncManagerSimple.prototype.loadDemoData) {
+            console.warn('[Fallback] Remplacement du SyncManager incomplet...');
+            
+            class SyncManagerFixed {
+                constructor() {
+                    this.database = null;
+                    this.initialized = false;
+                    this.deviceId = localStorage.getItem('device-id') || 'device-' + Date.now();
+                    console.log('[SyncManager] Mode local - Fallback activé');
+                }
+                
+                async initialize() {
+                    if (this.initialized) return;
+                    try {
+                        await this.loadLocalDatabase();
+                        this.createLoadButtons();
+                        this.initialized = true;
+                        if (!this.database || Object.keys(this.database).length === 0) {
+                            this.showWelcomeMessage();
+                        }
+                    } catch (error) {
+                        console.error('[SyncManager] Erreur init:', error);
+                        this.showWelcomeMessage();
+                    }
+                }
+                
+                async loadLocalDatabase() {
+                    try {
+                        const localData = localStorage.getItem('crimitrack-database');
+                        if (localData) {
+                            this.database = JSON.parse(localData);
+                            console.log('[SyncManager] Base locale chargée');
+                            return this.database;
+                        }
+                    } catch (error) {
+                        console.error('[SyncManager] Erreur chargement:', error);
+                    }
+                    return null;
+                }
+                
+                async loadDemoData() {
+                    console.log('[SyncManager] Chargement démo...');
+                    const demoData = {
+                        agenda: [
+                            {
+                                id: 'demo_1',
+                                patronyme: 'Catherine CARON',
+                                date_examen: '2025-02-15',
+                                lieu_examen: 'CJ',
+                                type_mission: 'instruction',
+                                statut: 'programmee'
+                            },
+                            {
+                                id: 'demo_2',
+                                patronyme: 'Jean MARTIN',
+                                date_examen: '2025-02-20',
+                                lieu_examen: 'CJ',
+                                type_mission: 'correctionnel',
+                                statut: 'programmee'
+                            }
+                        ],
+                        waitlist: [
+                            {
+                                id: 'wait_1',
+                                patronyme: 'Philippe ECHARD',
+                                statut: 'attente'
+                            }
+                        ],
+                        metadata: {
+                            version: '2.0.0',
+                            lastUpdate: new Date().toISOString()
+                        }
+                    };
+                    
+                    await this.saveDatabase(demoData);
+                    this.showNotification('Données démo chargées !', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                    return demoData;
+                }
+                
+                async loadFromFile() {
+                    return new Promise((resolve, reject) => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json';
+                        input.style.display = 'none';
+                        
+                        input.onchange = async (e) => {
+                            try {
+                                const file = e.target.files[0];
+                                if (!file) {
+                                    reject(new Error('Aucun fichier'));
+                                    return;
+                                }
+                                const text = await file.text();
+                                const data = JSON.parse(text);
+                                await this.saveDatabase(data);
+                                this.showNotification('Base chargée !', 'success');
+                                setTimeout(() => window.location.reload(), 1500);
+                                resolve(data);
+                            } catch (error) {
+                                this.showNotification('Erreur: ' + error.message, 'error');
+                                reject(error);
+                            } finally {
+                                document.body.removeChild(input);
+                            }
+                        };
+                        
+                        document.body.appendChild(input);
+                        input.click();
+                    });
+                }
+                
+                async saveDatabase(data) {
+                    try {
+                        localStorage.setItem('crimitrack-database', JSON.stringify(data));
+                        localStorage.setItem('crimitrack-lastsync', Date.now().toString());
+                        this.database = data;
+                        window.dispatchEvent(new CustomEvent('databaseloaded', {
+                            detail: { data, timestamp: Date.now() }
+                        }));
+                        return true;
+                    } catch (error) {
+                        console.error('[SyncManager] Erreur sauvegarde:', error);
+                        throw error;
+                    }
+                }
+                
+                async getDatabase() {
+                    if (!this.database) {
+                        await this.loadLocalDatabase();
+                    }
+                    return this.database;
+                }
+                
+                getStatus() {
+                    return {
+                        mode: 'local',
+                        hasData: !!this.database,
+                        entriesCount: this.database ? 
+                            (this.database.agenda?.length || 0) + (this.database.waitlist?.length || 0) : 0,
+                        lastUpdate: localStorage.getItem('crimitrack-lastsync'),
+                        deviceId: this.deviceId
+                    };
+                }
+                
+                createLoadButtons() {
+                    try {
+                        if (document.getElementById('load-file-button')) return;
+                        
+                        const container = document.createElement('div');
+                        container.className = 'sync-buttons-container';
+                        container.style.cssText = `
+                            display: flex;
+                            gap: 10px;
+                            align-items: center;
+                            position: fixed;
+                            top: 10px;
+                            right: 10px;
+                            z-index: 1000;
+                            background: white;
+                            padding: 10px;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        `;
+                        
+                        const loadButton = document.createElement('button');
+                        loadButton.id = 'load-file-button';
+                        loadButton.className = 'sync-button primary';
+                        loadButton.innerHTML = '📁 Charger Base de Données';
+                        loadButton.style.cssText = `
+                            padding: 8px 16px;
+                            background: #667eea;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 500;
+                        `;
+                        loadButton.onclick = () => this.loadFromFile();
+                        
+                        const demoButton = document.createElement('button');
+                        demoButton.id = 'load-demo-button';
+                        demoButton.className = 'sync-button secondary';
+                        demoButton.innerHTML = '🎭 Données Démo';
+                        demoButton.style.cssText = `
+                            padding: 8px 16px;
+                            background: #10b981;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 500;
+                        `;
+                        demoButton.onclick = () => this.loadDemoData();
+                        
+                        const status = document.createElement('div');
+                        status.id = 'sync-status';
+                        status.style.cssText = `
+                            padding: 5px 10px;
+                            border-radius: 5px;
+                            font-size: 12px;
+                            background: #f0f0f0;
+                        `;
+                        
+                        if (this.database) {
+                            const count = (this.database.agenda?.length || 0) + (this.database.waitlist?.length || 0);
+                            status.innerHTML = `✅ ${count} entrées`;
+                        } else {
+                            status.innerHTML = `📱 Mode local`;
+                        }
+                        
+                        container.appendChild(loadButton);
+                        container.appendChild(demoButton);
+                        container.appendChild(status);
+                        
+                        document.body.appendChild(container);
+                        
+                    } catch (error) {
+                        console.error('[SyncManager] Erreur boutons:', error);
+                    }
+                }
+                
+                showWelcomeMessage() {
+                    const existing = document.querySelector('.welcome-message');
+                    if (existing) return;
+                    
+                    const message = document.createElement('div');
+                    message.className = 'welcome-message';
+                    message.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: white;
+                        padding: 30px;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                        text-align: center;
+                        max-width: 400px;
+                        z-index: 1000;
+                    `;
+                    message.innerHTML = `
+                        <h2>🎯 Bienvenue dans CrimiTrack PWA</h2>
+                        <p>Application de gestion d'expertises</p>
+                        <p style="margin: 20px 0;">Pour commencer :</p>
+                        <button onclick="window.syncManager.loadFromFile()" style="margin: 5px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            📁 Charger ma base
+                        </button>
+                        <button onclick="window.syncManager.loadDemoData()" style="margin: 5px; padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            🎭 Essayer la démo
+                        </button>
+                    `;
+                    
+                    document.body.appendChild(message);
+                    
+                    setTimeout(() => {
+                        document.addEventListener('click', (e) => {
+                            if (!message.contains(e.target)) {
+                                message.remove();
+                            }
+                        }, { once: true });
+                    }, 100);
+                }
+                
+                showNotification(message, type = 'info') {
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        background: ${type === 'error' ? '#ef4444' : '#10b981'};
+                        color: white;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                        z-index: 2000;
+                        animation: slideIn 0.3s ease;
+                    `;
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.style.animation = 'slideOut 0.3s ease';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 3000);
+                }
+            }
+            
+            // Remplacer les classes
+            window.SyncManagerSimple = SyncManagerFixed;
+            window.SyncManager = SyncManagerFixed;
+            
+            // Créer l'instance globale
+            window.syncManager = new SyncManagerFixed();
+            window.syncManager.initialize().catch(console.error);
+            
+            console.log('[Fallback] SyncManager remplacé avec succès');
+        }
+    }, 100);
+    </script>
     <script src="assets/js/offline-manager.js"></script>
     <script src="assets/js/connection-manager.js"></script>
     <script src="assets/js/log-manager.js"></script>
