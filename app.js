@@ -1025,20 +1025,13 @@ class CrimiTrackApp {
     
     let expertises = [...this.database.expertises];
     
-    // Filtrer uniquement les expertises en prison (lieu_examen contient "prison" ou "maison d'arrêt")
-    expertises = expertises.filter(exp => {
-      const lieu = exp.lieu_examen?.toLowerCase() || '';
-      return lieu.includes('prison') || lieu.includes('maison') || lieu.includes('centre') || 
-             lieu.includes('pénitentiaire') || lieu.includes('detention');
-    });
-    
-    // Grouper par prison
-    const prisonGroups = {};
+    // Grouper par lieu_examen (tous les lieux, pas seulement les prisons)
+    const locationGroups = {};
     expertises.forEach(exp => {
-      const prison = exp.lieu_examen || 'Prison non spécifiée';
-      if (!prisonGroups[prison]) {
-        prisonGroups[prison] = {
-          name: prison,
+      const location = exp.lieu_examen || 'Lieu non spécifié';
+      if (!locationGroups[location]) {
+        locationGroups[location] = {
+          name: location,
           programmees: [],
           attente: []
         };
@@ -1046,41 +1039,41 @@ class CrimiTrackApp {
       
       // Classer par statut
       if (exp.statut === 'programmee' || (exp.date_examen && exp.statut !== 'realisee')) {
-        prisonGroups[prison].programmees.push(exp);
+        locationGroups[location].programmees.push(exp);
       } else if (exp.statut !== 'realisee') {
-        prisonGroups[prison].attente.push(exp);
+        locationGroups[location].attente.push(exp);
       }
     });
     
     // Filtrer par recherche
-    let filteredPrisons = Object.values(prisonGroups);
+    let filteredLocations = Object.values(locationGroups);
     if (searchTerm) {
-      filteredPrisons = filteredPrisons.filter(prison =>
-        prison.name.toLowerCase().includes(searchTerm)
+      filteredLocations = filteredLocations.filter(location =>
+        location.name.toLowerCase().includes(searchTerm)
       );
     }
     
     // Filtrer par type
     if (filter === 'programmees') {
-      filteredPrisons = filteredPrisons.filter(prison => prison.programmees.length > 0);
+      filteredLocations = filteredLocations.filter(location => location.programmees.length > 0);
     } else if (filter === 'attente') {
-      filteredPrisons = filteredPrisons.filter(prison => prison.attente.length > 0);
+      filteredLocations = filteredLocations.filter(location => location.attente.length > 0);
     }
     
-    // Trier les prisons par nom
-    filteredPrisons.sort((a, b) => a.name.localeCompare(b.name));
+    // Trier les lieux par nom
+    filteredLocations.sort((a, b) => a.name.localeCompare(b.name));
     
-    // Pour chaque prison, trier les expertises
-    filteredPrisons.forEach(prison => {
+    // Pour chaque lieu, trier les expertises
+    filteredLocations.forEach(location => {
       // Trier programmées par date
-      prison.programmees.sort((a, b) => {
+      location.programmees.sort((a, b) => {
         const dateA = new Date(a.date_examen || '2099-12-31');
         const dateB = new Date(b.date_examen || '2099-12-31');
         return dateA - dateB;
       });
       
       // Trier en attente par LIMITE_OCE (deadline)
-      prison.attente.sort((a, b) => {
+      location.attente.sort((a, b) => {
         const dateA = new Date(a.limite_oce || '2099-12-31');
         const dateB = new Date(b.limite_oce || '2099-12-31');
         return dateA - dateB;
@@ -1088,10 +1081,10 @@ class CrimiTrackApp {
     });
     
     // Afficher
-    if (filteredPrisons.length === 0) {
-      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucune prison trouvée</p>';
+    if (filteredLocations.length === 0) {
+      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucun lieu trouvé</p>';
     } else {
-      container.innerHTML = filteredPrisons.map(prison => this.createPrisonCard(prison)).join('');
+      container.innerHTML = filteredLocations.map(location => this.createPrisonCard(location)).join('');
     }
   }
   
