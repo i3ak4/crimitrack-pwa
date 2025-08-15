@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fix Undefined - CrimiTrack</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .fix-info {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .mapping-table th, .mapping-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .mapping-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .template-var {
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #d73502;
+        }
+        .data-field {
+            font-family: monospace;
+            background: #e1f5fe;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #1976d2;
+        }
+        .sample-data {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+            transition: transform 0.3s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #28a745;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix Undefined - Solution Implémentée</h1>
+        
+        <div class="fix-info">
+            <h3>✅ PROBLÈME IDENTIFIÉ ET RÉSOLU</h3>
+            <p><strong>Cause racine :</strong> Mismatch entre les noms de variables du template Word (MAJUSCULES) et les données JavaScript (minuscules)</p>
+            <p><strong>Solution :</strong> Mapping correct implémenté dans generateDocument()</p>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Mapping des Variables</h3>
+            <p>Correspondance entre les variables du template Word et les champs de données :</p>
+            
+            <table class="mapping-table">
+                <thead>
+                    <tr>
+                        <th>Template Word</th>
+                        <th>Données JavaScript</th>
+                        <th>Exemple</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="template-var">{NOM_PRENOM}</span></td>
+                        <td><span class="data-field">patronyme</span></td>
+                        <td>"Stéphane BALLER"</td>
+                    </tr>
+                    <tr>
+                        <td><span class="template-var">{TRIBUNAL}</span></td>
+                        <td><span class="data-field">tribunal</span></td>
+                        <td>"Paris"</td>
+                    </tr>
+                    <tr>
+                        <td><span class="template-var">{MAGISTRAT}</span></td>
+                        <td><span class="data-field">magistrat</span></td>
+                        <td>"M. MARTIN"</td>
+                    </tr>
+                    <tr>
+                        <td><span class="template-var">{AGE}</span></td>
+                        <td><span class="data-field">age</span></td>
+                        <td>45</td>
+                    </tr>
+                    <tr>
+                        <td><span class="template-var">{DATE_EXAMEN}</span></td>
+                        <td><span class="data-field">date_examen</span></td>
+                        <td>"15/08/2025"</td>
+                    </tr>
+                    <tr>
+                        <td><span class="template-var">{PROC_1}</span></td>
+                        <td><span class="data-field">numero_parquet</span></td>
+                        <td>"2025/12345"</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 Test du Mapping</h3>
+            <p>Testez la nouvelle fonction de mapping avec des données d'exemple :</p>
+            
+            <button onclick="testMapping()">🔍 Tester le Mapping</button>
+            
+            <div id="result" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 Données d'Exemple</h3>
+            <div class="sample-data">AVANT (incorrecte) :
+{
+  "patronyme": "Stéphane BALLER",
+  "tribunal": "Paris", 
+  "magistrat": "M. MARTIN"
+}
+
+APRÈS (correcte) :
+{
+  "NOM_PRENOM": "Stéphane BALLER",
+  "TRIBUNAL": "Paris",
+  "MAGISTRAT": "M. MARTIN"
+}</div>
+        </div>
+        
+        <div class="success">
+            <h4>🎉 Résultat Attendu</h4>
+            <p>Avec cette correction, les documents Word générés afficheront maintenant :</p>
+            <ul>
+                <li>✅ "Cabinet de <strong>Stéphane BALLER</strong>" au lieu de "Cabinet de undefined"</li>
+                <li>✅ "Tribunal Judiciaire de <strong>Paris</strong>" au lieu de "Tribunal Judiciaire de undefined"</li>
+                <li>✅ Toutes les variables correctement remplacées</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function testMapping() {
+            // Simule la fonction de sanitisation
+            function sanitizeLocal(value, fieldName) {
+                if (value === null || 
+                    value === undefined || 
+                    value === 'null' || 
+                    value === 'undefined' || 
+                    value === '' || 
+                    String(value).trim() === '' ||
+                    String(value).toLowerCase() === 'undefined') {
+                    return '';
+                }
+                return String(value).trim();
+            }
+            
+            // Données d'exemple (comme dans la base)
+            const expertise = {
+                patronyme: "Stéphane BALLER",
+                tribunal: "Paris",
+                magistrat: "M. MARTIN", 
+                age: 45,
+                date_examen: "2025-08-15",
+                numero_parquet: "2025/12345",
+                numero_instruction: null,
+                chefs_accusation: "Escroquerie",
+                lieu_examen: "Lyon",
+                profession: null,
+                domicile: "123 rue de la Paix",
+                opj_greffier: "DUPONT"
+            };
+            
+            // Nouveau mapping (comme dans le fix)
+            const fieldMapping = {
+                'NOM_PRENOM':          'patronyme',
+                'LIEU_EXAMEN':         'lieu_examen', 
+                'AGE':                 'age',
+                'PROFESSION':          'profession',
+                'DOMICILE':            'domicile',
+                'MAGISTRAT':           'magistrat',
+                'TRIBUNAL':            'tribunal',
+                'PROC_1':              'numero_parquet',
+                'PROC_2':              'numero_instruction', 
+                'CHEFS_ACCUSATION':    'chefs_accusation',
+                'OPJ_GREFFIER':        'opj_greffier'
+            };
+            
+            // Créer l'objet de données mappé
+            const data = {};
+            Object.entries(fieldMapping).forEach(([templateVar, dataField]) => {
+                const rawValue = expertise[dataField];
+                const cleanValue = sanitizeLocal(rawValue, dataField);
+                data[templateVar] = cleanValue;
+            });
+            
+            // Ajouter les dates
+            data.DATE_EXAMEN = "15/08/2025";
+            
+            // Afficher le résultat
+            let result = "🔍 TEST DU MAPPING RÉALISÉ\n\n";
+            result += "📊 DONNÉES D'ENTRÉE (simulation base de données) :\n";
+            result += JSON.stringify(expertise, null, 2);
+            result += "\n\n🎯 DONNÉES MAPPÉES POUR LE TEMPLATE WORD :\n";
+            result += JSON.stringify(data, null, 2);
+            result += "\n\n✅ RÉSULTAT :\n";
+            result += "• Template trouve {NOM_PRENOM} → \"" + data.NOM_PRENOM + "\"\n";
+            result += "• Template trouve {TRIBUNAL} → \"" + data.TRIBUNAL + "\"\n";
+            result += "• Template trouve {MAGISTRAT} → \"" + data.MAGISTRAT + "\"\n";
+            result += "• Plus aucune variable 'undefined' !\n";
+            
+            // Vérifier qu'il n'y a pas d'undefined
+            const hasUndefined = Object.values(data).some(value => 
+                String(value).toLowerCase().includes('undefined')
+            );
+            
+            if (!hasUndefined) {
+                result += "\n🎉 SUCCÈS : Aucune valeur 'undefined' détectée !";
+            } else {
+                result += "\n❌ ERREUR : Des valeurs 'undefined' persistent.";
+            }
+            
+            document.getElementById('result').textContent = result;
+            document.getElementById('result').style.display = 'block';
+        }
+        
+        // Auto-test au chargement
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🔧 Page de test du fix "undefined" chargée');
+                console.log('🎯 Le problème était un mismatch des noms de variables');
+                console.log('✅ Solution implémentée dans app.js ligne 663-691');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

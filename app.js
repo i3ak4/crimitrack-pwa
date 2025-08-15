@@ -75,10 +75,12 @@ class CrimiTrackApp {
       try {
         const parsedData = JSON.parse(localData);
         this.database = parsedData;
+        // SANITISER LES DONNÉES MIGRÉES
+        this.sanitizeLoadedData();
         await this.saveDatabase();
         // Supprimer de localStorage après migration réussie
         localStorage.removeItem('crimitrack_database');
-        console.log('Migration depuis localStorage réussie');
+        console.log('Migration depuis localStorage réussie et données nettoyées');
       } catch (error) {
         console.error('Erreur migration localStorage:', error);
       }
@@ -103,12 +105,16 @@ class CrimiTrackApp {
           if (request.result) {
             this.database = request.result.data;
             console.log('Base de données chargée depuis IndexedDB');
+            // SANITISER LES DONNÉES AU CHARGEMENT
+            this.sanitizeLoadedData();
           } else {
             // Charger le fichier par défaut si aucune donnée
             try {
               const response = await fetch('/database.json');
               if (response.ok) {
                 this.database = await response.json();
+                // SANITISER LES DONNÉES AU CHARGEMENT
+                this.sanitizeLoadedData();
                 await this.saveDatabase();
               }
             } catch (error) {
@@ -128,6 +134,59 @@ class CrimiTrackApp {
     } catch (error) {
       console.error('Erreur chargement BDD:', error);
       this.database = { expertises: [] };
+    }
+  }
+
+  // Nouvelle méthode pour sanitiser les données chargées
+  sanitizeLoadedData() {
+    console.log('🧹 Sanitisation des données chargées...');
+    
+    if (!this.database || !this.database.expertises) {
+      return;
+    }
+    
+    let sanitizedCount = 0;
+    
+    this.database.expertises = this.database.expertises.map(expertise => {
+      let modified = false;
+      const sanitized = {};
+      
+      Object.keys(expertise).forEach(key => {
+        const value = expertise[key];
+        
+        // Ne pas toucher aux champs système
+        if (key.startsWith('_')) {
+          sanitized[key] = value;
+          return;
+        }
+        
+        // Sanitiser les valeurs problématiques
+        if (value === undefined || 
+            value === 'undefined' || 
+            value === null || 
+            value === 'null' ||
+            String(value).toLowerCase() === 'undefined') {
+          sanitized[key] = '';
+          modified = true;
+          console.log(`  ✨ Nettoyage: ${key} était "${value}", maintenant ""`);
+        } else {
+          sanitized[key] = value;
+        }
+      });
+      
+      if (modified) {
+        sanitizedCount++;
+      }
+      
+      return sanitized;
+    });
+    
+    if (sanitizedCount > 0) {
+      console.log(`✅ ${sanitizedCount} expertise(s) nettoyée(s)`);
+      // Sauvegarder automatiquement les données nettoyées
+      this.saveDatabase();
+    } else {
+      console.log('✅ Toutes les données sont propres');
     }
   }
 
@@ -534,34 +593,127 @@ class CrimiTrackApp {
         this.database.expertises.find(exp => exp._uniqueId === id)
       ).filter(Boolean);
       
+      console.log('🔍 GÉNÉRATION DOCUMENT - DEBUG ULTRATHINK');
+      console.log(`📊 Nombre d'expertises sélectionnées: ${selected.length}`);
+      
       // Pour chaque expertise, générer un document
       for (let i = 0; i < selected.length; i++) {
         const expertise = selected[i];
         
-        // Préparer les données avec formatage des dates et valeurs par défaut
-        const data = {
-          // Utiliser la fonction globale sanitizeValue pour éviter les "undefined"
-          patronyme: this.sanitizeValue(expertise.patronyme),
-          date_examen: this.formatDateForTemplate(expertise.date_examen),
-          lieu_examen: this.sanitizeValue(expertise.lieu_examen),
-          date_naissance: this.formatDateForTemplate(expertise.date_naissance),
-          age: this.sanitizeValue(expertise.age),
-          profession: this.sanitizeValue(expertise.profession),
-          domicile: this.sanitizeValue(expertise.domicile),
-          magistrat: this.sanitizeValue(expertise.magistrat),
-          tribunal: this.sanitizeValue(expertise.tribunal),
-          numero_parquet: this.sanitizeValue(expertise.numero_parquet),
-          numero_instruction: this.sanitizeValue(expertise.numero_instruction),
-          chefs_accusation: this.sanitizeValue(expertise.chefs_accusation),
-          opj_greffier: this.sanitizeValue(expertise.opj_greffier),
-          type_mission: this.sanitizeValue(expertise.type_mission),
-          statut: this.sanitizeValue(expertise.statut)
+        console.log(`\n🎯 EXPERTISE ${i + 1}/${selected.length}`);
+        console.log('📋 Expertise brute:', expertise);
+        
+        // FONCTION SANITIZE LOCALE SÉCURISÉE - plus de problème de contexte this
+        const sanitizeLocal = (value, fieldName) => {
+          console.log(`  🧹 Sanitize [${fieldName}]: "${value}" (type: ${typeof value})`);
+          
+          // Gérer tous les cas d'undefined
+          if (value === null || 
+              value === undefined || 
+              value === 'null' || 
+              value === 'undefined' || 
+              value === '' || 
+              String(value).trim() === '' ||
+              String(value).toLowerCase() === 'undefined') {
+            console.log(`    ➡️ Valeur vide détectée, retour: ""`);
+            return '';
+          }
+          
+          const result = String(value).trim();
+          console.log(`    ➡️ Valeur nettoyée: "${result}"`);
+          return result;
         };
         
+        // FONCTION FORMAT DATE LOCALE SÉCURISÉE
+        const formatDateLocal = (dateStr, fieldName) => {
+          console.log(`  📅 Format date [${fieldName}]: "${dateStr}"`);
+          
+          if (!dateStr || 
+              dateStr === 'null' || 
+              dateStr === null || 
+              dateStr === undefined ||
+              String(dateStr).toLowerCase() === 'undefined') {
+            console.log(`    ➡️ Date vide, retour: ""`);
+            return '';
+          }
+          
+          try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) {
+              console.log(`    ➡️ Date invalide, retour: ""`);
+              return '';
+            }
+            const formatted = date.toLocaleDateString('fr-FR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+            console.log(`    ➡️ Date formatée: "${formatted}"`);
+            return formatted;
+          } catch (error) {
+            console.log(`    ❌ Erreur format date: ${error.message}`);
+            return '';
+          }
+        };
+        
+        // CRÉATION DATA OBJECT AVEC LOGS DÉTAILLÉS
+        console.log('🏗️ Construction de l\'objet data...');
+        const data = {};
+        
+        // MAPPING CORRECT: Variables du template Word (MAJUSCULES) ← données JS (minuscules)
+        const fieldMapping = {
+          // Template Word       ← Source données JS
+          'NOM_PRENOM':          'patronyme',
+          'LIEU_EXAMEN':         'lieu_examen', 
+          'AGE':                 'age',
+          'PROFESSION':          'profession',
+          'DOMICILE':            'domicile',
+          'MAGISTRAT':           'magistrat',
+          'TRIBUNAL':            'tribunal',
+          'PROC_1':              'numero_parquet',
+          'PROC_2':              'numero_instruction', 
+          'CHEFS_ACCUSATION':    'chefs_accusation',
+          'OPJ_GREFFIER':        'opj_greffier'
+        };
+        
+        // Traiter chaque champ avec le mapping correct
+        Object.entries(fieldMapping).forEach(([templateVar, dataField]) => {
+          const rawValue = expertise[dataField];
+          const cleanValue = sanitizeLocal(rawValue, dataField);
+          data[templateVar] = cleanValue;
+          console.log(`  📝 Mapping: {${templateVar}} ← "${cleanValue}" (depuis ${dataField})`);
+        });
+        
+        // Traiter les dates séparément avec le bon mapping
+        data.DATE_EXAMEN = formatDateLocal(expertise.date_examen, 'date_examen');
+        data.DATE_NAISSANCE = formatDateLocal(expertise.date_naissance, 'date_naissance');
+        data.DATE_OCE = formatDateLocal(expertise.date_oce, 'date_oce');
+        data.LIMITE_OCE = formatDateLocal(expertise.limite_oce, 'limite_oce');
+        
+        console.log('\n📦 OBJET DATA FINAL:');
+        console.log(JSON.stringify(data, null, 2));
+        
+        // Vérification finale - détecter les undefined restants
+        const undefinedFields = Object.entries(data).filter(([key, value]) => 
+          value === undefined || value === 'undefined' || String(value).toLowerCase().includes('undefined')
+        );
+        
+        if (undefinedFields.length > 0) {
+          console.error('❌ ALERTE: Des champs contiennent encore "undefined":');
+          undefinedFields.forEach(([key, value]) => {
+            console.error(`  - ${key}: "${value}"`);
+            data[key] = ''; // Force à vide si still undefined
+          });
+        } else {
+          console.log('✅ Aucun champ "undefined" détecté');
+        }
+        
         // Créer une instance de PizZip avec le template
+        console.log('📋 Création PizZip avec template...');
         const zip = new PizZip(this.currentTemplate);
         
         // Créer un nouveau Docxtemplater
+        console.log('🔧 Création docxtemplater...');
         const doc = new window.docxtemplater(zip, {
           paragraphLoop: true,
           linebreaks: true,
@@ -571,8 +723,37 @@ class CrimiTrackApp {
           }
         });
         
-        // Remplacer les variables
-        doc.render(data);
+        console.log('🎯 DATA ENVOYÉ À DOCXTEMPLATER:');
+        console.log('Keys:', Object.keys(data));
+        console.log('Values:', Object.values(data));
+        console.log('Full object:', data);
+        
+        // TEST CRITIQUE: Vérifier chaque propriété individuellement
+        Object.entries(data).forEach(([key, value]) => {
+          console.log(`  📝 ${key}: "${value}" (${typeof value}) [length: ${String(value).length}]`);
+          if (String(value).includes('undefined')) {
+            console.error(`    ❌ DANGER: La valeur contient "undefined"!`);
+          }
+        });
+        
+        // Remplacer les variables dans le template
+        console.log('🔄 Appel doc.render() avec les données nettoyées...');
+        try {
+          // Utiliser directement les vraies données nettoyées
+          doc.render(data);
+          console.log('✅ doc.render() réussi avec données nettoyées');
+          
+        } catch (renderError) {
+          console.error('❌ Erreur lors du render:', renderError);
+          console.error('Stack:', renderError.stack);
+          console.error('Propriétés problématiques:', renderError.properties);
+          
+          // Afficher les données qui ont causé l'erreur pour debug
+          console.error('Données envoyées qui ont causé l\'erreur:');
+          console.error(JSON.stringify(data, null, 2));
+          
+          throw renderError;
+        }
         
         // Générer le document
         const out = doc.getZip().generate({
@@ -1065,12 +1246,20 @@ class CrimiTrackApp {
     const expertise = {};
     
     formData.forEach((value, key) => {
-      expertise[key] = value;
+      // SANITISER LES VALEURS DU FORMULAIRE
+      // Si la valeur est vide, undefined, ou contient 'undefined', la remplacer par une chaîne vide
+      if (!value || value === 'undefined' || value === 'null' || String(value).trim() === '') {
+        expertise[key] = '';
+      } else {
+        expertise[key] = String(value).trim();
+      }
     });
     
     // Générer un ID unique
     expertise._uniqueId = this.generateUniqueId();
     expertise._importDate = new Date().toISOString();
+    
+    console.log('📝 Nouvelle expertise sanitisée:', expertise);
     
     // Ajouter à la base de données
     this.database.expertises.push(expertise);
