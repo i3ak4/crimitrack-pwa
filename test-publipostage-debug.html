@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Publipostage Debug - CrimiTrack PWA</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #2980b9;
+        }
+        .button.danger {
+            background: #e74c3c;
+        }
+        .button.danger:hover {
+            background: #c0392b;
+        }
+        .button.success {
+            background: #27ae60;
+        }
+        .button.success:hover {
+            background: #229954;
+        }
+        .console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .console-line {
+            margin: 2px 0;
+        }
+        .console-line.error {
+            color: #ff4444;
+        }
+        .console-line.warning {
+            color: #ffaa00;
+        }
+        .console-line.success {
+            color: #44ff44;
+        }
+        .data-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .undefined {
+            background: #ffcccc;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 Test Debug Publipostage - CrimiTrack PWA</h1>
+
+    <div class="test-section">
+        <h2>📋 Test 1: Données de Test</h2>
+        <p>Créer et tester avec des données contrôlées</p>
+        
+        <button class="button" onclick="createTestData()">
+            📝 Créer Données Test
+        </button>
+        
+        <button class="button success" onclick="testWithHardcodedData()">
+            ✅ Test avec Données Hardcodées
+        </button>
+        
+        <button class="button danger" onclick="testWithEmptyData()">
+            ❌ Test avec Données Vides
+        </button>
+        
+        <button class="button" onclick="testWithMixedData()">
+            🔄 Test avec Données Mixtes
+        </button>
+        
+        <div id="test-data" class="data-display"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Test 2: Sanitisation des Valeurs</h2>
+        <p>Tester les fonctions de nettoyage des données</p>
+        
+        <button class="button" onclick="testSanitization()">
+            🧹 Tester Sanitisation
+        </button>
+        
+        <div id="sanitization-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📄 Test 3: Template Word</h2>
+        <p>Choisir un template et tester le remplacement des variables</p>
+        
+        <label for="template-upload" class="button">
+            📂 Choisir Template Word
+        </label>
+        <input type="file" id="template-upload" accept=".docx" style="display: none;">
+        <span id="template-name">Aucun template sélectionné</span>
+        
+        <button class="button success" onclick="generateTestDocument()">
+            📝 Générer Document Test
+        </button>
+        
+        <div id="template-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Test 4: Analyse des Expertises</h2>
+        <p>Analyser les expertises existantes dans la base</p>
+        
+        <button class="button" onclick="analyzeExpertises()">
+            🔎 Analyser Base de Données
+        </button>
+        
+        <div id="analysis-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>💻 Console de Debug</h2>
+        <button class="button" onclick="clearConsole()">🗑️ Effacer Console</button>
+        <div id="console" class="console"></div>
+    </div>
+
+    <!-- Bibliothèques -->
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip-utils.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.42.0/build/docxtemplater.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+    <script>
+        let currentTemplate = null;
+        const consoleDiv = document.getElementById('console');
+        
+        // Fonction de log personnalisée
+        function log(message, type = 'log') {
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            line.textContent = `[${timestamp}] ${message}`;
+            consoleDiv.appendChild(line);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            
+            // Log aussi dans la vraie console
+            if (type === 'error') console.error(message);
+            else if (type === 'warning') console.warn(message);
+            else console.log(message);
+        }
+        
+        // Fonction de sanitisation locale
+        function sanitizeValue(value, fieldName = '') {
+            log(`Sanitizing [${fieldName}]: "${value}" (type: ${typeof value})`);
+            
+            if (value === null || 
+                value === undefined || 
+                value === 'null' || 
+                value === 'undefined' || 
+                value === '' || 
+                String(value).trim() === '' ||
+                String(value).toLowerCase() === 'undefined') {
+                log(`  → Empty value detected, returning ""`, 'warning');
+                return '';
+            }
+            
+            const result = String(value).trim();
+            log(`  → Cleaned value: "${result}"`, 'success');
+            return result;
+        }
+        
+        // Fonction de formatage de date
+        function formatDate(dateStr, fieldName = '') {
+            log(`Formatting date [${fieldName}]: "${dateStr}"`);
+            
+            if (!dateStr || 
+                dateStr === 'null' || 
+                dateStr === null || 
+                dateStr === undefined ||
+                String(dateStr).toLowerCase() === 'undefined') {
+                log(`  → Empty date, returning ""`, 'warning');
+                return '';
+            }
+            
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    log(`  → Invalid date, returning ""`, 'warning');
+                    return '';
+                }
+                const formatted = date.toLocaleDateString('fr-FR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                log(`  → Formatted date: "${formatted}"`, 'success');
+                return formatted;
+            } catch (error) {
+                log(`  → Date format error: ${error.message}`, 'error');
+                return '';
+            }
+        }
+        
+        // Créer des données de test
+        function createTestData() {
+            const testData = {
+                patronyme: 'DUPONT Jean',
+                date_examen: '2025-08-20',
+                lieu_examen: 'Palais de Justice de Paris',
+                date_naissance: '1985-03-15',
+                age: '40',
+                profession: 'Ingénieur',
+                domicile: '123 rue de la Paix, 75001 Paris',
+                magistrat: 'Mme MARTIN',
+                tribunal: 'TJ Paris',
+                numero_parquet: '2025/123456',
+                numero_instruction: 'INS-2025-789',
+                chefs_accusation: 'Vol avec violence',
+                opj_greffier: 'Lieutenant BERNARD',
+                type_mission: 'Expertise psychiatrique',
+                statut: 'programmee'
+            };
+            
+            document.getElementById('test-data').textContent = JSON.stringify(testData, null, 2);
+            log('Test data created', 'success');
+            return testData;
+        }
+        
+        // Test avec données hardcodées
+        function testWithHardcodedData() {
+            const data = createTestData();
+            log('Testing with hardcoded data...', 'warning');
+            processDataForTemplate(data);
+        }
+        
+        // Test avec données vides
+        function testWithEmptyData() {
+            const data = {
+                patronyme: undefined,
+                date_examen: null,
+                lieu_examen: 'undefined',
+                date_naissance: '',
+                age: 'null',
+                profession: undefined,
+                domicile: null,
+                magistrat: 'undefined',
+                tribunal: '',
+                numero_parquet: undefined,
+                numero_instruction: null,
+                chefs_accusation: 'undefined',
+                opj_greffier: '',
+                type_mission: undefined,
+                statut: null
+            };
+            
+            document.getElementById('test-data').textContent = JSON.stringify(data, null, 2);
+            log('Testing with empty/undefined data...', 'warning');
+            processDataForTemplate(data);
+        }
+        
+        // Test avec données mixtes
+        function testWithMixedData() {
+            const data = {
+                patronyme: 'MARTIN Sophie',
+                date_examen: undefined,
+                lieu_examen: 'Tribunal de Créteil',
+                date_naissance: null,
+                age: '35',
+                profession: 'undefined',
+                domicile: '',
+                magistrat: 'M. DURAND',
+                tribunal: undefined,
+                numero_parquet: '2025/987654',
+                numero_instruction: null,
+                chefs_accusation: 'undefined',
+                opj_greffier: 'Brigadier PETIT',
+                type_mission: '',
+                statut: 'attente'
+            };
+            
+            document.getElementById('test-data').textContent = JSON.stringify(data, null, 2);
+            log('Testing with mixed data...', 'warning');
+            processDataForTemplate(data);
+        }
+        
+        // Traiter les données pour le template
+        function processDataForTemplate(rawData) {
+            log('=== PROCESSING DATA FOR TEMPLATE ===');
+            const processedData = {};
+            
+            // Liste des champs standards
+            const fields = [
+                'patronyme', 'lieu_examen', 'age', 'profession', 'domicile',
+                'magistrat', 'tribunal', 'numero_parquet', 'numero_instruction',
+                'chefs_accusation', 'opj_greffier', 'type_mission', 'statut'
+            ];
+            
+            // Traiter chaque champ
+            fields.forEach(field => {
+                const rawValue = rawData[field];
+                const cleanValue = sanitizeValue(rawValue, field);
+                processedData[field] = cleanValue;
+            });
+            
+            // Traiter les dates
+            processedData.date_examen = formatDate(rawData.date_examen, 'date_examen');
+            processedData.date_naissance = formatDate(rawData.date_naissance, 'date_naissance');
+            
+            // Afficher le résultat
+            log('\n=== PROCESSED DATA ===');
+            
+            // Créer un tableau pour afficher les résultats
+            let html = '<table>';
+            html += '<tr><th>Champ</th><th>Valeur Originale</th><th>Valeur Nettoyée</th><th>Status</th></tr>';
+            
+            Object.keys(processedData).forEach(key => {
+                const original = rawData[key];
+                const cleaned = processedData[key];
+                const hasUndefined = String(original).includes('undefined') || original === undefined || original === null;
+                const rowClass = hasUndefined ? 'undefined' : '';
+                
+                html += `<tr class="${rowClass}">`;
+                html += `<td><strong>${key}</strong></td>`;
+                html += `<td>${original === undefined ? 'undefined' : original === null ? 'null' : original}</td>`;
+                html += `<td>${cleaned}</td>`;
+                html += `<td>${hasUndefined ? '❌ Problème' : '✅ OK'}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</table>';
+            
+            document.getElementById('test-data').innerHTML = html;
+            
+            // Vérifier si des undefined restent
+            const undefinedFields = Object.entries(processedData).filter(([key, value]) => 
+                value === undefined || value === 'undefined' || String(value).toLowerCase().includes('undefined')
+            );
+            
+            if (undefinedFields.length > 0) {
+                log(`❌ ALERT: ${undefinedFields.length} fields still contain undefined!`, 'error');
+                undefinedFields.forEach(([key, value]) => {
+                    log(`  - ${key}: "${value}"`, 'error');
+                });
+            } else {
+                log('✅ All fields cleaned successfully!', 'success');
+            }
+            
+            return processedData;
+        }
+        
+        // Test de sanitisation
+        function testSanitization() {
+            log('=== TESTING SANITIZATION FUNCTIONS ===');
+            
+            const testCases = [
+                { input: 'Normal text', expected: 'Normal text' },
+                { input: undefined, expected: '' },
+                { input: null, expected: '' },
+                { input: 'undefined', expected: '' },
+                { input: 'null', expected: '' },
+                { input: '', expected: '' },
+                { input: '   ', expected: '' },
+                { input: '  Trimmed  ', expected: 'Trimmed' },
+                { input: 123, expected: '123' },
+                { input: true, expected: 'true' },
+                { input: false, expected: 'false' },
+                { input: 'UNDEFINED', expected: '' },
+                { input: 'Undefined', expected: '' }
+            ];
+            
+            let html = '<table>';
+            html += '<tr><th>Input</th><th>Type</th><th>Expected</th><th>Result</th><th>Status</th></tr>';
+            
+            testCases.forEach(test => {
+                const result = sanitizeValue(test.input, 'test');
+                const passed = result === test.expected;
+                
+                html += '<tr>';
+                html += `<td>${test.input === undefined ? 'undefined' : test.input === null ? 'null' : `"${test.input}"`}</td>`;
+                html += `<td>${typeof test.input}</td>`;
+                html += `<td>"${test.expected}"</td>`;
+                html += `<td>"${result}"</td>`;
+                html += `<td>${passed ? '✅ PASS' : '❌ FAIL'}</td>`;
+                html += '</tr>';
+                
+                if (!passed) {
+                    log(`Test failed: input="${test.input}", expected="${test.expected}", got="${result}"`, 'error');
+                }
+            });
+            
+            html += '</table>';
+            document.getElementById('sanitization-results').innerHTML = html;
+            
+            log('Sanitization tests completed', 'success');
+        }
+        
+        // Gérer l'upload du template
+        document.getElementById('template-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentTemplate = e.target.result;
+                document.getElementById('template-name').textContent = file.name;
+                log(`Template loaded: ${file.name}`, 'success');
+            };
+            reader.readAsArrayBuffer(file);
+        });
+        
+        // Générer un document test
+        async function generateTestDocument() {
+            if (!currentTemplate) {
+                log('No template selected!', 'error');
+                alert('Veuillez d\'abord choisir un template Word');
+                return;
+            }
+            
+            log('=== GENERATING TEST DOCUMENT ===');
+            
+            try {
+                // Créer les données test
+                const rawData = createTestData();
+                const processedData = processDataForTemplate(rawData);
+                
+                // Créer le document
+                const zip = new PizZip(currentTemplate);
+                const doc = new window.docxtemplater(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true,
+                    delimiters: {
+                        start: '{',
+                        end: '}'
+                    }
+                });
+                
+                // Essayer de render
+                log('Rendering document with processed data...');
+                doc.render(processedData);
+                
+                // Générer le blob
+                const out = doc.getZip().generate({
+                    type: 'blob',
+                    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                });
+                
+                log(`Document generated successfully! Size: ${out.size} bytes`, 'success');
+                
+                // Télécharger
+                if (typeof saveAs !== 'undefined') {
+                    saveAs(out, 'test-publipostage.docx');
+                    log('Document downloaded using FileSaver', 'success');
+                } else {
+                    const url = URL.createObjectURL(out);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'test-publipostage.docx';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    log('Document downloaded using fallback method', 'success');
+                }
+                
+                // Afficher les résultats
+                let html = '<div class="status success">✅ Document généré avec succès!</div>';
+                html += '<div class="data-display">';
+                html += '<strong>Données utilisées:</strong>\n';
+                html += JSON.stringify(processedData, null, 2);
+                html += '</div>';
+                document.getElementById('template-results').innerHTML = html;
+                
+            } catch (error) {
+                log(`Error generating document: ${error.message}`, 'error');
+                console.error(error);
+                
+                let html = '<div class="status error">❌ Erreur lors de la génération</div>';
+                html += '<div class="data-display">';
+                html += error.message;
+                if (error.properties) {
+                    html += '\n\nPropriétés problématiques:\n';
+                    html += JSON.stringify(error.properties, null, 2);
+                }
+                html += '</div>';
+                document.getElementById('template-results').innerHTML = html;
+            }
+        }
+        
+        // Analyser les expertises existantes
+        async function analyzeExpertises() {
+            log('=== ANALYZING EXISTING EXPERTISES ===');
+            
+            try {
+                // Essayer de charger les données depuis localStorage
+                const stored = localStorage.getItem('crimitrack-database');
+                
+                if (!stored) {
+                    log('No data found in localStorage', 'warning');
+                    document.getElementById('analysis-results').innerHTML = 
+                        '<div class="status warning">⚠️ Aucune donnée trouvée dans localStorage</div>';
+                    return;
+                }
+                
+                const database = JSON.parse(stored);
+                const expertises = database.expertises || [];
+                
+                log(`Found ${expertises.length} expertises`, 'success');
+                
+                if (expertises.length === 0) {
+                    document.getElementById('analysis-results').innerHTML = 
+                        '<div class="status warning">⚠️ Base de données vide</div>';
+                    return;
+                }
+                
+                // Analyser chaque expertise
+                let html = '<div class="status success">✅ ' + expertises.length + ' expertise(s) trouvée(s)</div>';
+                
+                let undefinedCount = 0;
+                const fieldStats = {};
+                
+                expertises.forEach((exp, index) => {
+                    log(`Analyzing expertise ${index + 1}...`);
+                    
+                    Object.entries(exp).forEach(([key, value]) => {
+                        if (!fieldStats[key]) {
+                            fieldStats[key] = { total: 0, undefined: 0, empty: 0, valid: 0 };
+                        }
+                        
+                        fieldStats[key].total++;
+                        
+                        if (value === undefined || value === 'undefined' || String(value).toLowerCase() === 'undefined') {
+                            fieldStats[key].undefined++;
+                            undefinedCount++;
+                            log(`  Field ${key} contains undefined!`, 'error');
+                        } else if (value === null || value === 'null' || value === '') {
+                            fieldStats[key].empty++;
+                        } else {
+                            fieldStats[key].valid++;
+                        }
+                    });
+                });
+                
+                // Afficher les statistiques
+                html += '<h3>Statistiques par champ:</h3>';
+                html += '<table>';
+                html += '<tr><th>Champ</th><th>Total</th><th>Valides</th><th>Vides</th><th>Undefined</th><th>Status</th></tr>';
+                
+                Object.entries(fieldStats).forEach(([field, stats]) => {
+                    const hasProblems = stats.undefined > 0;
+                    html += `<tr class="${hasProblems ? 'undefined' : ''}">`;
+                    html += `<td><strong>${field}</strong></td>`;
+                    html += `<td>${stats.total}</td>`;
+                    html += `<td>${stats.valid}</td>`;
+                    html += `<td>${stats.empty}</td>`;
+                    html += `<td>${stats.undefined}</td>`;
+                    html += `<td>${hasProblems ? '❌ Problème' : '✅ OK'}</td>`;
+                    html += '</tr>';
+                });
+                
+                html += '</table>';
+                
+                if (undefinedCount > 0) {
+                    html += `<div class="status error">❌ ${undefinedCount} valeur(s) "undefined" détectée(s)</div>`;
+                } else {
+                    html += '<div class="status success">✅ Aucune valeur "undefined" détectée</div>';
+                }
+                
+                document.getElementById('analysis-results').innerHTML = html;
+                
+            } catch (error) {
+                log(`Error analyzing database: ${error.message}`, 'error');
+                document.getElementById('analysis-results').innerHTML = 
+                    '<div class="status error">❌ Erreur lors de l\'analyse: ' + error.message + '</div>';
+            }
+        }
+        
+        // Effacer la console
+        function clearConsole() {
+            consoleDiv.innerHTML = '';
+            log('Console cleared', 'success');
+        }
+        
+        // Au chargement
+        window.addEventListener('load', () => {
+            log('Debug page ready', 'success');
+            log('Checking dependencies...', 'warning');
+            
+            if (typeof PizZip !== 'undefined') {
+                log('✅ PizZip loaded', 'success');
+            } else {
+                log('❌ PizZip not found', 'error');
+            }
+            
+            if (typeof window.docxtemplater !== 'undefined') {
+                log('✅ docxtemplater loaded', 'success');
+            } else {
+                log('❌ docxtemplater not found', 'error');
+            }
+            
+            if (typeof saveAs !== 'undefined') {
+                log('✅ FileSaver loaded', 'success');
+            } else {
+                log('⚠️ FileSaver not found, using fallback', 'warning');
+            }
+        });
+    </script>
+</body>
+</html>

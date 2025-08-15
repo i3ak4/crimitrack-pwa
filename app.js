@@ -660,35 +660,44 @@ class CrimiTrackApp {
         console.log('🏗️ Construction de l\'objet data...');
         const data = {};
         
-        // MAPPING CORRECT: Variables du template Word (MAJUSCULES) ← données JS (minuscules)
-        const fieldMapping = {
-          // Template Word       ← Source données JS
-          'NOM_PRENOM':          'patronyme',
-          'LIEU_EXAMEN':         'lieu_examen', 
-          'AGE':                 'age',
-          'PROFESSION':          'profession',
-          'DOMICILE':            'domicile',
-          'MAGISTRAT':           'magistrat',
-          'TRIBUNAL':            'tribunal',
-          'PROC_1':              'numero_parquet',
-          'PROC_2':              'numero_instruction', 
-          'CHEFS_ACCUSATION':    'chefs_accusation',
-          'OPJ_GREFFIER':        'opj_greffier'
-        };
+        // IMPORTANT: Il faut aussi garder les variables en minuscules pour certains templates
+        // Donc on va créer les deux versions : MAJUSCULES et minuscules
         
-        // Traiter chaque champ avec le mapping correct
-        Object.entries(fieldMapping).forEach(([templateVar, dataField]) => {
-          const rawValue = expertise[dataField];
-          const cleanValue = sanitizeLocal(rawValue, dataField);
-          data[templateVar] = cleanValue;
-          console.log(`  📝 Mapping: {${templateVar}} ← "${cleanValue}" (depuis ${dataField})`);
+        // 1. Variables en minuscules (pour compatibilité avec anciens templates)
+        const fields = [
+          'patronyme', 'lieu_examen', 'age', 'profession', 'domicile',
+          'magistrat', 'tribunal', 'numero_parquet', 'numero_instruction',
+          'chefs_accusation', 'opj_greffier', 'type_mission', 'statut'
+        ];
+        
+        fields.forEach(field => {
+          const rawValue = expertise[field];
+          const cleanValue = sanitizeLocal(rawValue, field);
+          data[field] = cleanValue;
         });
         
-        // Traiter les dates séparément avec le bon mapping
-        data.DATE_EXAMEN = formatDateLocal(expertise.date_examen, 'date_examen');
-        data.DATE_NAISSANCE = formatDateLocal(expertise.date_naissance, 'date_naissance');
-        data.DATE_OCE = formatDateLocal(expertise.date_oce, 'date_oce');
-        data.LIMITE_OCE = formatDateLocal(expertise.limite_oce, 'limite_oce');
+        // Dates en minuscules
+        data.date_examen = formatDateLocal(expertise.date_examen, 'date_examen');
+        data.date_naissance = formatDateLocal(expertise.date_naissance, 'date_naissance');
+        
+        // 2. AJOUTER aussi les variables EN MAJUSCULES pour les templates qui les utilisent
+        data.NOM_PRENOM = data.patronyme;
+        data.LIEU_EXAMEN = data.lieu_examen;
+        data.AGE = data.age;
+        data.PROFESSION = data.profession;
+        data.DOMICILE = data.domicile;
+        data.MAGISTRAT = data.magistrat;
+        data.TRIBUNAL = data.tribunal;
+        data.PROC_1 = data.numero_parquet;
+        data.PROC_2 = data.numero_instruction;
+        data.CHEFS_ACCUSATION = data.chefs_accusation;
+        data.OPJ_GREFFIER = data.opj_greffier;
+        data.TYPE_MISSION = data.type_mission;
+        data.STATUT = data.statut;
+        data.DATE_EXAMEN = data.date_examen;
+        data.DATE_NAISSANCE = data.date_naissance;
+        
+        console.log('📊 Double mapping créé (minuscules + MAJUSCULES) pour compatibilité maximale');
         
         console.log('\n📦 OBJET DATA FINAL:');
         console.log(JSON.stringify(data, null, 2));

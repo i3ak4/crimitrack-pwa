@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Sanitize - CrimiTrack PWA</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-size: 1.1em;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: transform 0.3s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .results {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .column {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .column h3 {
+            color: #495057;
+            margin-top: 0;
+        }
+        pre {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .problem {
+            background: #ffcccc;
+            font-weight: bold;
+        }
+        .fixed {
+            background: #ccffcc;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Force Sanitization - CrimiTrack PWA</h1>
+        
+        <div id="initial-status" class="status warning">
+            Prêt à nettoyer les données...
+        </div>
+        
+        <button onclick="forceSanitize()">
+            🚀 Forcer le Nettoyage Complet
+        </button>
+        
+        <div class="before-after" id="comparison" style="display: none;">
+            <div class="column">
+                <h3>❌ Avant (avec problèmes)</h3>
+                <pre id="before-data"></pre>
+            </div>
+            <div class="column">
+                <h3>✅ Après (nettoyé)</h3>
+                <pre id="after-data"></pre>
+            </div>
+        </div>
+        
+        <div id="results" class="results" style="display: none;">
+            <h3>📊 Résultats du nettoyage</h3>
+            <div id="results-content"></div>
+        </div>
+    </div>
+    
+    <script>
+        async function forceSanitize() {
+            const statusDiv = document.getElementById('initial-status');
+            statusDiv.className = 'status warning';
+            statusDiv.textContent = '⏳ Nettoyage en cours...';
+            
+            // 1. Charger les données depuis localStorage
+            const localData = localStorage.getItem('crimitrack-database');
+            if (!localData) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Aucune donnée trouvée dans localStorage';
+                return;
+            }
+            
+            let database;
+            try {
+                database = JSON.parse(localData);
+            } catch (e) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Erreur lors du parsing des données';
+                return;
+            }
+            
+            // Afficher les données avant
+            const beforeData = JSON.stringify(database.expertises[0], null, 2);
+            document.getElementById('before-data').textContent = beforeData;
+            
+            // 2. Statistiques avant nettoyage
+            let problemCount = 0;
+            const problemFields = new Set();
+            
+            database.expertises.forEach(expertise => {
+                Object.entries(expertise).forEach(([key, value]) => {
+                    if (key.startsWith('_')) return; // Ignorer les champs système
+                    
+                    if (value === undefined || 
+                        value === 'undefined' || 
+                        value === null || 
+                        value === 'null' ||
+                        value === 'UNDEFINED' ||
+                        value === 'Undefined' ||
+                        String(value).toLowerCase() === 'undefined' ||
+                        String(value).toLowerCase() === 'null') {
+                        problemCount++;
+                        problemFields.add(key);
+                    }
+                });
+            });
+            
+            console.log(`🔍 Problèmes détectés: ${problemCount} valeurs dans ${problemFields.size} champs`);
+            
+            // 3. Nettoyer les données
+            const cleanedDatabase = {
+                expertises: database.expertises.map(expertise => {
+                    const cleaned = {};
+                    
+                    Object.entries(expertise).forEach(([key, value]) => {
+                        // Préserver les champs système
+                        if (key.startsWith('_')) {
+                            cleaned[key] = value;
+                            return;
+                        }
+                        
+                        // Nettoyer les valeurs problématiques
+                        if (value === undefined || 
+                            value === 'undefined' || 
+                            value === null || 
+                            value === 'null' ||
+                            value === 'UNDEFINED' ||
+                            value === 'Undefined' ||
+                            String(value).toLowerCase() === 'undefined' ||
+                            String(value).toLowerCase() === 'null' ||
+                            String(value).trim() === '') {
+                            cleaned[key] = '';
+                            console.log(`✨ Nettoyé: ${key} était "${value}", maintenant ""`);
+                        } else {
+                            // Nettoyer les chaînes qui contiennent "undefined"
+                            let cleanValue = String(value);
+                            if (cleanValue.includes('undefined')) {
+                                cleanValue = cleanValue.replace(/undefined/gi, '').trim();
+                                console.log(`✨ Nettoyé: ${key} contenait "undefined", maintenant "${cleanValue}"`);
+                            }
+                            cleaned[key] = cleanValue;
+                        }
+                    });
+                    
+                    return cleaned;
+                })
+            };
+            
+            // Afficher les données après
+            const afterData = JSON.stringify(cleanedDatabase.expertises[0], null, 2);
+            document.getElementById('after-data').textContent = afterData;
+            document.getElementById('comparison').style.display = 'block';
+            
+            // 4. Statistiques après nettoyage
+            let remainingProblems = 0;
+            cleanedDatabase.expertises.forEach(expertise => {
+                Object.entries(expertise).forEach(([key, value]) => {
+                    if (key.startsWith('_')) return;
+                    
+                    if (String(value).toLowerCase().includes('undefined') ||
+                        String(value).toLowerCase().includes('null')) {
+                        remainingProblems++;
+                        console.error(`⚠️ Problème restant: ${key} = "${value}"`);
+                    }
+                });
+            });
+            
+            // 5. Sauvegarder les données nettoyées
+            localStorage.setItem('crimitrack-database', JSON.stringify(cleanedDatabase));
+            
+            // 6. Sauvegarder aussi dans IndexedDB
+            await saveToIndexedDB(cleanedDatabase);
+            
+            // 7. Afficher les résultats
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = `
+                <p>📊 <strong>Expertises traitées:</strong> ${cleanedDatabase.expertises.length}</p>
+                <p>🐛 <strong>Problèmes trouvés:</strong> ${problemCount}</p>
+                <p>✨ <strong>Problèmes corrigés:</strong> ${problemCount - remainingProblems}</p>
+                <p>⚠️ <strong>Problèmes restants:</strong> ${remainingProblems}</p>
+                <p>📝 <strong>Champs affectés:</strong> ${Array.from(problemFields).join(', ')}</p>
+            `;
+            document.getElementById('results').style.display = 'block';
+            
+            if (remainingProblems === 0) {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Toutes les données ont été nettoyées avec succès!';
+            } else {
+                statusDiv.className = 'status warning';
+                statusDiv.textContent = `⚠️ Nettoyage terminé mais ${remainingProblems} problème(s) subsiste(nt)`;
+            }
+        }
+        
+        async function saveToIndexedDB(database) {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('CrimiTrackDB', 1);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('database')) {
+                        db.createObjectStore('database');
+                    }
+                };
+                
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['database'], 'readwrite');
+                    const store = transaction.objectStore('database');
+                    
+                    const putRequest = store.put({
+                        data: database,
+                        timestamp: new Date().toISOString()
+                    }, 'main');
+                    
+                    putRequest.onsuccess = () => {
+                        console.log('✅ Données nettoyées sauvegardées dans IndexedDB');
+                        resolve();
+                    };
+                    
+                    putRequest.onerror = () => {
+                        console.error('❌ Erreur sauvegarde IndexedDB');
+                        reject();
+                    };
+                };
+                
+                request.onerror = () => {
+                    console.error('❌ Erreur ouverture IndexedDB');
+                    reject();
+                };
+            });
+        }
+        
+        // Vérifier l'état initial
+        window.addEventListener('load', () => {
+            const localData = localStorage.getItem('crimitrack-database');
+            if (localData) {
+                try {
+                    const database = JSON.parse(localData);
+                    let problemCount = 0;
+                    
+                    database.expertises.forEach(expertise => {
+                        Object.entries(expertise).forEach(([key, value]) => {
+                            if (key.startsWith('_')) return;
+                            
+                            if (value === undefined || 
+                                value === 'undefined' || 
+                                value === null || 
+                                value === 'null' ||
+                                String(value).toLowerCase() === 'undefined') {
+                                problemCount++;
+                            }
+                        });
+                    });
+                    
+                    if (problemCount > 0) {
+                        document.getElementById('initial-status').textContent = 
+                            `⚠️ ${problemCount} valeur(s) problématique(s) détectée(s). Cliquez pour nettoyer.`;
+                    } else {
+                        document.getElementById('initial-status').className = 'status success';
+                        document.getElementById('initial-status').textContent = 
+                            '✅ Les données sont déjà propres!';
+                    }
+                } catch (e) {
+                    console.error('Erreur parsing:', e);
+                }
+            } else {
+                document.getElementById('initial-status').className = 'status error';
+                document.getElementById('initial-status').textContent = 
+                    '❌ Aucune donnée trouvée';
+            }
+        });
+    </script>
+</body>
+</html>
