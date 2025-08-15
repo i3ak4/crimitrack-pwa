@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tests des Corrections - CrimiTrack PWA</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+        .test-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #2980b9;
+        }
+        #test-results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Tests des Corrections - CrimiTrack PWA</h1>
+
+    <div class="test-section">
+        <h2>📋 Tests Automatisés</h2>
+        <button class="test-button" onclick="runAllTests()">▶️ Lancer tous les tests</button>
+        <button class="test-button" onclick="testSanitizeValue()">Test sanitizeValue()</button>
+        <button class="test-button" onclick="testFormatDateForTemplate()">Test formatDateForTemplate()</button>
+        <button class="test-button" onclick="testExpertiseSelection()">Test sélection expertises</button>
+        <button class="test-button" onclick="testDocumentGeneration()">Test génération documents</button>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Tests Manuels</h2>
+        <h3>1. Test de sélection d'expertises</h3>
+        <ol>
+            <li>Ouvrir l'application PWA</li>
+            <li>Aller dans l'onglet "Publipostage"</li>
+            <li>Cliquer sur différentes expertises</li>
+            <li>Vérifier que le compteur "X expertise(s) sélectionnée(s)" se met à jour</li>
+            <li>Vérifier que les checkboxes se cochent/décochent correctement</li>
+        </ol>
+
+        <h3>2. Test de génération de documents</h3>
+        <ol>
+            <li>Sélectionner une ou plusieurs expertises</li>
+            <li>Charger un template Word</li>
+            <li>Cliquer sur "Générer le document"</li>
+            <li>Ouvrir le document généré</li>
+            <li>Vérifier qu'il n'y a pas de "undefined" dans le document</li>
+            <li>Vérifier que les champs vides sont bien vides (pas de texte)</li>
+        </ol>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        const resultsDiv = document.getElementById('test-results');
+        
+        function addResult(testName, success, message) {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${success ? 'success' : 'error'}`;
+            resultDiv.innerHTML = `
+                <strong>${success ? '✅' : '❌'} ${testName}</strong>
+                <br>${message}
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        // Test de la fonction sanitizeValue
+        function testSanitizeValue() {
+            clearResults();
+            const app = new CrimiTrackApp();
+            
+            const tests = [
+                { input: null, expected: '', name: 'null' },
+                { input: undefined, expected: '', name: 'undefined' },
+                { input: 'null', expected: '', name: '"null" string' },
+                { input: 'undefined', expected: '', name: '"undefined" string' },
+                { input: 'Test', expected: 'Test', name: 'string normale' },
+                { input: 123, expected: '123', name: 'nombre' },
+                { input: '', expected: '', name: 'chaîne vide' }
+            ];
+            
+            let allPassed = true;
+            tests.forEach(test => {
+                const result = app.sanitizeValue(test.input);
+                const passed = result === test.expected;
+                if (!passed) allPassed = false;
+                addResult(
+                    `sanitizeValue(${test.name})`,
+                    passed,
+                    `Entrée: ${test.input}, Attendu: "${test.expected}", Obtenu: "${result}"`
+                );
+            });
+            
+            addResult(
+                'Test sanitizeValue() global',
+                allPassed,
+                allPassed ? 'Tous les tests sont passés !' : 'Certains tests ont échoué'
+            );
+        }
+
+        // Test de la fonction formatDateForTemplate
+        function testFormatDateForTemplate() {
+            clearResults();
+            const app = new CrimiTrackApp();
+            
+            const tests = [
+                { input: null, expected: '', name: 'null' },
+                { input: undefined, expected: '', name: 'undefined' },
+                { input: 'null', expected: '', name: '"null" string' },
+                { input: '', expected: '', name: 'chaîne vide' },
+                { input: '2025-08-15', expected: '15/08/2025', name: 'date valide' },
+                { input: 'invalid-date', expected: '', name: 'date invalide' }
+            ];
+            
+            let allPassed = true;
+            tests.forEach(test => {
+                const result = app.formatDateForTemplate(test.input);
+                const passed = result === test.expected;
+                if (!passed) allPassed = false;
+                addResult(
+                    `formatDateForTemplate(${test.name})`,
+                    passed,
+                    `Entrée: ${test.input}, Attendu: "${test.expected}", Obtenu: "${result}"`
+                );
+            });
+            
+            addResult(
+                'Test formatDateForTemplate() global',
+                allPassed,
+                allPassed ? 'Tous les tests sont passés !' : 'Certains tests ont échoué'
+            );
+        }
+
+        // Test de la sélection d'expertises
+        function testExpertiseSelection() {
+            clearResults();
+            const app = new CrimiTrackApp();
+            
+            // Créer des expertises de test
+            app.database.expertises = [
+                { _uniqueId: 'test1', patronyme: 'Test 1' },
+                { _uniqueId: 'test-with-apostrophe\'s', patronyme: 'Test avec apostrophe' },
+                { _uniqueId: null, patronyme: 'Test sans ID' }
+            ];
+            
+            // Test 1: Sélection normale
+            app.toggleExpertiseSelection('test1');
+            const test1 = app.selectedExpertises.has('test1');
+            addResult('Sélection normale', test1, test1 ? 'Expertise ajoutée' : 'Échec de l\'ajout');
+            
+            // Test 2: Désélection
+            app.toggleExpertiseSelection('test1');
+            const test2 = !app.selectedExpertises.has('test1');
+            addResult('Désélection', test2, test2 ? 'Expertise retirée' : 'Échec du retrait');
+            
+            // Test 3: ID avec apostrophe
+            app.toggleExpertiseSelection('test-with-apostrophe\'s');
+            const test3 = app.selectedExpertises.has('test-with-apostrophe\'s');
+            addResult('ID avec apostrophe', test3, test3 ? 'Gestion correcte' : 'Échec avec apostrophe');
+            
+            // Test 4: ID inexistant
+            const sizeBefore = app.selectedExpertises.size;
+            app.toggleExpertiseSelection('inexistant');
+            const test4 = app.selectedExpertises.size === sizeBefore;
+            addResult('ID inexistant', test4, test4 ? 'Rejeté correctement' : 'Ajouté par erreur');
+            
+            const allPassed = test1 && test2 && test3 && test4;
+            addResult(
+                'Test sélection expertises global',
+                allPassed,
+                allPassed ? 'Tous les tests sont passés !' : 'Certains tests ont échoué'
+            );
+        }
+
+        // Test de génération de documents (simulation)
+        function testDocumentGeneration() {
+            clearResults();
+            const app = new CrimiTrackApp();
+            
+            // Créer une expertise de test avec valeurs null/undefined
+            const testExpertise = {
+                _uniqueId: 'test1',
+                patronyme: 'MARTIN Jean',
+                date_examen: '2025-08-15',
+                lieu_examen: null,
+                date_naissance: undefined,
+                age: 'null',
+                profession: undefined,
+                domicile: null,
+                magistrat: 'M. Dupont',
+                tribunal: 'Paris',
+                numero_parquet: '2025/123',
+                numero_instruction: null,
+                chefs_accusation: undefined,
+                opj_greffier: 'null',
+                type_mission: undefined,
+                statut: 'programmee'
+            };
+            
+            // Simuler la préparation des données
+            const data = {
+                patronyme: app.sanitizeValue(testExpertise.patronyme),
+                date_examen: app.formatDateForTemplate(testExpertise.date_examen),
+                lieu_examen: app.sanitizeValue(testExpertise.lieu_examen),
+                date_naissance: app.formatDateForTemplate(testExpertise.date_naissance),
+                age: app.sanitizeValue(testExpertise.age),
+                profession: app.sanitizeValue(testExpertise.profession),
+                domicile: app.sanitizeValue(testExpertise.domicile),
+                magistrat: app.sanitizeValue(testExpertise.magistrat),
+                tribunal: app.sanitizeValue(testExpertise.tribunal),
+                numero_parquet: app.sanitizeValue(testExpertise.numero_parquet),
+                numero_instruction: app.sanitizeValue(testExpertise.numero_instruction),
+                chefs_accusation: app.sanitizeValue(testExpertise.chefs_accusation),
+                opj_greffier: app.sanitizeValue(testExpertise.opj_greffier),
+                type_mission: app.sanitizeValue(testExpertise.type_mission),
+                statut: app.sanitizeValue(testExpertise.statut)
+            };
+            
+            // Vérifier qu'aucune valeur n'est undefined
+            let hasUndefined = false;
+            let hasNull = false;
+            for (const [key, value] of Object.entries(data)) {
+                if (value === undefined || value === 'undefined') {
+                    hasUndefined = true;
+                    addResult(`Champ ${key}`, false, `Contient "undefined": ${value}`);
+                }
+                if (value === null || value === 'null') {
+                    hasNull = true;
+                    addResult(`Champ ${key}`, false, `Contient "null": ${value}`);
+                }
+            }
+            
+            if (!hasUndefined && !hasNull) {
+                addResult('Aucun undefined/null', true, 'Toutes les valeurs sont correctement sanitisées');
+            }
+            
+            // Vérifier les valeurs attendues
+            const checks = [
+                { field: 'patronyme', expected: 'MARTIN Jean' },
+                { field: 'date_examen', expected: '15/08/2025' },
+                { field: 'lieu_examen', expected: '' },
+                { field: 'age', expected: '' },
+                { field: 'magistrat', expected: 'M. Dupont' },
+                { field: 'tribunal', expected: 'Paris' }
+            ];
+            
+            let allCorrect = true;
+            checks.forEach(check => {
+                const isCorrect = data[check.field] === check.expected;
+                if (!isCorrect) allCorrect = false;
+                addResult(
+                    `Valeur ${check.field}`,
+                    isCorrect,
+                    `Attendu: "${check.expected}", Obtenu: "${data[check.field]}"`
+                );
+            });
+            
+            addResult(
+                'Test génération documents global',
+                !hasUndefined && !hasNull && allCorrect,
+                !hasUndefined && !hasNull && allCorrect ? 
+                    'Données prêtes pour le template !' : 
+                    'Problèmes détectés dans la préparation des données'
+            );
+        }
+
+        // Lancer tous les tests
+        function runAllTests() {
+            clearResults();
+            addResult('Début des tests', true, new Date().toLocaleTimeString());
+            
+            setTimeout(() => testSanitizeValue(), 100);
+            setTimeout(() => testFormatDateForTemplate(), 300);
+            setTimeout(() => testExpertiseSelection(), 500);
+            setTimeout(() => testDocumentGeneration(), 700);
+            
+            setTimeout(() => {
+                addResult('Fin des tests', true, new Date().toLocaleTimeString());
+            }, 900);
+        }
+    </script>
+</body>
+</html>

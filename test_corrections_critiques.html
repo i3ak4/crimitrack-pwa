@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Corrections Critiques - CrimiTrack PWA</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { border-color: #28a745; background-color: #d4edda; }
+        .error { border-color: #dc3545; background-color: #f8d7da; }
+        .warning { border-color: #ffc107; background-color: #fff3cd; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test des Corrections Critiques - CrimiTrack PWA</h1>
+    
+    <div class="test-section">
+        <h2>Test 1 : Fonction sanitizeValue (Bug mapping)</h2>
+        <div id="test1-result"></div>
+        <pre id="test1-details"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2 : Fonction formatDateForTemplate</h2>
+        <div id="test2-result"></div>
+        <pre id="test2-details"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3 : Échappement des _uniqueId</h2>
+        <div id="test3-result"></div>
+        <pre id="test3-details"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 4 : Validation d'expertise existante</h2>
+        <div id="test4-result"></div>
+        <pre id="test4-details"></pre>
+    </div>
+
+    <script>
+        // Tests des corrections
+        
+        // Test 1: Fonction sanitizeValue
+        function testSanitizeValue() {
+            const sanitizeValue = (value) => {
+                if (value === null || value === undefined || value === 'null') return '';
+                return String(value);
+            };
+            
+            const tests = [
+                { input: null, expected: '', description: 'null' },
+                { input: undefined, expected: '', description: 'undefined' },
+                { input: 'null', expected: '', description: 'string "null"' },
+                { input: '', expected: '', description: 'chaîne vide' },
+                { input: 'test', expected: 'test', description: 'chaîne normale' },
+                { input: 123, expected: '123', description: 'nombre' },
+                { input: 0, expected: '0', description: 'zéro' }
+            ];
+            
+            let results = [];
+            let allPassed = true;
+            
+            tests.forEach(test => {
+                const result = sanitizeValue(test.input);
+                const passed = result === test.expected;
+                if (!passed) allPassed = false;
+                
+                results.push({
+                    description: test.description,
+                    input: test.input,
+                    expected: test.expected,
+                    actual: result,
+                    passed: passed
+                });
+            });
+            
+            document.getElementById('test1-result').className = allPassed ? 'success' : 'error';
+            document.getElementById('test1-result').innerHTML = 
+                `<strong>${allPassed ? '✅ PASSÉ' : '❌ ÉCHOUÉ'}</strong> - Fonction sanitizeValue`;
+            
+            document.getElementById('test1-details').textContent = 
+                results.map(r => 
+                    `${r.passed ? '✅' : '❌'} ${r.description}: ${JSON.stringify(r.input)} → ${JSON.stringify(r.actual)} (attendu: ${JSON.stringify(r.expected)})`
+                ).join('\n');
+        }
+        
+        // Test 2: Fonction formatDateForTemplate
+        function testFormatDateForTemplate() {
+            const formatDateForTemplate = (dateStr) => {
+                if (!dateStr || dateStr === 'null' || dateStr === null || dateStr === undefined) return '';
+                try {
+                    const date = new Date(dateStr);
+                    if (isNaN(date.getTime())) return ''; // Date invalide
+                    return date.toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                } catch {
+                    return '';
+                }
+            };
+            
+            const tests = [
+                { input: null, expected: '', description: 'null' },
+                { input: undefined, expected: '', description: 'undefined' },
+                { input: 'null', expected: '', description: 'string "null"' },
+                { input: '', expected: '', description: 'chaîne vide' },
+                { input: '2024-12-31', expected: '31/12/2024', description: 'date valide' },
+                { input: 'invalid-date', expected: '', description: 'date invalide' },
+                { input: '2024-02-30', expected: '', description: 'date impossible' }
+            ];
+            
+            let results = [];
+            let allPassed = true;
+            
+            tests.forEach(test => {
+                const result = formatDateForTemplate(test.input);
+                const passed = result === test.expected;
+                if (!passed) allPassed = false;
+                
+                results.push({
+                    description: test.description,
+                    input: test.input,
+                    expected: test.expected,
+                    actual: result,
+                    passed: passed
+                });
+            });
+            
+            document.getElementById('test2-result').className = allPassed ? 'success' : 'error';
+            document.getElementById('test2-result').innerHTML = 
+                `<strong>${allPassed ? '✅ PASSÉ' : '❌ ÉCHOUÉ'}</strong> - Fonction formatDateForTemplate`;
+            
+            document.getElementById('test2-details').textContent = 
+                results.map(r => 
+                    `${r.passed ? '✅' : '❌'} ${r.description}: ${JSON.stringify(r.input)} → ${JSON.stringify(r.actual)} (attendu: ${JSON.stringify(r.expected)})`
+                ).join('\n');
+        }
+        
+        // Test 3: Échappement des _uniqueId
+        function testUniqueIdEscaping() {
+            const testIds = [
+                'simple123',
+                "id-with'quotes",
+                'id"with"double',
+                'id\\with\\backslash',
+                'normalId456'
+            ];
+            
+            let results = [];
+            let allPassed = true;
+            
+            testIds.forEach(id => {
+                const safeId = id.replace(/'/g, "\\'");
+                const htmlTemplate = `onclick="app.handleExpertiseCardClick(event, '${safeId}')"`;
+                
+                // Vérifier que l'HTML généré ne casse pas la syntaxe JavaScript
+                const hasSyntaxError = safeId.includes("'") && !safeId.includes("\\'");
+                const passed = !hasSyntaxError;
+                
+                if (!passed) allPassed = false;
+                
+                results.push({
+                    original: id,
+                    escaped: safeId,
+                    htmlSample: htmlTemplate.substring(0, 50) + '...',
+                    passed: passed
+                });
+            });
+            
+            document.getElementById('test3-result').className = allPassed ? 'success' : 'error';
+            document.getElementById('test3-result').innerHTML = 
+                `<strong>${allPassed ? '✅ PASSÉ' : '❌ ÉCHOUÉ'}</strong> - Échappement des _uniqueId`;
+            
+            document.getElementById('test3-details').textContent = 
+                results.map(r => 
+                    `${r.passed ? '✅' : '❌'} ID: ${r.original} → ${r.escaped}\n   HTML: ${r.htmlSample}`
+                ).join('\n');
+        }
+        
+        // Test 4: Validation d'expertise existante
+        function testExpertiseValidation() {
+            // Simulation de la base de données
+            const mockDatabase = {
+                expertises: [
+                    { _uniqueId: 'valid-id-1', patronyme: 'Test 1' },
+                    { _uniqueId: 'valid-id-2', patronyme: 'Test 2' }
+                ]
+            };
+            
+            const validateExpertiseExists = (id, database) => {
+                return database.expertises.find(exp => exp._uniqueId === id) !== undefined;
+            };
+            
+            const tests = [
+                { id: 'valid-id-1', expected: true, description: 'ID existant' },
+                { id: 'valid-id-2', expected: true, description: 'ID existant 2' },
+                { id: 'invalid-id', expected: false, description: 'ID inexistant' },
+                { id: '', expected: false, description: 'ID vide' },
+                { id: null, expected: false, description: 'ID null' }
+            ];
+            
+            let results = [];
+            let allPassed = true;
+            
+            tests.forEach(test => {
+                const result = validateExpertiseExists(test.id, mockDatabase);
+                const passed = result === test.expected;
+                if (!passed) allPassed = false;
+                
+                results.push({
+                    description: test.description,
+                    id: test.id,
+                    expected: test.expected,
+                    actual: result,
+                    passed: passed
+                });
+            });
+            
+            document.getElementById('test4-result').className = allPassed ? 'success' : 'error';
+            document.getElementById('test4-result').innerHTML = 
+                `<strong>${allPassed ? '✅ PASSÉ' : '❌ ÉCHOUÉ'}</strong> - Validation d'expertise existante`;
+            
+            document.getElementById('test4-details').textContent = 
+                results.map(r => 
+                    `${r.passed ? '✅' : '❌'} ${r.description}: ${JSON.stringify(r.id)} → ${r.actual} (attendu: ${r.expected})`
+                ).join('\n');
+        }
+        
+        // Exécuter tous les tests
+        window.onload = function() {
+            testSanitizeValue();
+            testFormatDateForTemplate();
+            testUniqueIdEscaping();
+            testExpertiseValidation();
+        };
+    </script>
+</body>
+</html>

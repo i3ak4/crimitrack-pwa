@@ -425,14 +425,19 @@ class CrimiTrackApp {
       expertises = expertises.slice(0, 10);
     }
     
-    // Afficher les expertises
-    container.innerHTML = expertises.length ? expertises.map(exp => `
-      <div class="expertise-card ${this.selectedExpertises.has(exp._uniqueId) ? 'selected' : ''}" 
-           onclick="app.toggleExpertiseSelection('${exp._uniqueId}')">
+    // Afficher les expertises avec gestion sécurisée des événements
+    container.innerHTML = expertises.length ? expertises.map(exp => {
+      const safeId = exp._uniqueId ? exp._uniqueId.replace(/'/g, "\\'") : '';
+      const isSelected = this.selectedExpertises.has(exp._uniqueId);
+      
+      return `
+      <div class="expertise-card ${isSelected ? 'selected' : ''}" 
+           data-expertise-id="${safeId}"
+           onclick="app.handleExpertiseCardClick(event, '${safeId}')">
         <div class="card-header">
           <span class="card-title">${exp.patronyme || 'Sans nom'}</span>
-          <input type="checkbox" ${this.selectedExpertises.has(exp._uniqueId) ? 'checked' : ''} 
-                 onclick="event.stopPropagation()">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                 onchange="app.handleCheckboxChange(event, '${safeId}')">
         </div>
         <div class="card-body">
           <div class="card-info">
@@ -446,7 +451,8 @@ class CrimiTrackApp {
           </div>
         </div>
       </div>
-    `).join('') : '<p style="text-align: center; color: var(--text-secondary);">Aucune expertise trouvée</p>';
+      `;
+    }).join('') : '<p style="text-align: center; color: var(--text-secondary);">Aucune expertise trouvée</p>';
   }
   
   filterPublipostage(searchTerm) {
@@ -454,12 +460,34 @@ class CrimiTrackApp {
   }
 
   toggleExpertiseSelection(id) {
+    // Validation de sécurité : vérifier que l'expertise existe
+    const expertise = this.database.expertises.find(exp => exp._uniqueId === id);
+    if (!expertise) {
+      console.warn('Tentative de sélection d\'une expertise inexistante:', id);
+      return;
+    }
+    
     if (this.selectedExpertises.has(id)) {
       this.selectedExpertises.delete(id);
     } else {
       this.selectedExpertises.add(id);
     }
     this.updatePublipostage();
+  }
+
+  // Nouvelle fonction pour gérer les clics sur la card avec gestion d'événements sécurisée
+  handleExpertiseCardClick(event, id) {
+    // Empêcher la propagation si le clic vient du checkbox
+    if (event.target.type === 'checkbox') {
+      return; // Le checkbox gère sa propre logique
+    }
+    this.toggleExpertiseSelection(id);
+  }
+
+  // Fonction pour gérer le changement du checkbox
+  handleCheckboxChange(event, id) {
+    event.stopPropagation(); // Empêcher la propagation à la card
+    this.toggleExpertiseSelection(id);
   }
 
   handleTemplateUpload(event) {
@@ -509,22 +537,22 @@ class CrimiTrackApp {
         
         // Préparer les données avec formatage des dates et valeurs par défaut
         const data = {
-          // Valeurs par défaut d'abord
-          patronyme: expertise.patronyme || '',
-          date_examen: this.formatDate(expertise.date_examen),
-          lieu_examen: expertise.lieu_examen || '',
-          date_naissance: this.formatDate(expertise.date_naissance),
-          age: expertise.age || '',
-          profession: expertise.profession || '',
-          domicile: expertise.domicile || '',
-          magistrat: expertise.magistrat || '',
-          tribunal: expertise.tribunal || '',
-          numero_parquet: expertise.numero_parquet || '',
-          numero_instruction: expertise.numero_instruction || '',
-          chefs_accusation: expertise.chefs_accusation || '',
-          opj_greffier: expertise.opj_greffier || '',
-          type_mission: expertise.type_mission || '',
-          statut: expertise.statut || ''
+          // Utiliser la fonction globale sanitizeValue pour éviter les "undefined"
+          patronyme: this.sanitizeValue(expertise.patronyme),
+          date_examen: this.formatDateForTemplate(expertise.date_examen),
+          lieu_examen: this.sanitizeValue(expertise.lieu_examen),
+          date_naissance: this.formatDateForTemplate(expertise.date_naissance),
+          age: this.sanitizeValue(expertise.age),
+          profession: this.sanitizeValue(expertise.profession),
+          domicile: this.sanitizeValue(expertise.domicile),
+          magistrat: this.sanitizeValue(expertise.magistrat),
+          tribunal: this.sanitizeValue(expertise.tribunal),
+          numero_parquet: this.sanitizeValue(expertise.numero_parquet),
+          numero_instruction: this.sanitizeValue(expertise.numero_instruction),
+          chefs_accusation: this.sanitizeValue(expertise.chefs_accusation),
+          opj_greffier: this.sanitizeValue(expertise.opj_greffier),
+          type_mission: this.sanitizeValue(expertise.type_mission),
+          statut: this.sanitizeValue(expertise.statut)
         };
         
         // Créer une instance de PizZip avec le template
@@ -1030,6 +1058,30 @@ class CrimiTrackApp {
       });
     } catch {
       return dateStr;
+    }
+  }
+
+  // Fonction helper pour sanitiser les valeurs pour les templates
+  sanitizeValue(value) {
+    if (value === null || value === undefined || value === 'null' || value === 'undefined') {
+      return '';
+    }
+    return String(value);
+  }
+
+  // Version spéciale pour les templates Word - retourne chaîne vide au lieu de "N/A"
+  formatDateForTemplate(dateStr) {
+    if (!dateStr || dateStr === 'null' || dateStr === null || dateStr === undefined) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return ''; // Date invalide
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return '';
     }
   }
 
