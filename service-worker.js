@@ -1,10 +1,11 @@
 const CACHE_NAME = 'crimitrack-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/app.js',
-  '/manifest.json'
+  '/crimitrack-pwa/',
+  '/crimitrack-pwa/index.html',
+  '/crimitrack-pwa/styles.css',
+  '/crimitrack-pwa/app.js',
+  '/crimitrack-pwa/ui-fantaisie.js',
+  '/crimitrack-pwa/manifest.json'
 ];
 
 // Installation du service worker

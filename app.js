@@ -13,7 +13,9 @@ class CrimiTrackApp {
     // Enregistrer le service worker
     if ('serviceWorker' in navigator) {
       try {
-        await navigator.serviceWorker.register('/service-worker.js');
+        await navigator.serviceWorker.register('/crimitrack-pwa/service-worker.js', {
+          scope: '/crimitrack-pwa/'
+        });
         console.log('Service Worker enregistré');
       } catch (error) {
         console.error('Erreur Service Worker:', error);
