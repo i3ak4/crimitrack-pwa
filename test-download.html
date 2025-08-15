@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Téléchargement CrimiTrack</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .log {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Téléchargement CrimiTrack</h1>
+        
+        <div id="status" class="status"></div>
+        
+        <h2>Tests Disponibles</h2>
+        <button class="btn" onclick="testFileSaverAvailability()">1. Vérifier FileSaver.js</button>
+        <button class="btn" onclick="testBlobCreation()">2. Tester création de Blob</button>
+        <button class="btn" onclick="testFileSaverDownload()">3. Test FileSaver (saveAs)</button>
+        <button class="btn" onclick="testFallbackDownload()">4. Test Fallback Download</button>
+        
+        <h2>Console</h2>
+        <div id="log" class="log"></div>
+        
+        <button class="btn" onclick="clearLog()">Effacer Console</button>
+    </div>
+
+    <!-- Même bibliothèques que CrimiTrack -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    
+    <script>
+        let logDiv = document.getElementById('log');
+        let statusDiv = document.getElementById('status');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            
+            logDiv.innerHTML += logEntry + '\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            console.log(message);
+        }
+
+        function setStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function clearLog() {
+            logDiv.innerHTML = '';
+            statusDiv.textContent = '';
+            statusDiv.className = 'status';
+        }
+
+        function testFileSaverAvailability() {
+            log('🔍 Test 1: Vérification de FileSaver.js');
+            
+            if (typeof saveAs === 'function') {
+                log('✅ FileSaver.js est DISPONIBLE');
+                setStatus('FileSaver.js est disponible', 'success');
+            } else {
+                log('❌ FileSaver.js N\'EST PAS disponible');
+                setStatus('FileSaver.js NON disponible', 'error');
+            }
+        }
+
+        function testBlobCreation() {
+            log('🔍 Test 2: Création de Blob');
+            
+            try {
+                const testContent = 'Test content for download';
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                
+                log(`✅ Blob créé avec succès: ${blob.size} bytes, type: ${blob.type}`);
+                setStatus('Blob créé avec succès', 'success');
+                
+                return blob;
+            } catch (error) {
+                log(`❌ Erreur création Blob: ${error.message}`);
+                setStatus('Erreur création Blob', 'error');
+                return null;
+            }
+        }
+
+        function testFileSaverDownload() {
+            log('🔍 Test 3: Téléchargement avec FileSaver (saveAs)');
+            
+            if (typeof saveAs !== 'function') {
+                log('❌ saveAs non disponible, test impossible');
+                setStatus('saveAs non disponible', 'error');
+                return;
+            }
+            
+            try {
+                const testContent = 'Ceci est un fichier de test généré par CrimiTrack\nDate: ' + new Date().toISOString();
+                const blob = new Blob([testContent], { type: 'text/plain;charset=utf-8' });
+                const fileName = 'test-filesaver-' + Date.now() + '.txt';
+                
+                log(`📥 Tentative de téléchargement: ${fileName}`);
+                log(`📊 Blob: ${blob.size} bytes, type: ${blob.type}`);
+                
+                saveAs(blob, fileName);
+                
+                log('✅ saveAs() appelé sans erreur');
+                setStatus('Test FileSaver exécuté - Vérifiez vos téléchargements', 'success');
+                
+            } catch (error) {
+                log(`❌ Erreur avec saveAs: ${error.message}`);
+                setStatus('Erreur avec saveAs', 'error');
+            }
+        }
+
+        function testFallbackDownload() {
+            log('🔍 Test 4: Téléchargement Fallback');
+            
+            try {
+                const testContent = 'Ceci est un fichier de test avec la méthode FALLBACK\nDate: ' + new Date().toISOString();
+                const blob = new Blob([testContent], { type: 'text/plain;charset=utf-8' });
+                const fileName = 'test-fallback-' + Date.now() + '.txt';
+                
+                log(`📥 Téléchargement fallback: ${fileName}`);
+                log(`📊 Blob: ${blob.size} bytes, type: ${blob.type}`);
+                
+                // Méthode fallback identique à celle de CrimiTrack
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+                
+                document.body.appendChild(a);
+                log('🖱️ Simulation du clic pour téléchargement');
+                a.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    log('🧹 Nettoyage terminé');
+                }, 100);
+                
+                log('✅ Méthode fallback exécutée sans erreur');
+                setStatus('Test Fallback exécuté - Vérifiez vos téléchargements', 'success');
+                
+            } catch (error) {
+                log(`❌ Erreur méthode fallback: ${error.message}`);
+                setStatus('Erreur méthode fallback', 'error');
+            }
+        }
+
+        // Auto-test au chargement
+        window.addEventListener('load', () => {
+            log('🚀 Page de test chargée');
+            testFileSaverAvailability();
+        });
+    </script>
+</body>
+</html>

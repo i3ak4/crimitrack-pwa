@@ -37,6 +37,9 @@ class CrimiTrackApp {
     
     // Mettre à jour les statistiques
     this.updateStatistics();
+    
+    // Vérifier FileSaver.js
+    this.checkFileSaver();
   }
 
   async initIndexedDB() {
@@ -600,11 +603,11 @@ class CrimiTrackApp {
         
         // Si c'est le seul document ou si on veut télécharger individuellement
         if (selected.length === 1) {
-          saveAs(out, fileName);
+          this.downloadFile(out, fileName);
         } else {
           // Pour plusieurs documents, les télécharger avec un délai
           setTimeout(() => {
-            saveAs(out, fileName);
+            this.downloadFile(out, fileName);
           }, i * 500); // Délai de 500ms entre chaque téléchargement
         }
       }
@@ -619,6 +622,77 @@ class CrimiTrackApp {
     } catch (error) {
       console.error('Erreur génération document:', error);
       this.showNotification('Erreur lors de la génération du document. Vérifiez que votre template utilise les bonnes variables.', 'danger');
+    }
+  }
+
+  // Vérifier la disponibilité de FileSaver.js
+  checkFileSaver() {
+    console.log('🔍 Vérification de FileSaver.js...');
+    
+    if (typeof saveAs === 'function') {
+      console.log('✅ FileSaver.js est disponible');
+    } else {
+      console.warn('⚠️ FileSaver.js n\'est PAS disponible');
+      console.log('🔧 La méthode de fallback sera utilisée pour les téléchargements');
+    }
+    
+    // Vérifier les autres dépendances
+    console.log('📋 État des dépendances:');
+    console.log('- PizZip:', typeof PizZip !== 'undefined' ? '✅' : '❌');
+    console.log('- docxtemplater:', typeof docxtemplater !== 'undefined' ? '✅' : '❌');
+    console.log('- saveAs:', typeof saveAs !== 'undefined' ? '✅' : '❌');
+  }
+
+  // Fonction de téléchargement avec fallback et débogage
+  downloadFile(blob, fileName) {
+    console.log('📥 Tentative de téléchargement:', fileName);
+    console.log('📊 Blob info:', {
+      size: blob.size,
+      type: blob.type
+    });
+    
+    try {
+      // Vérifier si saveAs est disponible
+      if (typeof saveAs === 'function') {
+        console.log('✅ FileSaver.js détecté, utilisation de saveAs');
+        saveAs(blob, fileName);
+        console.log('✅ saveAs appelé avec succès');
+      } else {
+        console.warn('⚠️ FileSaver.js non disponible, utilisation du fallback');
+        this.downloadFileFallback(blob, fileName);
+      }
+    } catch (error) {
+      console.error('❌ Erreur avec saveAs:', error);
+      console.log('🔄 Basculement vers la méthode de fallback');
+      this.downloadFileFallback(blob, fileName);
+    }
+  }
+
+  // Méthode de fallback pour le téléchargement
+  downloadFileFallback(blob, fileName) {
+    console.log('🔄 Utilisation de la méthode de fallback pour:', fileName);
+    
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.style.display = 'none';
+      
+      document.body.appendChild(a);
+      console.log('🖱️ Simulation du clic pour téléchargement');
+      a.click();
+      
+      // Nettoyer après un court délai
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        console.log('🧹 Nettoyage terminé');
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Erreur dans la méthode de fallback:', error);
+      this.showNotification('Impossible de télécharger le fichier. Vérifiez les paramètres de votre navigateur.', 'danger');
     }
   }
 
