@@ -3,202 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Téléchargement CrimiTrack</title>
+    <title>Test Téléchargement - CrimiTrack PWA</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            padding: 20px; 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
             background: #f5f5f5;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
         }
-        .btn {
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
             background: #3498db;
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            margin: 10px;
-            font-size: 14px;
+            margin: 5px;
+            font-size: 16px;
         }
-        .btn:hover {
+        .button:hover {
             background: #2980b9;
         }
-        .log {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 300px;
-            overflow-y: auto;
+        .button.success {
+            background: #27ae60;
+        }
+        .button.warning {
+            background: #f39c12;
         }
         .status {
             padding: 10px;
             margin: 10px 0;
-            border-radius: 5px;
-            font-weight: bold;
+            border-radius: 4px;
+            font-family: monospace;
         }
-        .success { background: #d4edda; color: #155724; }
-        .warning { background: #fff3cd; color: #856404; }
-        .error { background: #f8d7da; color: #721c24; }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        #console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .console-line {
+            margin: 2px 0;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🧪 Test de Téléchargement CrimiTrack</h1>
-        
-        <div id="status" class="status"></div>
-        
-        <h2>Tests Disponibles</h2>
-        <button class="btn" onclick="testFileSaverAvailability()">1. Vérifier FileSaver.js</button>
-        <button class="btn" onclick="testBlobCreation()">2. Tester création de Blob</button>
-        <button class="btn" onclick="testFileSaverDownload()">3. Test FileSaver (saveAs)</button>
-        <button class="btn" onclick="testFallbackDownload()">4. Test Fallback Download</button>
-        
-        <h2>Console</h2>
-        <div id="log" class="log"></div>
-        
-        <button class="btn" onclick="clearLog()">Effacer Console</button>
+    <h1>🧪 Test de Téléchargement - CrimiTrack PWA</h1>
+
+    <div class="test-section">
+        <h2>📋 État des Dépendances</h2>
+        <div id="dependencies-status"></div>
     </div>
 
-    <!-- Même bibliothèques que CrimiTrack -->
+    <div class="test-section">
+        <h2>🔬 Tests de Téléchargement</h2>
+        
+        <button class="button" onclick="testTextFile()">
+            📄 Test Fichier Texte Simple
+        </button>
+        
+        <button class="button success" onclick="testWithFileSaver()">
+            💾 Test avec FileSaver.js
+        </button>
+        
+        <button class="button warning" onclick="testWithFallback()">
+            🔄 Test avec Fallback Natif
+        </button>
+        
+        <button class="button" onclick="testWordDocument()">
+            📝 Test Document Word (.docx)
+        </button>
+        
+        <button class="button" onclick="clearConsole()">
+            🗑️ Effacer Console
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Console de Débogage</h2>
+        <div id="console"></div>
+    </div>
+
+    <!-- Chargement des bibliothèques -->
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip-utils.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.42.0/build/docxtemplater.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    
+
     <script>
-        let logDiv = document.getElementById('log');
-        let statusDiv = document.getElementById('status');
-
-        function log(message, type = 'info') {
+        const consoleDiv = document.getElementById('console');
+        const statusDiv = document.getElementById('dependencies-status');
+        
+        // Redirection console vers notre div
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addToConsole(message, type = 'log') {
+            const line = document.createElement('div');
+            line.className = 'console-line';
             const timestamp = new Date().toLocaleTimeString();
-            const logEntry = `[${timestamp}] ${message}`;
             
-            logDiv.innerHTML += logEntry + '\n';
-            logDiv.scrollTop = logDiv.scrollHeight;
+            let prefix = '📝';
+            let color = '#00ff00';
             
-            console.log(message);
-        }
-
-        function setStatus(message, type) {
-            statusDiv.textContent = message;
-            statusDiv.className = `status ${type}`;
-        }
-
-        function clearLog() {
-            logDiv.innerHTML = '';
-            statusDiv.textContent = '';
-            statusDiv.className = 'status';
-        }
-
-        function testFileSaverAvailability() {
-            log('🔍 Test 1: Vérification de FileSaver.js');
+            if (type === 'error') {
+                prefix = '❌';
+                color = '#ff4444';
+            } else if (type === 'warn') {
+                prefix = '⚠️';
+                color = '#ffaa00';
+            } else if (type === 'success') {
+                prefix = '✅';
+                color = '#44ff44';
+            }
             
-            if (typeof saveAs === 'function') {
-                log('✅ FileSaver.js est DISPONIBLE');
-                setStatus('FileSaver.js est disponible', 'success');
+            line.style.color = color;
+            line.innerHTML = `[${timestamp}] ${prefix} ${message}`;
+            consoleDiv.appendChild(line);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            
+            // Appeler aussi la console originale
+            if (type === 'error') {
+                originalError.call(console, message);
+            } else if (type === 'warn') {
+                originalWarn.call(console, message);
             } else {
-                log('❌ FileSaver.js N\'EST PAS disponible');
-                setStatus('FileSaver.js NON disponible', 'error');
+                originalLog.call(console, message);
             }
         }
-
-        function testBlobCreation() {
-            log('🔍 Test 2: Création de Blob');
+        
+        console.log = (msg) => addToConsole(msg, 'log');
+        console.error = (msg) => addToConsole(msg, 'error');
+        console.warn = (msg) => addToConsole(msg, 'warn');
+        
+        // Vérifier les dépendances
+        function checkDependencies() {
+            let html = '';
             
-            try {
-                const testContent = 'Test content for download';
-                const blob = new Blob([testContent], { type: 'text/plain' });
-                
-                log(`✅ Blob créé avec succès: ${blob.size} bytes, type: ${blob.type}`);
-                setStatus('Blob créé avec succès', 'success');
-                
-                return blob;
-            } catch (error) {
-                log(`❌ Erreur création Blob: ${error.message}`);
-                setStatus('Erreur création Blob', 'error');
-                return null;
+            // FileSaver.js
+            if (typeof saveAs !== 'undefined') {
+                html += '<div class="status success">✅ FileSaver.js est chargé</div>';
+                console.log('FileSaver.js détecté et prêt');
+            } else {
+                html += '<div class="status error">❌ FileSaver.js n\'est pas chargé</div>';
+                console.error('FileSaver.js non disponible');
+            }
+            
+            // PizZip
+            if (typeof PizZip !== 'undefined') {
+                html += '<div class="status success">✅ PizZip est chargé</div>';
+                console.log('PizZip détecté et prêt');
+            } else {
+                html += '<div class="status error">❌ PizZip n\'est pas chargé</div>';
+                console.error('PizZip non disponible');
+            }
+            
+            // Docxtemplater
+            if (typeof window.docxtemplater !== 'undefined') {
+                html += '<div class="status success">✅ Docxtemplater est chargé</div>';
+                console.log('Docxtemplater détecté et prêt');
+            } else {
+                html += '<div class="status error">❌ Docxtemplater n\'est pas chargé</div>';
+                console.error('Docxtemplater non disponible');
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        // Test fichier texte simple
+        function testTextFile() {
+            console.log('=== TEST FICHIER TEXTE ===');
+            const content = 'Test de téléchargement CrimiTrack\nDate: ' + new Date().toISOString();
+            const blob = new Blob([content], { type: 'text/plain' });
+            
+            console.log('Blob créé: ' + blob.size + ' octets');
+            
+            if (typeof saveAs !== 'undefined') {
+                console.log('Utilisation de saveAs()');
+                saveAs(blob, 'test-crimitrack.txt');
+                addToConsole('Téléchargement déclenché avec saveAs', 'success');
+            } else {
+                console.warn('saveAs non disponible, utilisation du fallback');
+                downloadFallback(blob, 'test-crimitrack.txt');
             }
         }
-
-        function testFileSaverDownload() {
-            log('🔍 Test 3: Téléchargement avec FileSaver (saveAs)');
+        
+        // Test avec FileSaver
+        function testWithFileSaver() {
+            console.log('=== TEST AVEC FILESAVER ===');
             
-            if (typeof saveAs !== 'function') {
-                log('❌ saveAs non disponible, test impossible');
-                setStatus('saveAs non disponible', 'error');
+            if (typeof saveAs === 'undefined') {
+                console.error('FileSaver.js n\'est pas disponible !');
                 return;
             }
             
-            try {
-                const testContent = 'Ceci est un fichier de test généré par CrimiTrack\nDate: ' + new Date().toISOString();
-                const blob = new Blob([testContent], { type: 'text/plain;charset=utf-8' });
-                const fileName = 'test-filesaver-' + Date.now() + '.txt';
-                
-                log(`📥 Tentative de téléchargement: ${fileName}`);
-                log(`📊 Blob: ${blob.size} bytes, type: ${blob.type}`);
-                
-                saveAs(blob, fileName);
-                
-                log('✅ saveAs() appelé sans erreur');
-                setStatus('Test FileSaver exécuté - Vérifiez vos téléchargements', 'success');
-                
-            } catch (error) {
-                log(`❌ Erreur avec saveAs: ${error.message}`);
-                setStatus('Erreur avec saveAs', 'error');
-            }
-        }
-
-        function testFallbackDownload() {
-            log('🔍 Test 4: Téléchargement Fallback');
+            const content = 'Test FileSaver.js\n' + new Date().toISOString();
+            const blob = new Blob([content], { type: 'text/plain' });
             
             try {
-                const testContent = 'Ceci est un fichier de test avec la méthode FALLBACK\nDate: ' + new Date().toISOString();
-                const blob = new Blob([testContent], { type: 'text/plain;charset=utf-8' });
-                const fileName = 'test-fallback-' + Date.now() + '.txt';
-                
-                log(`📥 Téléchargement fallback: ${fileName}`);
-                log(`📊 Blob: ${blob.size} bytes, type: ${blob.type}`);
-                
-                // Méthode fallback identique à celle de CrimiTrack
+                saveAs(blob, 'test-filesaver.txt');
+                addToConsole('saveAs() appelé avec succès', 'success');
+            } catch (error) {
+                console.error('Erreur avec saveAs: ' + error.message);
+            }
+        }
+        
+        // Test avec fallback
+        function testWithFallback() {
+            console.log('=== TEST AVEC FALLBACK NATIF ===');
+            
+            const content = 'Test méthode native\n' + new Date().toISOString();
+            const blob = new Blob([content], { type: 'text/plain' });
+            
+            downloadFallback(blob, 'test-fallback.txt');
+        }
+        
+        // Fallback de téléchargement
+        function downloadFallback(blob, filename) {
+            console.log('Utilisation de la méthode native pour: ' + filename);
+            
+            try {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = fileName;
+                a.download = filename;
                 a.style.display = 'none';
                 
                 document.body.appendChild(a);
-                log('🖱️ Simulation du clic pour téléchargement');
+                console.log('Élément <a> créé et ajouté au DOM');
+                
                 a.click();
+                console.log('Click simulé sur l\'élément');
                 
                 setTimeout(() => {
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
-                    log('🧹 Nettoyage terminé');
+                    addToConsole('Nettoyage effectué', 'success');
                 }, 100);
                 
-                log('✅ Méthode fallback exécutée sans erreur');
-                setStatus('Test Fallback exécuté - Vérifiez vos téléchargements', 'success');
-                
+                addToConsole('Téléchargement déclenché avec la méthode native', 'success');
             } catch (error) {
-                log(`❌ Erreur méthode fallback: ${error.message}`);
-                setStatus('Erreur méthode fallback', 'error');
+                console.error('Erreur fallback: ' + error.message);
             }
         }
-
-        // Auto-test au chargement
-        window.addEventListener('load', () => {
-            log('🚀 Page de test chargée');
-            testFileSaverAvailability();
-        });
+        
+        // Test document Word
+        function testWordDocument() {
+            console.log('=== TEST DOCUMENT WORD ===');
+            
+            if (typeof PizZip === 'undefined' || typeof window.docxtemplater === 'undefined') {
+                console.error('PizZip ou Docxtemplater non disponible');
+                return;
+            }
+            
+            // Créer un document Word minimal
+            try {
+                // Template Word minimal en base64
+                const templateBase64 = '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';
+                
+                const templateBytes = atob(templateBase64);
+                const templateArray = new Uint8Array(templateBytes.length);
+                
+                for (let i = 0; i < templateBytes.length; i++) {
+                    templateArray[i] = templateBytes.charCodeAt(i);
+                }
+                
+                const zip = new PizZip(templateArray);
+                const doc = new window.docxtemplater(zip, {
+                    paragraphLoop: true,
+                    linebreaks: true
+                });
+                
+                // Données de test
+                doc.render({
+                    name: 'Test CrimiTrack',
+                    date: new Date().toLocaleDateString()
+                });
+                
+                const out = doc.getZip().generate({
+                    type: 'blob',
+                    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                });
+                
+                console.log('Document Word créé: ' + out.size + ' octets');
+                
+                // Essayer de télécharger
+                if (typeof saveAs !== 'undefined') {
+                    saveAs(out, 'test-document.docx');
+                    addToConsole('Document Word téléchargé avec saveAs', 'success');
+                } else {
+                    downloadFallback(out, 'test-document.docx');
+                }
+                
+            } catch (error) {
+                console.error('Erreur création document: ' + error.message);
+            }
+        }
+        
+        // Effacer la console
+        function clearConsole() {
+            consoleDiv.innerHTML = '';
+            console.log('Console effacée');
+        }
+        
+        // Vérifier au chargement
+        window.onload = () => {
+            checkDependencies();
+            console.log('Page de test prête');
+            console.log('Ouvrez la console du navigateur (F12) pour plus de détails');
+        };
     </script>
 </body>
 </html>

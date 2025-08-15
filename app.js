@@ -602,12 +602,41 @@ class CrimiTrackApp {
         fileName = fileName.replace(/[/\\?%*:|"<>]/g, '-');
         
         // Si c'est le seul document ou si on veut télécharger individuellement
+        console.log(`📄 Document prêt pour ${fileName}, taille: ${out.size} octets`);
+        
         if (selected.length === 1) {
-          this.downloadFile(out, fileName);
+          console.log('📥 Téléchargement immédiat du document unique');
+          if (typeof this.downloadFile === 'function') {
+            this.downloadFile(out, fileName);
+          } else {
+            console.error('❌ downloadFile n\'est pas définie !');
+            // Fallback direct si downloadFile n'existe pas
+            if (typeof saveAs !== 'undefined') {
+              saveAs(out, fileName);
+            } else {
+              const url = URL.createObjectURL(out);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = fileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }
+          }
         } else {
           // Pour plusieurs documents, les télécharger avec un délai
+          console.log(`📥 Téléchargement différé (${i * 500}ms) pour ${fileName}`);
           setTimeout(() => {
-            this.downloadFile(out, fileName);
+            if (typeof this.downloadFile === 'function') {
+              this.downloadFile(out, fileName);
+            } else {
+              console.error('❌ downloadFile n\'est pas définie !');
+              // Fallback direct
+              if (typeof saveAs !== 'undefined') {
+                saveAs(out, fileName);
+              }
+            }
           }, i * 500); // Délai de 500ms entre chaque téléchargement
         }
       }
