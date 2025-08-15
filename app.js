@@ -4,7 +4,7 @@ class CrimiTrackApp {
     this.database = { expertises: [] };
     this.currentTab = 'agenda';
     this.selectedExpertises = new Set();
-    this.currentTemplate = null;
+    this.currentTemplates = []; // Support pour plusieurs templates
     this.db = null; // IndexedDB instance
     this.init();
   }
@@ -463,32 +463,53 @@ class CrimiTrackApp {
   }
 
   handleTemplateUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
     
-    if (!file.name.endsWith('.docx')) {
-      this.showNotification('Veuillez sélectionner un fichier Word (.docx)', 'warning');
+    // Vérifier que tous les fichiers sont des .docx
+    const invalidFiles = files.filter(file => !file.name.endsWith('.docx'));
+    if (invalidFiles.length > 0) {
+      this.showNotification('Veuillez sélectionner uniquement des fichiers Word (.docx)', 'warning');
       return;
     }
     
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      this.currentTemplate = e.target.result;
-      document.getElementById('template-name').textContent = file.name;
-      
-      const generateBtn = document.getElementById('generate-doc');
-      if (generateBtn) {
-        generateBtn.disabled = this.selectedExpertises.size === 0;
-      }
-      
-      this.showNotification(`Template "${file.name}" chargé avec succès`, 'success');
-    };
-    reader.readAsArrayBuffer(file);
+    // Charger tous les templates
+    this.currentTemplates = [];
+    let loadedCount = 0;
+    
+    files.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.currentTemplates[index] = {
+          name: file.name,
+          data: e.target.result
+        };
+        loadedCount++;
+        
+        // Quand tous les fichiers sont chargés
+        if (loadedCount === files.length) {
+          const templateNames = this.currentTemplates.map(t => t.name).join(', ');
+          document.getElementById('template-name').textContent = 
+            files.length === 1 ? templateNames : `${files.length} templates sélectionnés`;
+          
+          const generateBtn = document.getElementById('generate-doc');
+          if (generateBtn) {
+            generateBtn.disabled = this.selectedExpertises.size === 0;
+          }
+          
+          this.showNotification(
+            `${files.length} template(s) chargé(s) avec succès`, 
+            'success'
+          );
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
   }
 
   async generateDocument() {
-    if (!this.currentTemplate) {
-      this.showNotification('Veuillez charger un template Word', 'warning');
+    if (!this.currentTemplates || this.currentTemplates.length === 0) {
+      this.showNotification('Veuillez charger au moins un template Word', 'warning');
       return;
     }
     
@@ -503,32 +524,38 @@ class CrimiTrackApp {
         this.database.expertises.find(exp => exp._uniqueId === id)
       ).filter(Boolean);
       
-      // Pour chaque expertise, générer un document
-      for (let i = 0; i < selected.length; i++) {
-        const expertise = selected[i];
+      let totalDocuments = 0;
+      
+      // Pour chaque template
+      for (let templateIndex = 0; templateIndex < this.currentTemplates.length; templateIndex++) {
+        const template = this.currentTemplates[templateIndex];
         
-        // Préparer les données avec formatage des dates et valeurs par défaut
-        const data = {
-          // Valeurs par défaut d'abord
-          patronyme: expertise.patronyme || '',
-          date_examen: this.formatDate(expertise.date_examen),
-          lieu_examen: expertise.lieu_examen || '',
-          date_naissance: this.formatDate(expertise.date_naissance),
-          age: expertise.age || '',
-          profession: expertise.profession || '',
-          domicile: expertise.domicile || '',
-          magistrat: expertise.magistrat || '',
-          tribunal: expertise.tribunal || '',
-          numero_parquet: expertise.numero_parquet || '',
-          numero_instruction: expertise.numero_instruction || '',
-          chefs_accusation: expertise.chefs_accusation || '',
-          opj_greffier: expertise.opj_greffier || '',
-          type_mission: expertise.type_mission || '',
-          statut: expertise.statut || ''
-        };
-        
-        // Créer une instance de PizZip avec le template
-        const zip = new PizZip(this.currentTemplate);
+        // Pour chaque expertise, générer un document avec ce template
+        for (let i = 0; i < selected.length; i++) {
+          const expertise = selected[i];
+          
+          // Préparer les données avec formatage des dates et valeurs par défaut
+          const data = {
+            // Valeurs par défaut d'abord
+            patronyme: expertise.patronyme || '',
+            date_examen: this.formatDate(expertise.date_examen),
+            lieu_examen: expertise.lieu_examen || '',
+            date_naissance: this.formatDate(expertise.date_naissance),
+            age: expertise.age || '',
+            profession: expertise.profession || '',
+            domicile: expertise.domicile || '',
+            magistrat: expertise.magistrat || '',
+            tribunal: expertise.tribunal || '',
+            numero_parquet: expertise.numero_parquet || '',
+            numero_instruction: expertise.numero_instruction || '',
+            chefs_accusation: expertise.chefs_accusation || '',
+            opj_greffier: expertise.opj_greffier || '',
+            type_mission: expertise.type_mission || '',
+            statut: expertise.statut || ''
+          };
+          
+          // Créer une instance de PizZip avec le template
+          const zip = new PizZip(template.data);
         
         // Créer un nouveau Docxtemplater
         const doc = new window.docxtemplater(zip, {
@@ -549,42 +576,46 @@ class CrimiTrackApp {
           mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         });
         
-        // Créer un nom de fichier au format NOM.Prenom.docx
-        let fileName;
-        if (expertise.patronyme) {
-          // Séparer le nom complet en parties
-          const nameParts = expertise.patronyme.trim().split(/\s+/);
-          if (nameParts.length >= 2) {
-            // Si on a nom et prénom, format NOM.Prenom
-            const nom = nameParts[nameParts.length - 1].toUpperCase(); // Dernier mot = nom de famille
-            const prenom = nameParts[0]; // Premier mot = prénom
-            fileName = `${nom}.${prenom}.docx`;
+          // Créer un nom de fichier au format NOM.Prenom_TemplateNames.docx
+          let baseName;
+          if (expertise.patronyme) {
+            // Séparer le nom complet en parties
+            const nameParts = expertise.patronyme.trim().split(/\s+/);
+            if (nameParts.length >= 2) {
+              // Si on a nom et prénom, format NOM.Prenom
+              const nom = nameParts[nameParts.length - 1].toUpperCase(); // Dernier mot = nom de famille
+              const prenom = nameParts[0]; // Premier mot = prénom
+              baseName = `${nom}.${prenom}`;
+            } else {
+              // Si un seul mot, l'utiliser tel quel
+              baseName = nameParts[0];
+            }
           } else {
-            // Si un seul mot, l'utiliser tel quel
-            fileName = `${nameParts[0]}.docx`;
+            baseName = 'export';
           }
-        } else {
-          fileName = 'export.docx';
-        }
-        
-        // Nettoyer le nom de fichier des caractères invalides
-        fileName = fileName.replace(/[/\\?%*:|"<>]/g, '-');
-        
-        // Si c'est le seul document ou si on veut télécharger individuellement
-        if (selected.length === 1) {
-          saveAs(out, fileName);
-        } else {
-          // Pour plusieurs documents, les télécharger avec un délai
+          
+          // Ajouter le nom du template si plusieurs templates
+          const templateName = template.name.replace('.docx', '');
+          const fileName = this.currentTemplates.length > 1 
+            ? `${baseName}_${templateName}.docx` 
+            : `${baseName}.docx`;
+          
+          // Nettoyer le nom de fichier des caractères invalides
+          const cleanFileName = fileName.replace(/[/\\?%*:|"<>]/g, '-');
+          
+          // Télécharger avec un délai pour éviter les conflits
           setTimeout(() => {
-            saveAs(out, fileName);
-          }, i * 500); // Délai de 500ms entre chaque téléchargement
+            saveAs(out, cleanFileName);
+          }, totalDocuments * 500); // Délai de 500ms entre chaque téléchargement
+          
+          totalDocuments++;
         }
       }
       
       this.showNotification(
-        selected.length === 1 
+        totalDocuments === 1 
           ? 'Document généré avec succès' 
-          : `${selected.length} documents générés avec succès`,
+          : `${totalDocuments} documents générés avec succès`,
         'success'
       );
       
