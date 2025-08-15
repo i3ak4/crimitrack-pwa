@@ -549,9 +549,26 @@ class CrimiTrackApp {
           mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         });
         
-        // Créer un nom de fichier unique
-        const fileName = `${expertise.patronyme || 'export'}_${expertise.numero_parquet || Date.now()}.docx`
-          .replace(/[/\\?%*:|"<>]/g, '-'); // Nettoyer le nom de fichier
+        // Créer un nom de fichier au format NOM.Prenom.docx
+        let fileName;
+        if (expertise.patronyme) {
+          // Séparer le nom complet en parties
+          const nameParts = expertise.patronyme.trim().split(/\s+/);
+          if (nameParts.length >= 2) {
+            // Si on a nom et prénom, format NOM.Prenom
+            const nom = nameParts[nameParts.length - 1].toUpperCase(); // Dernier mot = nom de famille
+            const prenom = nameParts[0]; // Premier mot = prénom
+            fileName = `${nom}.${prenom}.docx`;
+          } else {
+            // Si un seul mot, l'utiliser tel quel
+            fileName = `${nameParts[0]}.docx`;
+          }
+        } else {
+          fileName = 'export.docx';
+        }
+        
+        // Nettoyer le nom de fichier des caractères invalides
+        fileName = fileName.replace(/[/\\?%*:|"<>]/g, '-');
         
         // Si c'est le seul document ou si on veut télécharger individuellement
         if (selected.length === 1) {
