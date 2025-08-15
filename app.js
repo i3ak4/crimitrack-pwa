@@ -507,20 +507,24 @@ class CrimiTrackApp {
       for (let i = 0; i < selected.length; i++) {
         const expertise = selected[i];
         
-        // Préparer les données avec formatage des dates
+        // Préparer les données avec formatage des dates et valeurs par défaut
         const data = {
-          ...expertise,
+          // Valeurs par défaut d'abord
+          patronyme: expertise.patronyme || '',
           date_examen: this.formatDate(expertise.date_examen),
+          lieu_examen: expertise.lieu_examen || '',
           date_naissance: this.formatDate(expertise.date_naissance),
-          // Ajouter des valeurs par défaut pour les champs vides
+          age: expertise.age || '',
+          profession: expertise.profession || '',
+          domicile: expertise.domicile || '',
           magistrat: expertise.magistrat || '',
           tribunal: expertise.tribunal || '',
           numero_parquet: expertise.numero_parquet || '',
           numero_instruction: expertise.numero_instruction || '',
           chefs_accusation: expertise.chefs_accusation || '',
-          profession: expertise.profession || '',
-          domicile: expertise.domicile || '',
-          opj_greffier: expertise.opj_greffier || ''
+          opj_greffier: expertise.opj_greffier || '',
+          type_mission: expertise.type_mission || '',
+          statut: expertise.statut || ''
         };
         
         // Créer une instance de PizZip avec le template
