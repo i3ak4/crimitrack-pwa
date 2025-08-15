@@ -1025,24 +1025,25 @@ class CrimiTrackApp {
     
     let expertises = [...this.database.expertises];
     
-    // Grouper par lieu_examen (tous les lieux, pas seulement les prisons)
+    // Filtrer uniquement les expertises en attente (non réalisées)
+    expertises = expertises.filter(exp => exp.statut !== 'realisee');
+    
+    // Grouper par lieu_examen
     const locationGroups = {};
     expertises.forEach(exp => {
       const location = exp.lieu_examen || 'Lieu non spécifié';
       if (!locationGroups[location]) {
         locationGroups[location] = {
           name: location,
-          programmees: [],
-          attente: []
+          expertises: []
         };
       }
       
-      // Classer par statut
-      if (exp.statut === 'programmee' || (exp.date_examen && exp.statut !== 'realisee')) {
-        locationGroups[location].programmees.push(exp);
-      } else if (exp.statut !== 'realisee') {
-        locationGroups[location].attente.push(exp);
-      }
+      // Ajouter l'expertise avec son statut
+      locationGroups[location].expertises.push({
+        ...exp,
+        isProgrammee: exp.statut === 'programmee' || (exp.date_examen && exp.statut !== 'realisee')
+      });
     });
     
     // Filtrer par recherche
@@ -1055,25 +1056,26 @@ class CrimiTrackApp {
     
     // Filtrer par type
     if (filter === 'programmees') {
-      filteredLocations = filteredLocations.filter(location => location.programmees.length > 0);
+      filteredLocations = filteredLocations.filter(location => 
+        location.expertises.some(exp => exp.isProgrammee)
+      );
     } else if (filter === 'attente') {
-      filteredLocations = filteredLocations.filter(location => location.attente.length > 0);
+      filteredLocations = filteredLocations.filter(location => 
+        location.expertises.some(exp => !exp.isProgrammee)
+      );
     }
     
     // Trier les lieux par nom
     filteredLocations.sort((a, b) => a.name.localeCompare(b.name));
     
-    // Pour chaque lieu, trier les expertises
+    // Pour chaque lieu, trier les expertises : programmées en tête, puis par limite_oce
     filteredLocations.forEach(location => {
-      // Trier programmées par date
-      location.programmees.sort((a, b) => {
-        const dateA = new Date(a.date_examen || '2099-12-31');
-        const dateB = new Date(b.date_examen || '2099-12-31');
-        return dateA - dateB;
-      });
-      
-      // Trier en attente par LIMITE_OCE (deadline)
-      location.attente.sort((a, b) => {
+      location.expertises.sort((a, b) => {
+        // D'abord par statut (programmées en tête)
+        if (a.isProgrammee && !b.isProgrammee) return -1;
+        if (!a.isProgrammee && b.isProgrammee) return 1;
+        
+        // Puis par limite_oce (les plus urgentes en premier)
         const dateA = new Date(a.limite_oce || '2099-12-31');
         const dateB = new Date(b.limite_oce || '2099-12-31');
         return dateA - dateB;
@@ -1088,55 +1090,38 @@ class CrimiTrackApp {
     }
   }
   
-  createPrisonCard(prison) {
-    const totalCount = prison.programmees.length + prison.attente.length;
+  createPrisonCard(location) {
+    const totalCount = location.expertises.length;
+    const programmees = location.expertises.filter(exp => exp.isProgrammee);
+    const enAttente = location.expertises.filter(exp => !exp.isProgrammee);
     
     return `
       <div class="prison-card">
         <div class="prison-header">
-          <h3 class="prison-name">${prison.name}</h3>
+          <h3 class="prison-name">${location.name}</h3>
           <span class="prison-count">${totalCount} expertise${totalCount > 1 ? 's' : ''}</span>
         </div>
         
-        ${prison.programmees.length > 0 ? `
-          <div class="prison-section">
-            <div class="prison-section-title">
-              🗓️ Programmées <span class="section-count">${prison.programmees.length}</span>
-            </div>
-            <div class="prison-expertises">
-              ${prison.programmees.map(exp => `
-                <div class="prison-expertise-item programmee">
-                  <div class="expertise-name">${exp.patronyme}</div>
-                  <div class="expertise-details">
-                    <span class="expertise-date">📅 ${this.formatDate(exp.date_examen)}</span>
-                    ${exp.magistrat ? `<span>👨‍⚖️ ${exp.magistrat}</span>` : ''}
-                    ${exp.tribunal ? `<span>🏛️ ${exp.tribunal}</span>` : ''}
-                  </div>
-                </div>
-              `).join('')}
-            </div>
+        <div class="prison-section">
+          <div class="prison-section-title">
+            📋 Expertises en attente <span class="section-count">${totalCount}</span>
           </div>
-        ` : ''}
-        
-        ${prison.attente.length > 0 ? `
-          <div class="prison-section">
-            <div class="prison-section-title">
-              ⏳ En attente <span class="section-count">${prison.attente.length}</span>
-            </div>
-            <div class="prison-expertises">
-              ${prison.attente.map(exp => `
-                <div class="prison-expertise-item attente">
-                  <div class="expertise-name">${exp.patronyme}</div>
-                  <div class="expertise-details">
-                    ${exp.limite_oce ? `<span class="expertise-limit">⚠️ Limite: ${this.formatDate(exp.limite_oce)}</span>` : ''}
-                    ${exp.magistrat ? `<span>👨‍⚖️ ${exp.magistrat}</span>` : ''}
-                    ${exp.tribunal ? `<span>🏛️ ${exp.tribunal}</span>` : ''}
-                  </div>
+          <div class="prison-expertises">
+            ${location.expertises.map(exp => `
+              <div class="prison-expertise-item ${exp.isProgrammee ? 'programmee' : 'attente'}">
+                <div class="expertise-name">
+                  ${exp.isProgrammee ? '✅' : '⏳'} ${exp.patronyme}
                 </div>
-              `).join('')}
-            </div>
+                <div class="expertise-details">
+                  ${exp.limite_oce ? `<span class="expertise-limit">⚠️ Limite OCE: ${this.formatDate(exp.limite_oce)}</span>` : ''}
+                  ${exp.date_examen ? `<span class="expertise-date">📅 ${this.formatDate(exp.date_examen)}</span>` : ''}
+                  ${exp.magistrat ? `<span>👨‍⚖️ ${exp.magistrat}</span>` : ''}
+                  ${exp.tribunal ? `<span>🏛️ ${exp.tribunal}</span>` : ''}
+                </div>
+              </div>
+            `).join('')}
           </div>
-        ` : ''}
+        </div>
       </div>
     `;
   }
