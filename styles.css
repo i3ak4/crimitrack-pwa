@@ -1061,8 +1061,230 @@ body {
 /* Prison Grid */
 .prisons-grid {
   display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+/* Cartes repliables */
+.prison-card-collapsible {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.prison-card-collapsible:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.prison-card-header {
+  background: var(--card-color, var(--primary-color));
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s ease;
+}
+
+.prison-card-header:hover {
+  filter: brightness(1.1);
+}
+
+.prison-card-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.prison-card-arrow {
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.prison-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.prison-card-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+}
+
+.prison-card-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
+}
+
+.prison-card-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.prison-card-content.expanded {
+  max-height: 1000px;
+  transition: max-height 0.5s ease;
+}
+
+.prison-expertises-list {
+  padding: 1rem;
+}
+
+.prison-expertise-item {
+  background: var(--secondary-light);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-left: 4px solid var(--primary-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prison-expertise-item:hover {
+  background: var(--secondary-color);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.prison-expertise-item:last-child {
+  margin-bottom: 0;
+}
+
+.prison-expertise-item.programmee {
+  border-left-color: var(--success-color);
+  background: #e8f5e9;
+}
+
+.prison-expertise-item.programmee:hover {
+  background: #c8e6c9;
+}
+
+.prison-expertise-item.attente {
+  border-left-color: var(--warning-color);
+  background: #fff4e5;
+}
+
+.prison-expertise-item.attente:hover {
+  background: #ffe0b2;
+}
+
+.expertise-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.expertise-status {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.expertise-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.expertise-item-details {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.expertise-limit {
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+.expertise-date {
+  font-weight: 500;
+}
+
+/* Styles pour les détails dans le modal */
+.details-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.75rem;
+  background: var(--secondary-light);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--primary-color);
+}
+
+.detail-row strong {
+  min-width: 150px;
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-right: 1rem;
+}
+
+.detail-row span {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.detail-row-full {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.detail-row-full strong {
+  margin-bottom: 0.5rem;
+  min-width: auto;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-programmee {
+  background: #e8f5e9;
+  color: var(--success-color);
+}
+
+.status-attente {
+  background: #fff4e5;
+  color: var(--warning-color);
+}
+
+.status-realisee {
+  background: var(--secondary-color);
+  color: var(--primary-color);
+}
+
+.text-danger {
+  color: var(--danger-color);
+  font-weight: 600;
 }
 
 .prison-card {
@@ -1222,13 +1444,36 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .prison-card {
+  .prison-card-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
     padding: 1rem;
   }
   
-  .expertise-details {
+  .prison-card-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .prison-card-title {
+    font-size: 1rem;
+  }
+  
+  .expertise-item-details {
     flex-direction: column;
     gap: 0.25rem;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .detail-row strong {
+    min-width: auto;
+    margin-bottom: 0.25rem;
+    margin-right: 0;
   }
   
   .toolbar {

@@ -1094,29 +1094,49 @@ class CrimiTrackApp {
     const totalCount = location.expertises.length;
     const programmees = location.expertises.filter(exp => exp.isProgrammee);
     const enAttente = location.expertises.filter(exp => !exp.isProgrammee);
+    const cardId = `prison-${this.generateUniqueId()}`;
+    
+    // Choisir une couleur basée sur le nom du lieu (cohérente)
+    const colors = [
+      'var(--primary-color)',
+      'var(--accent-color)', 
+      'var(--success-color)',
+      'var(--warning-color)',
+      '#8B5CF6',
+      '#F59E0B'
+    ];
+    const colorIndex = location.name.length % colors.length;
+    const cardColor = colors[colorIndex];
     
     return `
-      <div class="prison-card">
-        <div class="prison-header">
-          <h3 class="prison-name">${location.name}</h3>
-          <span class="prison-count">${totalCount} expertise${totalCount > 1 ? 's' : ''}</span>
+      <div class="prison-card-collapsible" style="--card-color: ${cardColor}">
+        <div class="prison-card-header" onclick="app.togglePrisonCard('${cardId}')">
+          <div class="prison-card-left">
+            <svg class="prison-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9,18 15,12 9,6"></polyline>
+            </svg>
+            <div class="prison-card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9L12 2L21 9V20A2 2 0 0 1 19 22H5A2 2 0 0 1 3 20V9Z"></path>
+              </svg>
+            </div>
+            <h3 class="prison-card-title">${location.name}</h3>
+          </div>
+          <span class="prison-card-count">${totalCount}</span>
         </div>
         
-        <div class="prison-section">
-          <div class="prison-section-title">
-            📋 Expertises en attente <span class="section-count">${totalCount}</span>
-          </div>
-          <div class="prison-expertises">
+        <div class="prison-card-content" id="${cardId}">
+          <div class="prison-expertises-list">
             ${location.expertises.map(exp => `
-              <div class="prison-expertise-item ${exp.isProgrammee ? 'programmee' : 'attente'}">
-                <div class="expertise-name">
-                  ${exp.isProgrammee ? '✅' : '⏳'} ${exp.patronyme}
+              <div class="prison-expertise-item ${exp.isProgrammee ? 'programmee' : 'attente'}" 
+                   onclick="app.showExpertiseDetails('${exp.id || this.generateUniqueId()}', ${JSON.stringify(exp).replace(/"/g, '&quot;')})">
+                <div class="expertise-item-header">
+                  <span class="expertise-status">${exp.isProgrammee ? '✅' : '⏳'}</span>
+                  <span class="expertise-name">${exp.patronyme}</span>
                 </div>
-                <div class="expertise-details">
-                  ${exp.limite_oce ? `<span class="expertise-limit">⚠️ Limite OCE: ${this.formatDate(exp.limite_oce)}</span>` : ''}
+                <div class="expertise-item-details">
+                  ${exp.limite_oce ? `<span class="expertise-limit">⚠️ ${this.formatDate(exp.limite_oce)}</span>` : ''}
                   ${exp.date_examen ? `<span class="expertise-date">📅 ${this.formatDate(exp.date_examen)}</span>` : ''}
-                  ${exp.magistrat ? `<span>👨‍⚖️ ${exp.magistrat}</span>` : ''}
-                  ${exp.tribunal ? `<span>🏛️ ${exp.tribunal}</span>` : ''}
                 </div>
               </div>
             `).join('')}
@@ -1124,6 +1144,125 @@ class CrimiTrackApp {
         </div>
       </div>
     `;
+  }
+  
+  togglePrisonCard(cardId) {
+    const content = document.getElementById(cardId);
+    const arrow = content.previousElementSibling.querySelector('.prison-card-arrow');
+    
+    if (content.classList.contains('expanded')) {
+      content.classList.remove('expanded');
+      arrow.style.transform = 'rotate(0deg)';
+    } else {
+      content.classList.add('expanded');
+      arrow.style.transform = 'rotate(90deg)';
+    }
+  }
+  
+  showExpertiseDetails(id, expertiseData) {
+    // Parser les données de l'expertise
+    const exp = typeof expertiseData === 'string' ? JSON.parse(expertiseData.replace(/&quot;/g, '"')) : expertiseData;
+    
+    // Créer et afficher le modal détaillé
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Détails de l'expertise - ${exp.patronyme}</h2>
+          <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="details-grid">
+            <div class="detail-row">
+              <strong>Nom/Prénom :</strong>
+              <span>${exp.patronyme || 'Non renseigné'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Date d'examen :</strong>
+              <span>${exp.date_examen ? this.formatDate(exp.date_examen) : 'Non programmée'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Lieu d'examen :</strong>
+              <span>${exp.lieu_examen || 'Non renseigné'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Statut :</strong>
+              <span class="status-badge status-${exp.statut || 'attente'}">${exp.statut || 'En attente'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Limite OCE :</strong>
+              <span class="${exp.limite_oce ? 'text-danger' : ''}">${exp.limite_oce ? this.formatDate(exp.limite_oce) : 'Non définie'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Magistrat :</strong>
+              <span>${exp.magistrat || 'Non renseigné'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Tribunal :</strong>
+              <span>${exp.tribunal || 'Non renseigné'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>N° Parquet :</strong>
+              <span>${exp.numero_parquet || 'Non renseigné'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>N° Instruction :</strong>
+              <span>${exp.numero_instruction || 'Non renseigné'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Date de naissance :</strong>
+              <span>${exp.date_naissance ? this.formatDate(exp.date_naissance) : 'Non renseignée'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Âge :</strong>
+              <span>${exp.age || (exp.date_naissance ? this.calculateAge(exp.date_naissance) : 'Non calculé')}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Profession :</strong>
+              <span>${exp.profession || 'Non renseignée'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Domicile :</strong>
+              <span>${exp.domicile || 'Non renseigné'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>OPJ/Greffier :</strong>
+              <span>${exp.opj_greffier || 'Non renseigné'}</span>
+            </div>
+            ${exp.chefs_accusation ? `
+              <div class="detail-row detail-row-full">
+                <strong>Chefs d'accusation :</strong>
+                <span>${exp.chefs_accusation}</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Fermer</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Fermer au clic sur le backdrop
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+  }
+  
+  calculateAge(birthDate) {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    
+    return age + ' ans';
   }
 
   showNotification(message, type = 'success') {
