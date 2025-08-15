@@ -1153,7 +1153,7 @@ class CrimiTrackApp {
                    onclick="app.showExpertiseDetails('${exp.id || this.generateUniqueId()}', ${JSON.stringify(exp).replace(/"/g, '&quot;')})">
                 <div class="expertise-item-header">
                   <span class="expertise-status">${exp.isProgrammee ? '✅' : '⏳'}</span>
-                  <span class="expertise-name">${exp.patronyme}</span>
+                  <span class="expertise-name">${exp.patronyme || 'Sans nom'}</span>
                 </div>
                 <div class="expertise-item-details">
                   ${exp.limite_oce ? `<span class="expertise-limit">⚠️ ${this.formatDate(exp.limite_oce)}</span>` : ''}
@@ -1190,7 +1190,7 @@ class CrimiTrackApp {
     modal.innerHTML = `
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Détails de l'expertise - ${exp.patronyme}</h2>
+          <h2>Détails de l'expertise - ${exp.patronyme || 'Sans nom'}</h2>
           <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
         </div>
         <div class="modal-body">
