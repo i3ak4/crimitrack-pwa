@@ -192,6 +192,10 @@ class CrimiTrackApp {
     document.getElementById('search-global')?.addEventListener('input', () => this.updateAgenda());
     document.getElementById('clear-filters')?.addEventListener('click', () => this.clearFilters());
     
+    // Filtres onglet Prisons
+    document.getElementById('prison-search')?.addEventListener('input', () => this.updatePrisons());
+    document.getElementById('prison-filter')?.addEventListener('change', () => this.updatePrisons());
+    
     // Toggle liste d'attente
     document.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -241,6 +245,9 @@ class CrimiTrackApp {
         break;
       case 'publipostage':
         this.updatePublipostage();
+        break;
+      case 'prisons':
+        this.updatePrisons();
         break;
       case 'stats':
         this.updateStatistics();
@@ -1007,6 +1014,138 @@ class CrimiTrackApp {
 
   generateUniqueId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+
+  updatePrisons() {
+    const container = document.getElementById('prisons-container');
+    if (!container) return;
+    
+    const searchTerm = document.getElementById('prison-search')?.value?.toLowerCase() || '';
+    const filter = document.getElementById('prison-filter')?.value || 'all';
+    
+    let expertises = [...this.database.expertises];
+    
+    // Filtrer uniquement les expertises en prison (lieu_examen contient "prison" ou "maison d'arrêt")
+    expertises = expertises.filter(exp => {
+      const lieu = exp.lieu_examen?.toLowerCase() || '';
+      return lieu.includes('prison') || lieu.includes('maison') || lieu.includes('centre') || 
+             lieu.includes('pénitentiaire') || lieu.includes('detention');
+    });
+    
+    // Grouper par prison
+    const prisonGroups = {};
+    expertises.forEach(exp => {
+      const prison = exp.lieu_examen || 'Prison non spécifiée';
+      if (!prisonGroups[prison]) {
+        prisonGroups[prison] = {
+          name: prison,
+          programmees: [],
+          attente: []
+        };
+      }
+      
+      // Classer par statut
+      if (exp.statut === 'programmee' || (exp.date_examen && exp.statut !== 'realisee')) {
+        prisonGroups[prison].programmees.push(exp);
+      } else if (exp.statut !== 'realisee') {
+        prisonGroups[prison].attente.push(exp);
+      }
+    });
+    
+    // Filtrer par recherche
+    let filteredPrisons = Object.values(prisonGroups);
+    if (searchTerm) {
+      filteredPrisons = filteredPrisons.filter(prison =>
+        prison.name.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    // Filtrer par type
+    if (filter === 'programmees') {
+      filteredPrisons = filteredPrisons.filter(prison => prison.programmees.length > 0);
+    } else if (filter === 'attente') {
+      filteredPrisons = filteredPrisons.filter(prison => prison.attente.length > 0);
+    }
+    
+    // Trier les prisons par nom
+    filteredPrisons.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Pour chaque prison, trier les expertises
+    filteredPrisons.forEach(prison => {
+      // Trier programmées par date
+      prison.programmees.sort((a, b) => {
+        const dateA = new Date(a.date_examen || '2099-12-31');
+        const dateB = new Date(b.date_examen || '2099-12-31');
+        return dateA - dateB;
+      });
+      
+      // Trier en attente par LIMITE_OCE (deadline)
+      prison.attente.sort((a, b) => {
+        const dateA = new Date(a.limite_oce || '2099-12-31');
+        const dateB = new Date(b.limite_oce || '2099-12-31');
+        return dateA - dateB;
+      });
+    });
+    
+    // Afficher
+    if (filteredPrisons.length === 0) {
+      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucune prison trouvée</p>';
+    } else {
+      container.innerHTML = filteredPrisons.map(prison => this.createPrisonCard(prison)).join('');
+    }
+  }
+  
+  createPrisonCard(prison) {
+    const totalCount = prison.programmees.length + prison.attente.length;
+    
+    return `
+      <div class="prison-card">
+        <div class="prison-header">
+          <h3 class="prison-name">${prison.name}</h3>
+          <span class="prison-count">${totalCount} expertise${totalCount > 1 ? 's' : ''}</span>
+        </div>
+        
+        ${prison.programmees.length > 0 ? `
+          <div class="prison-section">
+            <div class="prison-section-title">
+              🗓️ Programmées <span class="section-count">${prison.programmees.length}</span>
+            </div>
+            <div class="prison-expertises">
+              ${prison.programmees.map(exp => `
+                <div class="prison-expertise-item programmee">
+                  <div class="expertise-name">${exp.patronyme}</div>
+                  <div class="expertise-details">
+                    <span class="expertise-date">📅 ${this.formatDate(exp.date_examen)}</span>
+                    ${exp.magistrat ? `<span>👨‍⚖️ ${exp.magistrat}</span>` : ''}
+                    ${exp.tribunal ? `<span>🏛️ ${exp.tribunal}</span>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        ${prison.attente.length > 0 ? `
+          <div class="prison-section">
+            <div class="prison-section-title">
+              ⏳ En attente <span class="section-count">${prison.attente.length}</span>
+            </div>
+            <div class="prison-expertises">
+              ${prison.attente.map(exp => `
+                <div class="prison-expertise-item attente">
+                  <div class="expertise-name">${exp.patronyme}</div>
+                  <div class="expertise-details">
+                    ${exp.limite_oce ? `<span class="expertise-limit">⚠️ Limite: ${this.formatDate(exp.limite_oce)}</span>` : ''}
+                    ${exp.magistrat ? `<span>👨‍⚖️ ${exp.magistrat}</span>` : ''}
+                    ${exp.tribunal ? `<span>🏛️ ${exp.tribunal}</span>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
   }
 
   showNotification(message, type = 'success') {

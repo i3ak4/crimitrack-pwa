@@ -97,6 +97,15 @@
                 </svg>
                 <span>Publipostage</span>
             </button>
+            <button class="tab-btn" data-tab="prisons">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="9" x2="15" y2="9"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                    <line x1="12" y1="3" x2="12" y2="21"></line>
+                </svg>
+                <span>Prisons</span>
+            </button>
             <button class="tab-btn" data-tab="stats">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -194,6 +203,19 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Prisons Tab -->
+            <div id="prisons" class="tab-pane">
+                <div class="toolbar">
+                    <input type="search" id="prison-search" placeholder="Rechercher une prison..." class="search-input">
+                    <select id="prison-filter" class="filter-select">
+                        <option value="all">Toutes les prisons</option>
+                        <option value="programmees">Avec programmées</option>
+                        <option value="attente">En attente uniquement</option>
+                    </select>
+                </div>
+                <div id="prisons-container" class="prisons-grid"></div>
             </div>
 
             <!-- Statistiques Tab -->
