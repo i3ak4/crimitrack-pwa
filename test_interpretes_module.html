@@ -67,7 +67,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 11H3v2h6v-2zm0-4H3v2h6V7zm0 8H3v2h6v-2zm12-8h-6v2h6V7zm0 4h-6v2h6v-2zm0 4h-6v2h6v-2z"/>
                 </svg>
-                <span>Liste d'attente</span>
+                <span>Liste d'en_attente</span>
             </button>
             <button class="tab-btn active" data-tab="interpretes">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -118,7 +118,7 @@
                 </div>
                 <div class="interpretes-summary">
                     <div class="summary-card">
-                        <span class="summary-label">Interprètes en attente</span>
+                        <span class="summary-label">Interprètes en en_attente</span>
                         <span id="interpretes-total" class="summary-value">0</span>
                     </div>
                     <div class="summary-card">
@@ -164,7 +164,7 @@
                     "limite_oce": "2025-08-25",
                     "tribunal": "Paris",
                     "notes": "10h - int. Espagnol",
-                    "statut": "attente"
+                    "statut": "en_attente"
                 },
                 {
                     "_uniqueId": "test3",
@@ -184,7 +184,7 @@
                     "limite_oce": "2025-09-12",
                     "tribunal": "Bobigny",
                     "notes": "int. Soninké",
-                    "statut": "attente"
+                    "statut": "en_attente"
                 },
                 {
                     "_uniqueId": "test5",
@@ -214,7 +214,7 @@
                     "limite_oce": "2025-09-18",
                     "tribunal": "Créteil",
                     "notes": "int. Arabe - dialecte marocain",
-                    "statut": "attente"
+                    "statut": "en_attente"
                 },
                 {
                     "_uniqueId": "test6",
@@ -265,9 +265,9 @@
                 const interpretesExpertises = this.database.expertises.filter(exp => {
                     const notes = exp.notes || '';
                     const statut = exp.statut || '';
-                    return notes.toLowerCase().includes('int.') && statut.toLowerCase() === 'attente';
+                    return notes.toLowerCase().includes('int.') && statut.toLowerCase() === 'en_attente';
                 });
-                this.addTestResult(interpretesExpertises.length === 3, `Filtrage interprètes en attente: ${interpretesExpertises.length}/3 trouvés`);
+                this.addTestResult(interpretesExpertises.length === 3, `Filtrage interprètes en en_attente: ${interpretesExpertises.length}/3 trouvés`);
 
                 // Test 2: Extraction des langues avec drapeaux
                 const languesInfo = interpretesExpertises.map(exp => this.getLangueInfo(exp.notes || ''));
@@ -447,11 +447,11 @@
                 
                 const searchTerm = document.getElementById('interpretes-search')?.value?.toLowerCase() || '';
                 
-                // Filtrer les expertises nécessitant un interprète ET en attente uniquement
+                // Filtrer les expertises nécessitant un interprète ET en en_attente uniquement
                 let interpretesExpertises = this.database.expertises.filter(exp => {
                     const notes = exp.notes || '';
                     const statut = exp.statut || '';
-                    return notes.toLowerCase().includes('int.') && statut.toLowerCase() === 'attente';
+                    return notes.toLowerCase().includes('int.') && statut.toLowerCase() === 'en_attente';
                 });
                 
                 // Appliquer la recherche

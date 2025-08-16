@@ -1687,7 +1687,7 @@ class CrimiTrackApp {
     let interpretesExpertises = this.database.expertises.filter(exp => {
       const notes = exp.notes || '';
       const statut = exp.statut || '';
-      return notes.toLowerCase().includes('int.') && statut.toLowerCase() === 'attente';
+      return notes.toLowerCase().includes('int.') && statut.toLowerCase() === 'en_attente';
     });
     
     // Appliquer la recherche
