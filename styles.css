@@ -159,27 +159,17 @@ body {
 .tab-navigation {
   background: var(--bg-secondary);
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-around;
   border-bottom: 1px solid var(--border-light);
   padding: 0.5rem;
   position: sticky;
   top: 77px;
   z-index: 90;
   box-shadow: var(--shadow-sm);
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.tab-navigation::-webkit-scrollbar {
-  display: none;
 }
 
 .tab-btn {
-  flex: 0 0 auto;
-  min-width: 120px;
+  flex: 1;
   background: transparent;
   border: none;
   padding: 0.75rem 1rem;
@@ -194,7 +184,7 @@ body {
   font-size: 0.875rem;
   position: relative;
   overflow: hidden;
-  white-space: nowrap;
+  text-align: center;
   transform: translateZ(0);
   will-change: transform, background;
 }
