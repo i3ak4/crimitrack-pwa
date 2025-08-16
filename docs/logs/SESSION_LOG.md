@@ -144,5 +144,109 @@ git push origin main
 
 **Déploiement:** Commit `76e2e5b` poussé sur GitHub Pages
 
+## Mise à jour du 16/08/2025
+
+### ✨ Ajout du Module Interprètes - Interface de Contact Rapide
+
+**Nouvelle fonctionnalité implémentée:**
+Création d'un 6ème onglet "Interprètes" pour la gestion optimisée des expertises nécessitant un interprète.
+
+**Fonctionnalités du module:**
+
+1. **Filtrage automatique intelligent:**
+   ```javascript
+   // Filtre: expertises avec "int. LANGUE" dans notes ET statut "en_attente"
+   return notes.toLowerCase().includes('int.') && statut.toLowerCase() === 'en_attente';
+   ```
+
+2. **Organisation hiérarchique optimisée:**
+   - **Niveau 1:** Langue avec drapeau pays (🇸🇦 Arabe, 🇪🇸 Espagnol, etc.)
+   - **Niveau 2:** Lieu d'examen (Bobigny, Paris XIV, Créteil...)
+   - **Niveau 3:** Tri par date limite OCE (urgent → normal)
+
+3. **Support multilingue avec drapeaux:**
+   - 40+ langues supportées avec drapeaux correspondants
+   - Mapping intelligent: Arabe 🇸🇦, Bengali 🇧🇩, Soninké 🇲🇱, etc.
+   - Normalisation automatique des variantes linguistiques
+
+4. **Indicateurs d'urgence visuels:**
+   - 🔴 Dépassée (limite OCE dépassée)
+   - 🟠 Urgent (< 7 jours)
+   - 🟡 Attention (< 30 jours)
+   - 🟢 Normal (> 30 jours)
+
+5. **Interface de contact rapide:**
+   - Bouton 📞 pour contact direct interprète
+   - Partage natif iOS/Android ou copie presse-papier
+   - Message pré-formaté avec détails expertise
+
+6. **Recherche et filtres avancés:**
+   - Recherche par langue, lieu, nom de l'expertisé
+   - Tri par langue/lieu/date limite
+   - Compteurs temps réel (interprètes en attente, langues actives)
+
+**Navigation responsive optimisée:**
+
+Problème initial: Scroll latéral iPhone ne couvrait pas toute la largeur.
+
+**Solution appliquée:**
+```css
+.tab-navigation {
+  display: flex;
+  justify-content: space-around; /* Répartition égale */
+}
+
+.tab-btn {
+  flex: 1; /* Chaque onglet prend 1/6 de la largeur */
+}
+```
+
+**Corrections techniques majeures:**
+
+1. **Détection des interprètes** (Commit 79b9e04):
+   - ❌ Ancien filtre: `statut === 'attente'`
+   - ✅ Correction: `statut === 'en_attente'`
+   - **Résultat:** 20+ expertises avec interprètes correctement détectées
+
+2. **Cache busting pour iPhone** (Commit 63dcbbd):
+   - Ajout versioning: `styles.css?v=1734394520`
+   - Résout problème navigation privée vs classique iPhone
+   - Force mise à jour cache navigateur
+
+**Données réelles trouvées:**
+```javascript
+// Expertises avec interprètes dans la base:
+"notes": "14h - int. Bengali"    // statut: "en_attente"
+"notes": "int. arabe"           // statut: "en_attente" 
+"notes": "int. ourdou"          // statut: "en_attente"
+"notes": "int. somali"          // statut: "en_attente"
+```
+
+**Architecture du module:**
+```
+/interprètes/
+├── Recherche et tri par langue/lieu/date
+├── Statistiques (total interprètes, langues actives)
+├── Groupes par langue (avec drapeaux)
+│   ├── Sous-groupes par lieu
+│   │   ├── Cartes compactes par expertise
+│   │   ├── Indicateurs urgence visuels
+│   │   └── Boutons contact/édition
+└── État vide informatif si aucun interprète
+```
+
+**Commits de la session:**
+1. `9bb51cf` - ✨ Ajout module Interprètes initial
+2. `462f828` - 🎨 Fix navigation 6 onglets largeur iPhone/iPad
+3. `63dcbbd` - 🔧 Fix cache iPhone avec versioning
+4. `79b9e04` - 🔧 Fix détection interprètes statut 'en_attente'
+
+**Objectif atteint:**
+> *"Lorsque je vois un interprète, je lance l'appli et en un clin d'œil je puis lui demander s'il est dispo pour X personnes à tel endroit"*
+
+Le module permet un contact rapide et organisé avec les interprètes via une interface mobile optimisée.
+
+**URL de production:** https://i3ak4.github.io/crimitrack-pwa/
+
 ---
-Session terminée avec succès - Application pleinement opérationnelle
+Session terminée avec succès - Application pleinement opérationnelle avec module Interprètes intégré
