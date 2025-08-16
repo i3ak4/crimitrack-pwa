@@ -100,5 +100,49 @@ git push origin main
 - Application responsive iPad 13" et iPhone
 - Performance optimisée avec animations CSS-first
 
+## Mise à jour du 15/08/2025
+
+### 🔧 Correction PWA GitHub Pages (Commit 76e2e5b)
+
+**Problème identifié:** 
+- L'installation PWA sur iOS menait à une erreur 404
+- La PWA tentait d'ouvrir `https://i3ak4.github.io/index.html` (inexistant)
+- Au lieu de `https://i3ak4.github.io/crimitrack-pwa/` (correct)
+
+**Modifications apportées:**
+
+1. **manifest.json** - Configuration GitHub Pages corrigée:
+   ```json
+   "start_url": "/crimitrack-pwa/",
+   "scope": "/crimitrack-pwa/"
+   ```
+
+2. **service-worker.js** - Chemins de cache ajustés:
+   ```javascript
+   const urlsToCache = [
+     '/crimitrack-pwa/',
+     '/crimitrack-pwa/index.html',
+     '/crimitrack-pwa/styles.css',
+     '/crimitrack-pwa/app.js',
+     '/crimitrack-pwa/ui-fantaisie.js',
+     '/crimitrack-pwa/manifest.json'
+   ];
+   ```
+
+3. **app.js** - Service worker scope configuré:
+   ```javascript
+   await navigator.serviceWorker.register('/crimitrack-pwa/service-worker.js', {
+     scope: '/crimitrack-pwa/'
+   });
+   ```
+
+**Résultat:**
+- ✅ PWA iOS fonctionne correctement après installation
+- ✅ Ouverture directe sur l'URL correcte
+- ✅ Mode hors-ligne opérationnel
+- ✅ Tous les caches service worker alignés
+
+**Déploiement:** Commit `76e2e5b` poussé sur GitHub Pages
+
 ---
 Session terminée avec succès - Application pleinement opérationnelle

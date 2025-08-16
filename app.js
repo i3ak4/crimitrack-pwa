@@ -260,6 +260,11 @@ class CrimiTrackApp {
     document.getElementById('prison-search')?.addEventListener('input', () => this.updatePrisons());
     document.getElementById('prison-filter')?.addEventListener('change', () => this.updatePrisons());
     
+    // Filtres onglet Interprètes
+    document.getElementById('interpretes-search')?.addEventListener('input', () => this.updateInterpretes());
+    document.getElementById('interpretes-sort')?.addEventListener('change', () => this.updateInterpretes());
+    
+    
     // Toggle liste d'attente
     document.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -309,6 +314,9 @@ class CrimiTrackApp {
         break;
       case 'publipostage':
         this.updatePublipostage();
+        break;
+      case 'interpretes':
+        this.updateInterpretes();
         break;
       case 'prisons':
         this.updatePrisons();
@@ -1665,6 +1673,396 @@ class CrimiTrackApp {
       notification.style.animation = 'slideOut 0.3s ease';
       setTimeout(() => notification.remove(), 300);
     }, 3000);
+  }
+
+  // Méthode pour l'onglet Interprètes
+  updateInterpretes() {
+    const container = document.getElementById('interpretes-container');
+    if (!container) return;
+    
+    const searchTerm = document.getElementById('interpretes-search')?.value?.toLowerCase() || '';
+    const sortBy = document.getElementById('interpretes-sort')?.value || 'langue';
+    
+    // Filtrer les expertises nécessitant un interprète ET en attente uniquement
+    let interpretesExpertises = this.database.expertises.filter(exp => {
+      const notes = exp.notes || '';
+      const statut = exp.statut || '';
+      return notes.toLowerCase().includes('int.') && statut.toLowerCase() === 'attente';
+    });
+    
+    // Appliquer la recherche
+    if (searchTerm) {
+      interpretesExpertises = interpretesExpertises.filter(exp => {
+        const notes = (exp.notes || '').toLowerCase();
+        const lieu = (exp.lieu_examen || '').toLowerCase();
+        const patronyme = (exp.patronyme || '').toLowerCase();
+        return notes.includes(searchTerm) || lieu.includes(searchTerm) || patronyme.includes(searchTerm);
+      });
+    }
+    
+    // Trier selon le critère sélectionné
+    interpretesExpertises.sort((a, b) => {
+      switch (sortBy) {
+        case 'langue':
+          const langueA = this.extractLangue(a.notes || '');
+          const langueB = this.extractLangue(b.notes || '');
+          const langueCompare = langueA.localeCompare(langueB);
+          if (langueCompare !== 0) return langueCompare;
+          // Si même langue, trier par lieu
+          const lieuCompare = (a.lieu_examen || '').localeCompare(b.lieu_examen || '');
+          if (lieuCompare !== 0) return lieuCompare;
+          // Si même lieu, trier par limite OCE
+          return this.compareDateLimite(a.limite_oce, b.limite_oce);
+          
+        case 'lieu':
+          const lieuCompareB = (a.lieu_examen || '').localeCompare(b.lieu_examen || '');
+          if (lieuCompareB !== 0) return lieuCompareB;
+          return this.compareDateLimite(a.limite_oce, b.limite_oce);
+          
+        case 'date':
+          return this.compareDateLimite(a.limite_oce, b.limite_oce);
+          
+        default:
+          return 0;
+      }
+    });
+    
+    // TOUJOURS grouper par langue → lieu → limite OCE pour usage rapide
+    let groupedByLangue = {};
+    
+    interpretesExpertises.forEach(exp => {
+      const langueInfo = this.getLangueInfo(exp.notes || '');
+      const lieu = exp.lieu_examen || 'Lieu non spécifié';
+      
+      if (!groupedByLangue[langueInfo.name]) {
+        groupedByLangue[langueInfo.name] = {
+          flag: langueInfo.flag,
+          name: langueInfo.name,
+          total: 0,
+          lieux: {}
+        };
+      }
+      
+      if (!groupedByLangue[langueInfo.name].lieux[lieu]) {
+        groupedByLangue[langueInfo.name].lieux[lieu] = [];
+      }
+      
+      groupedByLangue[langueInfo.name].lieux[lieu].push(exp);
+      groupedByLangue[langueInfo.name].total++;
+    });
+    
+    // Trier les expertises par lieu par limite OCE
+    Object.keys(groupedByLangue).forEach(langue => {
+      Object.keys(groupedByLangue[langue].lieux).forEach(lieu => {
+        groupedByLangue[langue].lieux[lieu].sort((a, b) => 
+          this.compareDateLimite(a.limite_oce, b.limite_oce)
+        );
+      });
+    });
+    
+    // Mettre à jour les statistiques
+    const totalInterpretes = interpretesExpertises.length;
+    const languesUniques = Object.keys(groupedByLangue).length;
+    
+    document.getElementById('interpretes-total').textContent = totalInterpretes;
+    document.getElementById('langues-total').textContent = languesUniques;
+    
+    // Générer le HTML optimisé pour contact rapide
+    let html = '';
+    
+    if (Object.keys(groupedByLangue).length > 0) {
+      Object.keys(groupedByLangue).sort().forEach(langue => {
+        const langueData = groupedByLangue[langue];
+        
+        html += `
+          <div class="interpretes-groupe-langue">
+            <div class="interpretes-langue-header-new">
+              <span class="langue-flag">${langueData.flag}</span>
+              <span class="langue-name">${langueData.name}</span>
+              <span class="langue-count">(${langueData.total})</span>
+            </div>
+            <div class="interpretes-lieux-container">
+        `;
+        
+        // Grouper par lieu
+        Object.keys(langueData.lieux).sort().forEach(lieu => {
+          const expertisesLieu = langueData.lieux[lieu];
+          
+          html += `
+            <div class="interpretes-lieu-groupe">
+              <div class="interpretes-lieu-header">
+                <span class="lieu-icon">📍</span>
+                <span class="lieu-name">${lieu}</span>
+                <span class="lieu-count">(${expertisesLieu.length})</span>
+              </div>
+              <div class="interpretes-expertises-list">
+          `;
+          
+          expertisesLieu.forEach(exp => {
+            html += this.generateCompactInterpreteCard(exp);
+          });
+          
+          html += `
+              </div>
+            </div>
+          `;
+        });
+        
+        html += `
+            </div>
+          </div>
+        `;
+      });
+    }
+    
+    if (html === '') {
+      html = `
+        <div class="empty-state">
+          <div class="empty-icon">🗣️</div>
+          <h3>Aucune expertise nécessitant un interprète</h3>
+          <p>Les expertises avec "int. LANGUE" dans les notes apparaîtront ici</p>
+        </div>
+      `;
+    }
+    
+    container.innerHTML = html;
+  }
+  
+  // Extraire la langue depuis les notes avec drapeaux
+  extractLangue(notes) {
+    const match = notes.match(/int\.\s*([a-záàâäéèêëïîôùûüÿçñ\s\-]+)/i);
+    if (match) {
+      let langue = match[1].trim();
+      // Normaliser les langues connues
+      langue = langue.charAt(0).toUpperCase() + langue.slice(1).toLowerCase();
+      
+      // Gérer les cas spéciaux
+      if (langue.includes('arabe')) return 'Arabe';
+      if (langue.includes('espagnol')) return 'Espagnol';
+      if (langue.includes('soninké')) return 'Soninké';
+      if (langue.includes('mandarin') || langue.includes('chinois')) return 'Mandarin';
+      if (langue.includes('russe')) return 'Russe';
+      
+      return langue;
+    }
+    return 'Non spécifiée';
+  }
+  
+  // Obtenir le drapeau et nom complet de la langue
+  getLangueInfo(notes) {
+    const langue = this.extractLangue(notes);
+    const langueMap = {
+      'Arabe': { flag: '🇸🇦', name: 'Arabe' },
+      'Espagnol': { flag: '🇪🇸', name: 'Espagnol' },
+      'Anglais': { flag: '🇬🇧', name: 'Anglais' },
+      'Mandarin': { flag: '🇨🇳', name: 'Mandarin' },
+      'Chinois': { flag: '🇨🇳', name: 'Chinois' },
+      'Russe': { flag: '🇷🇺', name: 'Russe' },
+      'Portugais': { flag: '🇵🇹', name: 'Portugais' },
+      'Italien': { flag: '🇮🇹', name: 'Italien' },
+      'Allemand': { flag: '🇩🇪', name: 'Allemand' },
+      'Turc': { flag: '🇹🇷', name: 'Turc' },
+      'Bengali': { flag: '🇧🇩', name: 'Bengali' },
+      'Ourdou': { flag: '🇵🇰', name: 'Ourdou' },
+      'Hindi': { flag: '🇮🇳', name: 'Hindi' },
+      'Punjabi': { flag: '🇮🇳', name: 'Punjabi' },
+      'Tamoul': { flag: '🇮🇳', name: 'Tamoul' },
+      'Somali': { flag: '🇸🇴', name: 'Somali' },
+      'Soninké': { flag: '🇲🇱', name: 'Soninké' },
+      'Wolof': { flag: '🇸🇳', name: 'Wolof' },
+      'Bambara': { flag: '🇲🇱', name: 'Bambara' },
+      'Peul': { flag: '🇸🇳', name: 'Peul' },
+      'Lingala': { flag: '🇨🇩', name: 'Lingala' },
+      'Swahili': { flag: '🇹🇿', name: 'Swahili' },
+      'Amharique': { flag: '🇪🇹', name: 'Amharique' },
+      'Tigrigna': { flag: '🇪🇷', name: 'Tigrigna' },
+      'Kurde': { flag: '🏴', name: 'Kurde' },
+      'Farsi': { flag: '🇮🇷', name: 'Farsi' },
+      'Dari': { flag: '🇦🇫', name: 'Dari' },
+      'Pachto': { flag: '🇦🇫', name: 'Pachto' },
+      'Albanais': { flag: '🇦🇱', name: 'Albanais' },
+      'Serbe': { flag: '🇷🇸', name: 'Serbe' },
+      'Croate': { flag: '🇭🇷', name: 'Croate' },
+      'Bosniaque': { flag: '🇧🇦', name: 'Bosniaque' },
+      'Bulgare': { flag: '🇧🇬', name: 'Bulgare' },
+      'Roumain': { flag: '🇷🇴', name: 'Roumain' },
+      'Polonais': { flag: '🇵🇱', name: 'Polonais' },
+      'Hongrois': { flag: '🇭🇺', name: 'Hongrois' },
+      'Tchèque': { flag: '🇨🇿', name: 'Tchèque' },
+      'Slovaque': { flag: '🇸🇰', name: 'Slovaque' },
+      'Ukrainien': { flag: '🇺🇦', name: 'Ukrainien' },
+      'Géorgien': { flag: '🇬🇪', name: 'Géorgien' },
+      'Arménien': { flag: '🇦🇲', name: 'Arménien' },
+      'Hébreu': { flag: '🇮🇱', name: 'Hébreu' },
+      'Japonais': { flag: '🇯🇵', name: 'Japonais' },
+      'Coréen': { flag: '🇰🇷', name: 'Coréen' },
+      'Vietnamien': { flag: '🇻🇳', name: 'Vietnamien' },
+      'Thaï': { flag: '🇹🇭', name: 'Thaï' },
+      'Malais': { flag: '🇲🇾', name: 'Malais' },
+      'Indonésien': { flag: '🇮🇩', name: 'Indonésien' },
+      'Tagalog': { flag: '🇵🇭', name: 'Tagalog' },
+      'Non spécifiée': { flag: '🗣️', name: 'Non spécifiée' }
+    };
+    
+    return langueMap[langue] || { flag: '🗣️', name: langue };
+  }
+  
+  // Comparer les dates limites OCE
+  compareDateLimite(dateA, dateB) {
+    if (!dateA && !dateB) return 0;
+    if (!dateA) return 1;
+    if (!dateB) return -1;
+    
+    const a = new Date(dateA);
+    const b = new Date(dateB);
+    return a - b;
+  }
+  
+  // Générer une carte compacte pour contact rapide interprète
+  generateCompactInterpreteCard(expertise) {
+    const urgence = this.getUrgenceLevel(expertise.limite_oce);
+    const urgenceIcon = this.getUrgenceIcon(urgence);
+    
+    return `
+      <div class="interpretes-card-compact ${urgence}">
+        <div class="compact-main-info">
+          <div class="compact-person">
+            <strong class="person-name">${expertise.patronyme || 'Non renseigné'}</strong>
+            <span class="compact-urgence ${urgence}">${urgenceIcon}</span>
+          </div>
+          <div class="compact-timing">
+            <span class="compact-date">📅 ${expertise.date_examen ? new Date(expertise.date_examen).toLocaleDateString('fr-FR') : 'Non programmée'}</span>
+            ${expertise.limite_oce ? `<span class="compact-limite">⏰ ${new Date(expertise.limite_oce).toLocaleDateString('fr-FR')}</span>` : ''}
+          </div>
+        </div>
+        <div class="compact-details">
+          <span class="compact-tribunal">${expertise.tribunal || 'Non renseigné'}</span>
+          <span class="compact-notes">${expertise.notes || ''}</span>
+        </div>
+        <div class="compact-actions">
+          <button onclick="app.contactInterpreter('${expertise._uniqueId}')" class="btn-contact" title="Contacter l'interprète">📞</button>
+          <button onclick="app.editExpertise('${expertise._uniqueId}')" class="btn-edit" title="Modifier">✏️</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Générer une carte compacte pour contact rapide interprète
+  generateCompactInterpreteCard(expertise) {
+    const urgence = this.getUrgenceLevel(expertise.limite_oce);
+    const urgenceIcon = this.getUrgenceIcon(urgence);
+    
+    return `
+      <div class="interpretes-card-compact ${urgence}">
+        <div class="compact-main-info">
+          <div class="compact-person">
+            <strong class="person-name">${expertise.patronyme || 'Non renseigné'}</strong>
+            <span class="compact-urgence ${urgence}">${urgenceIcon}</span>
+          </div>
+          <div class="compact-timing">
+            <span class="compact-date">📅 ${expertise.date_examen ? new Date(expertise.date_examen).toLocaleDateString('fr-FR') : 'Non programmée'}</span>
+            ${expertise.limite_oce ? `<span class="compact-limite">⏰ ${new Date(expertise.limite_oce).toLocaleDateString('fr-FR')}</span>` : ''}
+          </div>
+        </div>
+        <div class="compact-details">
+          <span class="compact-tribunal">${expertise.tribunal || 'Non renseigné'}</span>
+          <span class="compact-notes">${expertise.notes || ''}</span>
+        </div>
+        <div class="compact-actions">
+          <button onclick="app.contactInterpreter('${expertise._uniqueId}')" class="btn-contact" title="Contacter l'interprète">📞</button>
+          <button onclick="app.editExpertise('${expertise._uniqueId}')" class="btn-edit" title="Modifier">✏️</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Générer une carte pour une expertise interprète (ancienne version)
+  generateInterpreteCard(expertise) {
+    const langue = this.extractLangue(expertise.notes || '');
+    const urgence = this.getUrgenceLevel(expertise.limite_oce);
+    
+    return `
+      <div class="interpretes-card ${urgence}">
+        <div class="interpretes-card-header">
+          <span class="interpretes-langue">${langue}</span>
+          <span class="interpretes-urgence ${urgence}">${this.getUrgenceText(urgence)}</span>
+        </div>
+        <div class="interpretes-card-body">
+          <div class="interpretes-info">
+            <strong>${expertise.patronyme || 'Non renseigné'}</strong>
+            <span class="interpretes-lieu">📍 ${expertise.lieu_examen || 'Non renseigné'}</span>
+            <span class="interpretes-date">📅 ${expertise.date_examen ? new Date(expertise.date_examen).toLocaleDateString('fr-FR') : 'Non programmée'}</span>
+            ${expertise.limite_oce ? `<span class="interpretes-limite">⏰ Limite OCE: ${new Date(expertise.limite_oce).toLocaleDateString('fr-FR')}</span>` : ''}
+          </div>
+          <div class="interpretes-details">
+            <span class="interpretes-tribunal">${expertise.tribunal || 'Non renseigné'}</span>
+            <span class="interpretes-notes">${expertise.notes || ''}</span>
+          </div>
+        </div>
+        <div class="interpretes-card-actions">
+          <button onclick="app.editExpertise('${expertise._uniqueId}')" class="btn btn-sm btn-secondary">Modifier</button>
+          <button onclick="app.deleteExpertise('${expertise._uniqueId}')" class="btn btn-sm btn-danger">Supprimer</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Déterminer le niveau d'urgence selon la limite OCE
+  getUrgenceLevel(limite_oce) {
+    if (!limite_oce) return 'normal';
+    
+    const limite = new Date(limite_oce);
+    const today = new Date();
+    const diffTime = limite - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return 'depassee';
+    if (diffDays <= 7) return 'urgent';
+    if (diffDays <= 30) return 'attention';
+    return 'normal';
+  }
+  
+  // Icône d'urgence pour affichage compact
+  getUrgenceIcon(urgence) {
+    switch (urgence) {
+      case 'depassee': return '🔴';
+      case 'urgent': return '🟠';
+      case 'attention': return '🟡';
+      default: return '🟢';
+    }
+  }
+  
+  // Texte d'urgence
+  getUrgenceText(urgence) {
+    switch (urgence) {
+      case 'depassee': return '🔴 Dépassée';
+      case 'urgent': return '🟠 Urgent (< 7j)';
+      case 'attention': return '🟡 Attention (< 30j)';
+      default: return '🟢 Normal';
+    }
+  }
+  
+  // Fonction pour contacter un interprète (placeholder)
+  contactInterpreter(expertiseId) {
+    const expertise = this.database.expertises.find(exp => exp._uniqueId === expertiseId);
+    if (expertise) {
+      const langueInfo = this.getLangueInfo(expertise.notes || '');
+      const message = `Bonjour, êtes-vous disponible pour une expertise en ${langueInfo.name} ?\n\nLieu: ${expertise.lieu_examen}\nDate: ${expertise.date_examen ? new Date(expertise.date_examen).toLocaleDateString('fr-FR') : 'À programmer'}\nPersonne: ${expertise.patronyme}\n\nMerci !`;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: `Demande interprète ${langueInfo.name}`,
+          text: message
+        });
+      } else {
+        // Fallback: copier dans le presse-papier
+        navigator.clipboard.writeText(message).then(() => {
+          this.showNotification('Message copié dans le presse-papier', 'success');
+        }).catch(() => {
+          alert(message);
+        });
+      }
+    }
   }
 }
 

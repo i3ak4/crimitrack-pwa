@@ -81,6 +81,14 @@
                 </svg>
                 <span>Publipostage</span>
             </button>
+            <button class="tab-btn" data-tab="interpretes">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="5"></circle>
+                    <path d="M20 21a8 8 0 1 0-16 0"></path>
+                    <path d="M12 14c-4 0-7 2-7 5"></path>
+                </svg>
+                <span>Interprètes</span>
+            </button>
             <button class="tab-btn" data-tab="prisons">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -187,6 +195,29 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Interprètes Tab -->
+            <div id="interpretes" class="tab-pane">
+                <div class="toolbar">
+                    <input type="search" id="interpretes-search" placeholder="Rechercher par langue, lieu..." class="search-input">
+                    <select id="interpretes-sort" class="filter-select">
+                        <option value="langue">Trier par Langue</option>
+                        <option value="lieu">Trier par Lieu</option>
+                        <option value="date">Trier par Date limite</option>
+                    </select>
+                </div>
+                <div class="interpretes-summary">
+                    <div class="summary-card">
+                        <span class="summary-label">Interprètes en attente</span>
+                        <span id="interpretes-total" class="summary-value">0</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="summary-label">Langues actives</span>
+                        <span id="langues-total" class="summary-value">0</span>
+                    </div>
+                </div>
+                <div id="interpretes-container" class="interpretes-grid"></div>
             </div>
 
             <!-- Prisons Tab -->
