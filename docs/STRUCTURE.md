@@ -54,6 +54,10 @@ CrimiTrack_PWA/
 - **manifest.json** : Configuration Progressive Web App
 - **service-worker.js** : Cache et fonctionnement hors ligne
 
+### Base de Données
+- **db/database.json** : Fichier principal de base de données
+- **localStorage backup** : Sauvegarde automatique pour sécurité
+
 ### Tests & Debug
 - **init-test-data.html** : Créer des données de test
 - **test-publipostage-debug.html** : Debug complet du publipostage
