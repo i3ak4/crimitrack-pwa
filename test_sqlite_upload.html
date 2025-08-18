@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload SQLite</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Upload SQLite</h1>
+    
+    <div class="test-section">
+        <h2>Upload de Base SQLite</h2>
+        <div class="upload-area" id="dropZone">
+            <p>Glissez-déposez votre fichier crimitrack.db ici</p>
+            <p>ou</p>
+            <input type="file" id="sqliteFile" accept=".db,.sqlite,.sqlite3">
+            <label for="sqliteFile">
+                <button type="button" onclick="document.getElementById('sqliteFile').click()">
+                    Choisir fichier SQLite
+                </button>
+            </label>
+        </div>
+        <div id="upload-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Résultats du Parsing</h2>
+        <div id="parsing-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Aperçu des Données</h2>
+        <button onclick="showPreview()">Afficher aperçu</button>
+        <div id="data-preview"></div>
+    </div>
+
+    <!-- Charger sql.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    
+    <script>
+        let sqliteDB = null;
+        let extractedData = null;
+        
+        // Initialiser sql.js
+        let SQL = null;
+        
+        async function initSQLite() {
+            try {
+                SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+                });
+                console.log('sql.js initialisé');
+                return true;
+            } catch (error) {
+                console.error('Erreur initialisation sql.js:', error);
+                return false;
+            }
+        }
+        
+        // Gestion du drag & drop
+        const dropZone = document.getElementById('dropZone');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+        
+        // Gestion du sélecteur de fichier
+        document.getElementById('sqliteFile').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+        
+        async function handleFileUpload(file) {
+            const resultDiv = document.getElementById('upload-result');
+            
+            if (!file.name.match(/\.(db|sqlite|sqlite3)$/i)) {
+                resultDiv.innerHTML = '<div class="status error">Veuillez sélectionner un fichier .db, .sqlite ou .sqlite3</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="status info">Chargement du fichier SQLite...</div>';
+            
+            try {
+                // Initialiser sql.js si nécessaire
+                if (!SQL) {
+                    const initialized = await initSQLite();
+                    if (!initialized) {
+                        throw new Error('Impossible d\'initialiser sql.js');
+                    }
+                }
+                
+                // Lire le fichier
+                const arrayBuffer = await file.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                
+                // Créer la base de données
+                sqliteDB = new SQL.Database(uint8Array);
+                
+                // Analyser la structure
+                await analyzeDatabase();
+                
+                resultDiv.innerHTML = `<div class="status success">Fichier ${file.name} chargé avec succès !</div>`;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                resultDiv.innerHTML = `<div class="status error">Erreur: ${error.message}</div>`;
+            }
+        }
+        
+        async function analyzeDatabase() {
+            if (!sqliteDB) return;
+            
+            const resultDiv = document.getElementById('parsing-result');
+            let analysis = '';
+            
+            try {
+                // Lister les tables
+                const tablesResult = sqliteDB.exec("SELECT name FROM sqlite_master WHERE type='table'");
+                const tables = tablesResult[0] ? tablesResult[0].values.flat() : [];
+                analysis += `<h3>Tables trouvées: ${tables.join(', ')}</h3>`;
+                
+                // Analyser la table expertises
+                if (tables.includes('expertises')) {
+                    const countResult = sqliteDB.exec('SELECT COUNT(*) FROM expertises');
+                    const count = countResult[0].values[0][0];
+                    analysis += `<p><strong>Table expertises:</strong> ${count} enregistrements</p>`;
+                    
+                    // Structure des colonnes
+                    const schemaResult = sqliteDB.exec('PRAGMA table_info(expertises)');
+                    if (schemaResult.length > 0) {
+                        const columns = schemaResult[0].values.map(col => col[1]);
+                        analysis += `<p><strong>Colonnes:</strong> ${columns.join(', ')}</p>`;
+                    }
+                    
+                    // Extraire quelques données d'exemple
+                    const sampleResult = sqliteDB.exec('SELECT * FROM expertises LIMIT 3');
+                    if (sampleResult.length > 0) {
+                        const sampleColumns = sampleResult[0].columns;
+                        const sampleValues = sampleResult[0].values;
+                        
+                        extractedData = sampleValues.map(row => {
+                            const expertise = {};
+                            sampleColumns.forEach((col, index) => {
+                                expertise[col] = row[index];
+                            });
+                            return expertise;
+                        });
+                        
+                        analysis += '<h4>Aperçu des données (3 premiers enregistrements):</h4>';
+                        analysis += `<pre>${JSON.stringify(extractedData, null, 2)}</pre>`;
+                    }
+                }
+                
+                // Analyser la table waitlist
+                if (tables.includes('waitlist')) {
+                    const countResult = sqliteDB.exec('SELECT COUNT(*) FROM waitlist');
+                    const count = countResult[0].values[0][0];
+                    analysis += `<p><strong>Table waitlist:</strong> ${count} enregistrements</p>`;
+                }
+                
+                resultDiv.innerHTML = analysis;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">Erreur analyse: ${error.message}</div>`;
+            }
+        }
+        
+        function showPreview() {
+            if (!extractedData) {
+                document.getElementById('data-preview').innerHTML = '<div class="status error">Pas de données à afficher</div>';
+                return;
+            }
+            
+            let preview = '<h3>Conversion vers format application:</h3>';
+            
+            const converted = extractedData.map(expertise => {
+                const normalized = {};
+                
+                // Copier tous les champs
+                Object.keys(expertise).forEach(key => {
+                    normalized[key] = expertise[key];
+                });
+                
+                // Normaliser les noms pour compatibilité app
+                if (expertise.PATRONYME) normalized.patronyme = expertise.PATRONYME;
+                if (expertise.DATE_NAISSANCE) normalized.date_naissance = expertise.DATE_NAISSANCE;
+                if (expertise.OPJ_GREFFIER) normalized.opj_greffier = expertise.OPJ_GREFFIER;
+                if (expertise.CHEFS_ACCUSATION) normalized.chefs_accusation = expertise.CHEFS_ACCUSATION;
+                if (expertise.PROC_1) normalized.numero_parquet = expertise.PROC_1;
+                if (expertise.PROC_2) normalized.numero_instruction = expertise.PROC_2;
+                if (expertise.DATE_OCE) normalized.date_oce = expertise.DATE_OCE;
+                if (expertise.LIMITE_OCE) normalized.limite_oce = expertise.LIMITE_OCE;
+                
+                // ID unique
+                if (!normalized._uniqueId) {
+                    normalized._uniqueId = normalized.id || `sqlite_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                }
+                
+                return normalized;
+            });
+            
+            preview += `<pre>${JSON.stringify(converted, null, 2)}</pre>`;
+            document.getElementById('data-preview').innerHTML = preview;
+        }
+        
+        // Initialiser au chargement
+        window.addEventListener('load', () => {
+            console.log('Test SQLite Upload ready');
+        });
+    </script>
+</body>
+</html>

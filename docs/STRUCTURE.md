@@ -54,6 +54,10 @@ CrimiTrack_PWA/
 - **manifest.json** : Configuration Progressive Web App
 - **service-worker.js** : Cache et fonctionnement hors ligne
 
+### SQLite Integration
+- **sqlite-integration.js** : Module d'upload et traitement SQLite
+- **test_sqlite_upload.html** : Test du chargement de fichiers .db
+
 ### Tests & Debug
 - **init-test-data.html** : Créer des données de test
 - **test-publipostage-debug.html** : Debug complet du publipostage

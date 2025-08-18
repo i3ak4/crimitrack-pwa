@@ -1,0 +1,17 @@
+# Base de données SQLite locale (fichier privé, rechargé régulièrement)
+crimitrack.db
+crimitrack.db-shm
+crimitrack.db-wal
+
+# Fichiers système
+.DS_Store
+.vscode/
+.idea/
+
+# Logs de développement
+logs/
+debug.log
+
+# Sauvegardes temporaires
+*.backup
+*.tmp
