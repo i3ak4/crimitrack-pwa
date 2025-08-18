@@ -9,7 +9,6 @@ crimitrack.db-wal
 .idea/
 
 # Logs de développement
-logs/
 debug.log
 
 # Sauvegardes temporaires
