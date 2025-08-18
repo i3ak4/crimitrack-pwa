@@ -5,7 +5,7 @@ class CrimiTrackApp {
     this.currentTab = 'agenda';
     this.selectedExpertises = new Set();
     this.currentTemplate = null;
-    this.dbPath = 'db/database.json'; // Fichier de base de données
+    this.db = null; // IndexedDB instance
     this.init();
   }
 
@@ -22,7 +22,10 @@ class CrimiTrackApp {
       }
     }
 
-    // Charger la base de données depuis le fichier
+    // Initialiser IndexedDB
+    await this.initIndexedDB();
+    
+    // Charger la base de données
     await this.loadDatabase();
     
     // Migrer depuis localStorage si nécessaire
@@ -41,50 +44,98 @@ class CrimiTrackApp {
     this.checkFileSaver();
   }
 
-  async initFileSystem() {
-    // Vérifier si le dossier db existe, sinon le créer conceptuellement
-    console.log('Système de fichiers initialisé');
-    return Promise.resolve();
+  async initIndexedDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('CrimiTrackDB', 2);
+      
+      request.onerror = () => {
+        console.error('Erreur ouverture IndexedDB');
+        reject(request.error);
+      };
+      
+      request.onsuccess = () => {
+        this.db = request.result;
+        console.log('IndexedDB initialisé');
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        
+        // Créer le store pour la base de données
+        if (!db.objectStoreNames.contains('database')) {
+          db.createObjectStore('database', { keyPath: 'id' });
+        }
+      };
+    });
   }
 
   async migrateFromLocalStorage() {
-    // Migration maintenant intégrée dans loadDatabase()
-    // Cette méthode est conservée pour compatibilité mais ne fait plus rien
-    console.log('Migration localStorage intégrée dans loadDatabase()');
+    // Vérifier s'il y a des données dans localStorage
+    const localData = localStorage.getItem('crimitrack_database');
+    if (localData && this.database.expertises.length === 0) {
+      try {
+        const parsedData = JSON.parse(localData);
+        this.database = parsedData;
+        // SANITISER LES DONNÉES MIGRÉES
+        this.sanitizeLoadedData();
+        await this.saveDatabase();
+        // Supprimer de localStorage après migration réussie
+        localStorage.removeItem('crimitrack_database');
+        console.log('Migration depuis localStorage réussie et données nettoyées');
+      } catch (error) {
+        console.error('Erreur migration localStorage:', error);
+      }
+    }
   }
 
   async loadDatabase() {
+    if (!this.db) {
+      console.error('IndexedDB non initialisé');
+      this.database = { expertises: [] };
+      return;
+    }
+    
     try {
-      // Charger depuis le fichier JSON
-      const response = await fetch(this.dbPath);
-      if (response.ok) {
-        this.database = await response.json();
-        console.log('Base de données chargée depuis', this.dbPath);
-        // SANITISER LES DONNÉES AU CHARGEMENT
-        this.sanitizeLoadedData();
-      } else {
-        console.log('Fichier de base de données non trouvé, création d\'une base vide');
-        this.database = { expertises: [] };
-        await this.saveDatabase();
-      }
-    } catch (error) {
-      // Fallback vers localStorage puis base vide
-      console.warn('Erreur chargement fichier DB, tentative localStorage:', error);
-      const localData = localStorage.getItem('crimitrack_database');
-      if (localData) {
-        try {
-          this.database = JSON.parse(localData);
-          this.sanitizeLoadedData();
-          await this.saveDatabase();
-          localStorage.removeItem('crimitrack_database');
-          console.log('Migration depuis localStorage réussie');
-        } catch (parseError) {
-          console.error('Erreur parsing localStorage:', parseError);
+      // Charger depuis IndexedDB
+      const transaction = this.db.transaction(['database'], 'readonly');
+      const store = transaction.objectStore('database');
+      const request = store.get('main');
+      
+      return new Promise((resolve) => {
+        request.onsuccess = async () => {
+          if (request.result) {
+            this.database = request.result.data;
+            console.log('Base de données chargée depuis IndexedDB');
+            // SANITISER LES DONNÉES AU CHARGEMENT
+            this.sanitizeLoadedData();
+          } else {
+            // Charger le fichier par défaut si aucune donnée
+            try {
+              const response = await fetch('/database.json');
+              if (response.ok) {
+                this.database = await response.json();
+                // SANITISER LES DONNÉES AU CHARGEMENT
+                this.sanitizeLoadedData();
+                await this.saveDatabase();
+              }
+            } catch (error) {
+              console.log('Pas de fichier database.json par défaut');
+              this.database = { expertises: [] };
+            }
+          }
+          resolve();
+        };
+        
+        request.onerror = () => {
+          console.error('Erreur chargement IndexedDB:', request.error);
           this.database = { expertises: [] };
-        }
-      } else {
-        this.database = { expertises: [] };
-      }
+          resolve();
+        };
+      });
+    } catch (error) {
+      console.error('Erreur chargement BDD:', error);
+      this.database = { expertises: [] };
     }
   }
 
@@ -134,44 +185,43 @@ class CrimiTrackApp {
     
     if (sanitizedCount > 0) {
       console.log(`✅ ${sanitizedCount} expertise(s) nettoyée(s)`);
-      // Sauvegarder les données nettoyées en localStorage uniquement
-      localStorage.setItem('crimitrack_database_backup', JSON.stringify({
-        data: this.database,
-        timestamp: new Date().toISOString(),
-        sanitized: true
-      }));
-      console.log('Données nettoyées sauvegardées en backup');
+      // Sauvegarder automatiquement les données nettoyées
+      this.saveDatabase();
     } else {
       console.log('✅ Toutes les données sont propres');
     }
   }
 
   async saveDatabase() {
+    if (!this.db) {
+      console.error('IndexedDB non initialisé');
+      return;
+    }
+    
     try {
-      // Sauvegarder en localStorage comme backup
-      localStorage.setItem('crimitrack_database_backup', JSON.stringify({
+      const transaction = this.db.transaction(['database'], 'readwrite');
+      const store = transaction.objectStore('database');
+      const request = store.put({
+        id: 'main',
         data: this.database,
         timestamp: new Date().toISOString()
-      }));
+      });
       
-      // Pour une PWA, on ne peut pas écrire directement sur le serveur
-      // On propose le téléchargement du fichier pour la sauvegarde
-      console.log('Données sauvegardées en localStorage (backup)');
-      this.showNotification('Données sauvegardées localement');
-      
-      // Si FileSaver est disponible, proposer la sauvegarde automatique
-      if (typeof saveAs === 'function') {
-        const dataStr = JSON.stringify(this.database, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        // On ne force pas le téléchargement, juste on prépare
-        console.log('Fichier de sauvegarde préparé');
-      }
-      
-      return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        request.onsuccess = () => {
+          this.showNotification('Base de données sauvegardée');
+          resolve();
+        };
+        
+        request.onerror = () => {
+          console.error('Erreur sauvegarde IndexedDB:', request.error);
+          this.showNotification('Erreur lors de la sauvegarde', 'danger');
+          reject(request.error);
+        };
+      });
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
       this.showNotification('Erreur lors de la sauvegarde', 'danger');
-      return Promise.reject(error);
     }
   }
 
