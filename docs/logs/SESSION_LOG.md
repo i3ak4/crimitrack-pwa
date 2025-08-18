@@ -2,7 +2,7 @@
 ## Date: 14/08/2025
 
 ### État actuel du projet
-Application PWA de gestion d'expertises judiciaires entièrement fonctionnelle et déployée.
+Application PWA de gestion d'expertises judiciaires entièrement fonctionnelle et déployée avec support SQLite intégré.
 
 ### URL de production
 https://i3ak4.github.io/crimitrack-pwa
@@ -12,7 +12,8 @@ https://i3ak4.github.io/crimitrack-pwa
 - ✅ PWA complète avec Service Worker pour mode hors-ligne
 - ✅ Base de données IndexedDB (migration depuis localStorage)
 - ✅ Import/Export de base de données JSON
-- ✅ 4 onglets: Agenda, Liste d'attente, Publipostage, Statistiques
+- ✅ **Upload SQLite (.db)** - Support fichiers crimitrack.db (2587+ expertises)
+- ✅ 6 onglets: Agenda, Liste d'attente, Publipostage, Interprètes, Prison, Statistiques
 
 #### Agenda
 - ✅ Vue des expertises à venir par défaut
@@ -48,26 +49,42 @@ https://i3ak4.github.io/crimitrack-pwa
 
 ### Structure des fichiers
 ```
-/Users/leonard/Library/Mobile Documents/com~apple~CloudDocs/Support/CrimiTrack_PWA/
+/Users/leonard/Dev/CrimiTrack_PWA/
 ├── index.html           # Interface principale
 ├── app.js              # Logique application (IndexedDB, gestion données)
+├── sqlite-integration.js # Module d'upload et traitement SQLite
 ├── styles.css          # Styles avec animations UI Fantaisie
 ├── ui-fantaisie.js     # Module d'animations et micro-interactions
 ├── service-worker.js   # PWA offline
 ├── manifest.json       # Configuration PWA
+├── .gitignore          # Protection fichiers sensibles (crimitrack.db)
+├── test_sqlite_upload.html # Test d'upload SQLite
 ├── demo-ui-fantaisie.html # Page de démonstration UI
+├── docs/               # Documentation et logs
+│   ├── STRUCTURE.md
+│   └── logs/
+│       ├── SESSION_LOG.md
+│       └── SESSION_LOG_SQLITE_INTEGRATION.md
 └── icons/              # Icônes PWA
 ```
 
 ### Problèmes résolus
 1. **Quota localStorage dépassé** → Migration vers IndexedDB
 2. **Liste d'attente vide** → Correction de la logique de filtrage
-3. **Agenda ne montrait pas les prochaines expertises** → Filtre par défaut ajusté
-4. **Recherche dans publipostage** → Ajout de filtres nom/magistrat/tribunal
+3. **Support SQLite** → Upload manuel de crimitrack.db (2587+ expertises)
+4. **Confidentialité données** → .gitignore pour fichiers sensibles
+5. **Agenda ne montrait pas les prochaines expertises** → Filtre par défaut ajusté
+6. **Recherche dans publipostage** → Ajout de filtres nom/magistrat/tribunal
 
 ### Derniers commits Git
+- "✨ Intégration SQLite: Upload manuel de fichiers .db" (18/08/2025)
 - "✨ UI Fantaisie : Transformation Premium de l'Interface"
 - Déployé sur GitHub Pages avec succès
+
+### Sessions récentes
+- **18/08/2025** : Intégration SQLite avec upload manuel de crimitrack.db
+- **14/08/2025** : UI Fantaisie et animations premium
+- **Précédent** : Module Interprètes et corrections bugs
 
 ### Technologies utilisées
 - Pure JavaScript (pas de framework)
