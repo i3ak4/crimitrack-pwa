@@ -17,6 +17,8 @@
   --bg-main: #f7f9fc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f2f6fa;
+  --card-bg: #ffffff;
+  --light-bg: #f8f9fa;
   
   --text-primary: #2c3e50;
   --text-secondary: #606266;
@@ -31,6 +33,9 @@
   
   --radius: 8px;
   --radius-lg: 12px;
+  
+  /* Force le mode clair */
+  color-scheme: light only;
 }
 
 * {
@@ -39,14 +44,21 @@
   box-sizing: border-box;
 }
 
+/* Force le mode clair sur tous les éléments pour éviter les problèmes iOS */
+*, *::before, *::after {
+  color-scheme: light only;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, var(--bg-main) 0%, var(--secondary-light) 100%);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--bg-main) 0%, var(--secondary-light) 100%) !important;
+  color: var(--text-primary) !important;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   min-height: 100vh;
+  /* Force le mode clair */
+  color-scheme: light only;
 }
 
 #app {
@@ -842,12 +854,14 @@ body {
 
 .selection-panel,
 .preview-panel {
-  background: var(--card-bg);
+  background: var(--card-bg) !important;
+  background-color: #ffffff !important;
   border-radius: var(--radius);
   padding: 1.5rem;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
+  color: var(--text-primary) !important;
 }
 
 .selection-panel h3,
@@ -1013,14 +1027,14 @@ body {
 
 .tribunal-card h4 {
   font-size: 1rem;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   margin-bottom: 0.5rem;
 }
 
 .tribunal-number {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary-color);
+  color: var(--primary-color) !important;
   margin-bottom: 0.75rem;
 }
 
@@ -1580,7 +1594,7 @@ body {
 
 .person-name {
   font-size: 1.1rem;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   margin: 0;
 }
 
