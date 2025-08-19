@@ -1869,6 +1869,29 @@ body {
   margin: 0 auto;
 }
 
+/* Séparateur de dates pour l'agenda */
+.date-separator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.date-line {
+  background: var(--bg-secondary);
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 1px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  z-index: 1;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .prisons-grid {

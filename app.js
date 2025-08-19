@@ -401,10 +401,45 @@ class CrimiTrackApp {
     // Trier par date (prochaines en premier)
     expertises.sort((a, b) => new Date(a.date_examen || '2099-12-31') - new Date(b.date_examen || '2099-12-31'));
     
-    // Afficher les expertises avec possibilité de cliquer pour voir les détails
-    container.innerHTML = expertises.length ? 
-      expertises.map(exp => this.createExpertiseCard(exp, false, true)).join('') :
-      '<p style="text-align: center; color: var(--text-secondary);">Aucune expertise à venir</p>';
+    // Grouper par date pour ajouter des séparateurs
+    if (expertises.length > 0) {
+      let html = '';
+      let lastDisplayedDate = null;
+      
+      expertises.forEach((exp, index) => {
+        const expDate = exp.date_examen;
+        
+        // Ajouter un séparateur pour chaque nouvelle date
+        if (expDate && expDate !== lastDisplayedDate) {
+          // Ajouter un espacement avant le séparateur (sauf pour le premier)
+          if (index > 0 && lastDisplayedDate !== null) {
+            html += '<div style="margin: 1.5rem 0;"></div>';
+          }
+          
+          // Créer le séparateur de date
+          const dateObj = new Date(expDate);
+          const formatDateSeparator = dateObj.toLocaleDateString('fr-FR', { 
+            day: '2-digit', 
+            month: '2-digit'
+          });
+          
+          html += `
+            <div class="date-separator">
+              <span class="date-line">────── ${formatDateSeparator} ──────</span>
+            </div>
+          `;
+          
+          lastDisplayedDate = expDate;
+        }
+        
+        // Ajouter la carte d'expertise
+        html += this.createExpertiseCard(exp, false, true);
+      });
+      
+      container.innerHTML = html;
+    } else {
+      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Aucune expertise à venir</p>';
+    }
   }
   
   clearFilters() {
@@ -963,10 +998,10 @@ class CrimiTrackApp {
     
     // Statistiques par tribunal
     const tribunalStats = {
-      'paris': 0,
-      'creteil': 0,
-      'bobigny': 0,
-      'autres': 0
+      paris: 0,
+      creteil: 0,
+      bobigny: 0,
+      autres: 0
     };
     
     expertisesThisYear.forEach(exp => {
@@ -1916,35 +1951,6 @@ class CrimiTrackApp {
     const a = new Date(dateA);
     const b = new Date(dateB);
     return a - b;
-  }
-  
-  // Générer une carte compacte pour contact rapide interprète
-  generateCompactInterpreteCard(expertise) {
-    const urgence = this.getUrgenceLevel(expertise.limite_oce);
-    const urgenceIcon = this.getUrgenceIcon(urgence);
-    
-    return `
-      <div class="interpretes-card-compact ${urgence}">
-        <div class="compact-main-info">
-          <div class="compact-person">
-            <strong class="person-name">${expertise.patronyme || 'Non renseigné'}</strong>
-            <span class="compact-urgence ${urgence}">${urgenceIcon}</span>
-          </div>
-          <div class="compact-timing">
-            <span class="compact-date">📅 ${expertise.date_examen ? new Date(expertise.date_examen).toLocaleDateString('fr-FR') : 'Non programmée'}</span>
-            ${expertise.limite_oce ? `<span class="compact-limite">⏰ ${new Date(expertise.limite_oce).toLocaleDateString('fr-FR')}</span>` : ''}
-          </div>
-        </div>
-        <div class="compact-details">
-          <span class="compact-tribunal">${expertise.tribunal || 'Non renseigné'}</span>
-          <span class="compact-notes">${expertise.notes || ''}</span>
-        </div>
-        <div class="compact-actions">
-          <button onclick="app.contactInterpreter('${expertise._uniqueId}')" class="btn-contact" title="Contacter l'interprète">📞</button>
-          <button onclick="app.editExpertise('${expertise._uniqueId}')" class="btn-edit" title="Modifier">✏️</button>
-        </div>
-      </div>
-    `;
   }
   
   // Générer une carte compacte pour contact rapide interprète
