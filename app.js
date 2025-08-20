@@ -1179,7 +1179,7 @@ class CrimiTrackApp {
         waitingCounts.villepinte++;
       } else if (lieu.includes('fleury')) {
         waitingCounts.fleury++;
-      } else if (lieu.includes('cj')) {
+      } else if (lieu === 'cj' || exp.lieu_examen === 'CJ') {
         waitingCounts.cj++;
         console.log(`CJ compté: ${exp.lieu_examen} (statut: ${exp.statut})`);
       }
