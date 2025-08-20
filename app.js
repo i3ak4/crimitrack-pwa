@@ -1198,9 +1198,9 @@ class CrimiTrackApp {
     expertisesToProcess.forEach(exp => {
       const lieu = (exp.lieu_examen || '').toLowerCase();
       
-      // Debug pour CJ spécifiquement
-      if (exp.lieu_examen === 'CJ') {
-        console.log(`Expertise CJ détectée: lieu="${lieu}", statut="${exp.statut}"`);
+      // Debug pour Contrôle Judiciaire spécifiquement
+      if (exp.lieu_examen === 'Contrôle Judiciaire') {
+        console.log(`Expertise Contrôle Judiciaire détectée: lieu="${lieu}", statut="${exp.statut}"`);
       }
       
       if (lieu.includes('fresnes')) {
@@ -1209,7 +1209,7 @@ class CrimiTrackApp {
         waitingCounts.villepinte++;
       } else if (lieu.includes('fleury')) {
         waitingCounts.fleury++;
-      } else if (lieu === 'cj' || exp.lieu_examen === 'CJ') {
+      } else if (lieu.includes('contrôle judiciaire') || exp.lieu_examen === 'Contrôle Judiciaire') {
         waitingCounts.cj++;
         console.log(`CJ compté: ${exp.lieu_examen} (statut: ${exp.statut})`);
       }
