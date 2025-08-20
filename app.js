@@ -1191,6 +1191,11 @@ class CrimiTrackApp {
         delayElement.textContent = delay;
       }
       
+      // Debug temporaire pour CJ
+      if (prison === 'cj') {
+        console.log(`CJ Debug: ${waitingCount} en attente, délai calculé: ${delay} semaines`);
+      }
+      
       if (detailElement && waitingCount > 0) {
         const frequencyText = config.frequency === 1 ? 'semaine' : `${config.frequency} semaines`;
         detailElement.textContent = `${waitingCount} en attente • ${config.capacity} pers./${frequencyText}`;
