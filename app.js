@@ -1155,6 +1155,12 @@ class CrimiTrackApp {
     }
     console.log('=== FIN ULTRA DEBUG CJ ===');
     
+    // ULTRA DEBUG 2: Lister tous les lieux uniques dans l'app
+    console.log('=== LIEUX UNIQUES DANS L\'APP ===');
+    const allLieux = [...new Set(this.database.expertises.map(exp => exp.lieu_examen))];
+    console.log(`Total lieux uniques: ${allLieux.length}`);
+    console.log('Premiers 20 lieux:', allLieux.slice(0, 20));
+    
     // Configuration des prisons avec leurs paramètres
     const prisonConfig = {
       fresnes: {
