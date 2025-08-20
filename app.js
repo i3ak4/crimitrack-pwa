@@ -1158,8 +1158,10 @@ class CrimiTrackApp {
       cj: 0
     };
 
-    // Filtrer les expertises en attente
-    this.database.expertises.filter(exp => exp.statut === 'en_attente').forEach(exp => {
+    // Filtrer les expertises en attente ET programmées (pas encore réalisées)
+    this.database.expertises.filter(exp => 
+      exp.statut === 'en_attente' || exp.statut === 'programmee'
+    ).forEach(exp => {
       const lieu = (exp.lieu_examen || '').toLowerCase();
       
       if (lieu.includes('fresnes')) {
