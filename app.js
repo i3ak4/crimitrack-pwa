@@ -1034,6 +1034,9 @@ class CrimiTrackApp {
     
     // Dessiner le graphique mensuel
     this.drawMonthlyChart();
+    
+    // Calculer les délais d'attente par prison
+    this.updatePrisonDelays();
   }
 
   drawMonthlyChart() {
@@ -1124,6 +1127,73 @@ class CrimiTrackApp {
     ctx.textAlign = 'center';
     ctx.fillText('Nombre d\'expertises', 0, 0);
     ctx.restore();
+  }
+
+  updatePrisonDelays() {
+    // Configuration des prisons avec leurs paramètres
+    const prisonConfig = {
+      fresnes: {
+        capacity: 5, // personnes par déplacement
+        frequency: 1 // toutes les semaines (1 semaine)
+      },
+      villepinte: {
+        capacity: 4, // personnes par déplacement
+        frequency: 2 // une semaine sur 2 (2 semaines)
+      },
+      fleury: {
+        capacity: 4, // personnes par déplacement
+        frequency: 2 // une semaine sur 2 (2 semaines)
+      },
+      cj: {
+        capacity: 7, // personnes par mardi
+        frequency: 1 // tous les mardis (1 semaine)
+      }
+    };
+
+    // Compter les expertises en attente pour chaque prison
+    const waitingCounts = {
+      fresnes: 0,
+      villepinte: 0,
+      fleury: 0,
+      cj: 0
+    };
+
+    // Filtrer les expertises en attente
+    this.database.expertises.filter(exp => exp.statut === 'attente').forEach(exp => {
+      const lieu = (exp.lieu_examen || '').toLowerCase();
+      
+      if (lieu.includes('fresnes')) {
+        waitingCounts.fresnes++;
+      } else if (lieu.includes('villepinte')) {
+        waitingCounts.villepinte++;
+      } else if (lieu.includes('fleury')) {
+        waitingCounts.fleury++;
+      } else if (lieu.includes('cj') || lieu.includes('centre judiciaire')) {
+        waitingCounts.cj++;
+      }
+    });
+
+    // Calculer les délais en semaines
+    Object.keys(prisonConfig).forEach(prison => {
+      const waitingCount = waitingCounts[prison];
+      const config = prisonConfig[prison];
+      
+      // Délai = (nombre en attente / capacité par déplacement) * fréquence
+      const delay = Math.ceil(waitingCount / config.capacity) * config.frequency;
+      
+      // Mettre à jour l'interface
+      const delayElement = document.getElementById(`delay-${prison}`);
+      const detailElement = document.getElementById(`detail-${prison}`);
+      
+      if (delayElement) {
+        delayElement.textContent = delay;
+      }
+      
+      if (detailElement && waitingCount > 0) {
+        const frequencyText = config.frequency === 1 ? 'semaine' : `${config.frequency} semaines`;
+        detailElement.textContent = `${waitingCount} en attente • ${config.capacity} pers./${frequencyText}`;
+      }
+    });
   }
 
   createExpertiseCard(expertise, showActions = false, clickable = false) {
