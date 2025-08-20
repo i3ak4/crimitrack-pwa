@@ -1130,6 +1130,7 @@ class CrimiTrackApp {
   }
 
   updatePrisonDelays() {
+    console.log('updatePrisonDelays() appelée');
     // Configuration des prisons avec leurs paramètres
     const prisonConfig = {
       fresnes: {
@@ -1159,9 +1160,12 @@ class CrimiTrackApp {
     };
 
     // Filtrer les expertises en attente ET programmées (pas encore réalisées)
-    this.database.expertises.filter(exp => 
+    const expertisesToProcess = this.database.expertises.filter(exp => 
       exp.statut === 'en_attente' || exp.statut === 'programmee'
-    ).forEach(exp => {
+    );
+    console.log(`Total expertises à traiter: ${expertisesToProcess.length}`);
+    
+    expertisesToProcess.forEach(exp => {
       const lieu = (exp.lieu_examen || '').toLowerCase();
       
       if (lieu.includes('fresnes')) {
@@ -1172,8 +1176,11 @@ class CrimiTrackApp {
         waitingCounts.fleury++;
       } else if (lieu.includes('cj') || lieu.includes('centre judiciaire')) {
         waitingCounts.cj++;
+        console.log(`CJ trouvé: ${exp.lieu_examen} (statut: ${exp.statut})`);
       }
     });
+    
+    console.log('Compteurs finaux:', waitingCounts);
 
     // Calculer les délais en semaines
     Object.keys(prisonConfig).forEach(prison => {
