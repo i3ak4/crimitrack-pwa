@@ -1168,15 +1168,20 @@ class CrimiTrackApp {
     expertisesToProcess.forEach(exp => {
       const lieu = (exp.lieu_examen || '').toLowerCase();
       
+      // Debug pour CJ spécifiquement
+      if (exp.lieu_examen === 'CJ') {
+        console.log(`Expertise CJ détectée: lieu="${lieu}", statut="${exp.statut}"`);
+      }
+      
       if (lieu.includes('fresnes')) {
         waitingCounts.fresnes++;
       } else if (lieu.includes('villepinte')) {
         waitingCounts.villepinte++;
       } else if (lieu.includes('fleury')) {
         waitingCounts.fleury++;
-      } else if (lieu.includes('cj') || lieu.includes('centre judiciaire')) {
+      } else if (lieu.includes('cj')) {
         waitingCounts.cj++;
-        console.log(`CJ trouvé: ${exp.lieu_examen} (statut: ${exp.statut})`);
+        console.log(`CJ compté: ${exp.lieu_examen} (statut: ${exp.statut})`);
       }
     });
     
