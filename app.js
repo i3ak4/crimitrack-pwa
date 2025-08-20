@@ -1131,6 +1131,30 @@ class CrimiTrackApp {
 
   updatePrisonDelays() {
     console.log('updatePrisonDelays() appelée');
+    
+    // ULTRA DEBUG: Lister TOUTES les expertises avec "CJ" dans lieu_examen
+    console.log('=== ULTRA DEBUG CJ ===');
+    const allCJ = this.database.expertises.filter(exp => 
+      (exp.lieu_examen || '').toLowerCase().includes('cj')
+    );
+    console.log(`Total expertises contenant "CJ": ${allCJ.length}`);
+    
+    if (allCJ.length > 0) {
+      console.log('Échantillon expertises CJ:');
+      allCJ.slice(0, 5).forEach(exp => {
+        console.log(`- lieu_examen: "${exp.lieu_examen}", statut: "${exp.statut}"`);
+      });
+      
+      // Compter par statut
+      const statutsCJ = {};
+      allCJ.forEach(exp => {
+        const statut = exp.statut || 'undefined';
+        statutsCJ[statut] = (statutsCJ[statut] || 0) + 1;
+      });
+      console.log('Statuts des expertises CJ:', statutsCJ);
+    }
+    console.log('=== FIN ULTRA DEBUG CJ ===');
+    
     // Configuration des prisons avec leurs paramètres
     const prisonConfig = {
       fresnes: {
