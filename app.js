@@ -1130,37 +1130,6 @@ class CrimiTrackApp {
   }
 
   updatePrisonDelays() {
-    console.log('updatePrisonDelays() appelée');
-    
-    // ULTRA DEBUG: Lister TOUTES les expertises avec "CJ" dans lieu_examen
-    console.log('=== ULTRA DEBUG CJ ===');
-    const allCJ = this.database.expertises.filter(exp => 
-      (exp.lieu_examen || '').toLowerCase().includes('cj')
-    );
-    console.log(`Total expertises contenant "CJ": ${allCJ.length}`);
-    
-    if (allCJ.length > 0) {
-      console.log('Échantillon expertises CJ:');
-      allCJ.slice(0, 5).forEach(exp => {
-        console.log(`- lieu_examen: "${exp.lieu_examen}", statut: "${exp.statut}"`);
-      });
-      
-      // Compter par statut
-      const statutsCJ = {};
-      allCJ.forEach(exp => {
-        const statut = exp.statut || 'undefined';
-        statutsCJ[statut] = (statutsCJ[statut] || 0) + 1;
-      });
-      console.log('Statuts des expertises CJ:', statutsCJ);
-    }
-    console.log('=== FIN ULTRA DEBUG CJ ===');
-    
-    // ULTRA DEBUG 2: Lister tous les lieux uniques dans l'app
-    console.log('=== LIEUX UNIQUES DANS L\'APP ===');
-    const allLieux = [...new Set(this.database.expertises.map(exp => exp.lieu_examen))];
-    console.log(`Total lieux uniques: ${allLieux.length}`);
-    console.log('Premiers 20 lieux:', allLieux.slice(0, 20));
-    
     // Configuration des prisons avec leurs paramètres
     const prisonConfig = {
       fresnes: {
@@ -1193,15 +1162,9 @@ class CrimiTrackApp {
     const expertisesToProcess = this.database.expertises.filter(exp => 
       exp.statut === 'en_attente' || exp.statut === 'programmee'
     );
-    console.log(`Total expertises à traiter: ${expertisesToProcess.length}`);
     
     expertisesToProcess.forEach(exp => {
       const lieu = (exp.lieu_examen || '').toLowerCase();
-      
-      // Debug pour Contrôle Judiciaire spécifiquement
-      if (exp.lieu_examen === 'Contrôle Judiciaire') {
-        console.log(`Expertise Contrôle Judiciaire détectée: lieu="${lieu}", statut="${exp.statut}"`);
-      }
       
       if (lieu.includes('fresnes')) {
         waitingCounts.fresnes++;
@@ -1211,11 +1174,8 @@ class CrimiTrackApp {
         waitingCounts.fleury++;
       } else if (lieu.includes('contrôle judiciaire') || exp.lieu_examen === 'Contrôle Judiciaire') {
         waitingCounts.cj++;
-        console.log(`CJ compté: ${exp.lieu_examen} (statut: ${exp.statut})`);
       }
     });
-    
-    console.log('Compteurs finaux:', waitingCounts);
 
     // Calculer les délais en semaines
     Object.keys(prisonConfig).forEach(prison => {
@@ -1233,10 +1193,6 @@ class CrimiTrackApp {
         delayElement.textContent = delay;
       }
       
-      // Debug temporaire pour CJ
-      if (prison === 'cj') {
-        console.log(`CJ Debug: ${waitingCount} en attente, délai calculé: ${delay} semaines`);
-      }
       
       if (detailElement && waitingCount > 0) {
         const frequencyText = config.frequency === 1 ? 'semaine' : `${config.frequency} semaines`;
