@@ -79,6 +79,8 @@ class CrimiTrackApp {
         this.database = parsedData;
         // SANITISER LES DONNÉES MIGRÉES
         this.sanitizeLoadedData();
+        // CORRIGER LES NOMS DE LIEUX MAL FORMATÉS
+        this.fixLocationNames();
         await this.saveDatabase();
         // Supprimer de localStorage après migration réussie
         localStorage.removeItem('crimitrack_database');
@@ -109,6 +111,8 @@ class CrimiTrackApp {
             console.log('Base de données chargée depuis IndexedDB');
             // SANITISER LES DONNÉES AU CHARGEMENT
             this.sanitizeLoadedData();
+            // CORRIGER LES NOMS DE LIEUX MAL FORMATÉS
+            this.fixLocationNames();
           } else {
             // Charger le fichier par défaut si aucune donnée
             try {
@@ -117,6 +121,8 @@ class CrimiTrackApp {
                 this.database = await response.json();
                 // SANITISER LES DONNÉES AU CHARGEMENT
                 this.sanitizeLoadedData();
+                // CORRIGER LES NOMS DE LIEUX MAL FORMATÉS
+                this.fixLocationNames();
                 await this.saveDatabase();
               }
             } catch (error) {
@@ -190,6 +196,50 @@ class CrimiTrackApp {
     } else {
       console.log('✅ Toutes les données sont propres');
     }
+  }
+  
+  // Méthode pour corriger les lieux d'examen mal formatés
+  fixLocationNames() {
+    console.log('🔧 Correction des noms de lieux...');
+    
+    if (!this.database || !this.database.expertises) {
+      return;
+    }
+    
+    let correctedCount = 0;
+    
+    this.database.expertises = this.database.expertises.map(expertise => {
+      if (expertise.lieu_examen) {
+        let newValue = expertise.lieu_examen;
+        
+        // Corriger "Base Aérienne" en "BA" (pour Bois d'Arcy)
+        if (expertise.lieu_examen === 'Base Aérienne') {
+          newValue = 'BA';
+          console.log(`  📍 Correction: "Base Aérienne" → "BA"`);
+          correctedCount++;
+        }
+        // Corriger "Service des Scellés" en "Scellés"
+        else if (expertise.lieu_examen === 'Service des Scellés' || expertise.lieu_examen === 'Service des scellés') {
+          newValue = 'Scellés';
+          console.log(`  📍 Correction: "${expertise.lieu_examen}" → "Scellés"`);
+          correctedCount++;
+        }
+        
+        expertise.lieu_examen = newValue;
+      }
+      return expertise;
+    });
+    
+    if (correctedCount > 0) {
+      console.log(`✅ ${correctedCount} lieu(x) corrigé(s)`);
+      this.saveDatabase();
+      // Rafraîchir l'affichage si on est dans l'onglet Prisons
+      if (this.currentTab === 'prisons') {
+        this.updatePrisons();
+      }
+    }
+    
+    return correctedCount;
   }
 
   async saveDatabase() {
@@ -1435,6 +1485,10 @@ class CrimiTrackApp {
         const data = JSON.parse(event.target.result);
         if (data.expertises && Array.isArray(data.expertises)) {
           this.database = data;
+          // SANITISER LES DONNÉES IMPORTÉES
+          this.sanitizeLoadedData();
+          // CORRIGER LES NOMS DE LIEUX MAL FORMATÉS
+          this.fixLocationNames();
           await this.saveDatabase();
           this.showTab(this.currentTab);
           this.updateStatistics();

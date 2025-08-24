@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Correction des lieux</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4a6fa5;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #3a5f95;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #4a6fa5;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #17a2b8;
+            margin: 10px 0;
+        }
+        pre {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test de correction des lieux</h1>
+        
+        <div class="info">
+            <p>Cette page permet de tester la correction automatique des noms de lieux :</p>
+            <ul>
+                <li>"Base Aérienne" → "BA" (Bois d'Arcy)</li>
+                <li>"Service des Scellés" → "Scellés"</li>
+            </ul>
+        </div>
+
+        <button onclick="testCorrection()">🧪 Tester la correction</button>
+        <button onclick="forceCorrection()">🔨 Forcer la correction sur la base actuelle</button>
+        <button onclick="checkCurrentData()">📊 Vérifier les données actuelles</button>
+        
+        <div id="results" class="results" style="display:none;"></div>
+    </div>
+
+    <script>
+        // Initialiser l'application
+        let app;
+        
+        async function initApp() {
+            // Charger app.js
+            const script = document.createElement('script');
+            script.src = 'app.js';
+            document.head.appendChild(script);
+            
+            // Attendre que l'app soit chargée
+            await new Promise(resolve => {
+                script.onload = resolve;
+            });
+            
+            // Attendre un peu pour l'initialisation
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            app = window.app;
+        }
+        
+        async function testCorrection() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<p>⏳ Test en cours...</p>';
+            
+            try {
+                await initApp();
+                
+                // Créer des données de test
+                const testData = {
+                    expertises: [
+                        { id: 1, lieu_examen: 'Base Aérienne', patronyme: 'Test BA' },
+                        { id: 2, lieu_examen: 'Service des Scellés', patronyme: 'Test Scellés' },
+                        { id: 3, lieu_examen: 'BA', patronyme: 'Déjà correct BA' },
+                        { id: 4, lieu_examen: 'Scellés', patronyme: 'Déjà correct Scellés' },
+                        { id: 5, lieu_examen: 'Fleury', patronyme: 'Autre lieu' }
+                    ]
+                };
+                
+                // Sauvegarder les données actuelles
+                const originalData = JSON.parse(JSON.stringify(app.database));
+                
+                // Appliquer les données de test
+                app.database = testData;
+                
+                resultsDiv.innerHTML += '<h3>Données avant correction :</h3>';
+                resultsDiv.innerHTML += '<pre>' + JSON.stringify(testData.expertises.map(e => ({
+                    patronyme: e.patronyme,
+                    lieu_examen: e.lieu_examen
+                })), null, 2) + '</pre>';
+                
+                // Appliquer la correction
+                const correctedCount = app.fixLocationNames();
+                
+                resultsDiv.innerHTML += '<h3>Données après correction :</h3>';
+                resultsDiv.innerHTML += '<pre>' + JSON.stringify(app.database.expertises.map(e => ({
+                    patronyme: e.patronyme,
+                    lieu_examen: e.lieu_examen
+                })), null, 2) + '</pre>';
+                
+                // Vérifier les résultats
+                const results = app.database.expertises;
+                let success = true;
+                
+                if (results[0].lieu_examen !== 'BA') {
+                    resultsDiv.innerHTML += '<p class="error">❌ Échec : "Base Aérienne" devrait être "BA"</p>';
+                    success = false;
+                } else {
+                    resultsDiv.innerHTML += '<p class="success">✅ "Base Aérienne" corrigé en "BA"</p>';
+                }
+                
+                if (results[1].lieu_examen !== 'Scellés') {
+                    resultsDiv.innerHTML += '<p class="error">❌ Échec : "Service des Scellés" devrait être "Scellés"</p>';
+                    success = false;
+                } else {
+                    resultsDiv.innerHTML += '<p class="success">✅ "Service des Scellés" corrigé en "Scellés"</p>';
+                }
+                
+                if (results[2].lieu_examen !== 'BA') {
+                    resultsDiv.innerHTML += '<p class="error">❌ "BA" a été modifié alors qu\'il était correct</p>';
+                    success = false;
+                } else {
+                    resultsDiv.innerHTML += '<p class="success">✅ "BA" non modifié (déjà correct)</p>';
+                }
+                
+                if (results[3].lieu_examen !== 'Scellés') {
+                    resultsDiv.innerHTML += '<p class="error">❌ "Scellés" a été modifié alors qu\'il était correct</p>';
+                    success = false;
+                } else {
+                    resultsDiv.innerHTML += '<p class="success">✅ "Scellés" non modifié (déjà correct)</p>';
+                }
+                
+                if (results[4].lieu_examen !== 'Fleury') {
+                    resultsDiv.innerHTML += '<p class="error">❌ "Fleury" a été modifié</p>';
+                    success = false;
+                } else {
+                    resultsDiv.innerHTML += '<p class="success">✅ "Fleury" non modifié (autre lieu)</p>';
+                }
+                
+                resultsDiv.innerHTML += `<h3>Résumé : ${correctedCount} correction(s) appliquée(s)</h3>`;
+                
+                if (success) {
+                    resultsDiv.innerHTML += '<p class="success">🎉 Tous les tests ont réussi !</p>';
+                } else {
+                    resultsDiv.innerHTML += '<p class="error">⚠️ Certains tests ont échoué</p>';
+                }
+                
+                // Restaurer les données originales
+                app.database = originalData;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Erreur : ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+        
+        async function forceCorrection() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<p>⏳ Correction en cours...</p>';
+            
+            try {
+                await initApp();
+                
+                const correctedCount = app.fixLocationNames();
+                
+                if (correctedCount > 0) {
+                    resultsDiv.innerHTML = `<p class="success">✅ ${correctedCount} lieu(x) corrigé(s) avec succès !</p>`;
+                    resultsDiv.innerHTML += '<p class="info">Les données ont été sauvegardées automatiquement.</p>';
+                } else {
+                    resultsDiv.innerHTML = '<p class="info">ℹ️ Aucune correction nécessaire. Tous les lieux sont déjà corrects.</p>';
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Erreur : ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+        
+        async function checkCurrentData() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<p>⏳ Chargement des données...</p>';
+            
+            try {
+                await initApp();
+                
+                const problematicLocations = app.database.expertises.filter(exp => 
+                    exp.lieu_examen === 'Base Aérienne' || 
+                    exp.lieu_examen === 'Service des Scellés' ||
+                    exp.lieu_examen === 'Service des scellés'
+                );
+                
+                if (problematicLocations.length > 0) {
+                    resultsDiv.innerHTML = '<h3>⚠️ Lieux nécessitant une correction :</h3>';
+                    resultsDiv.innerHTML += '<pre>' + JSON.stringify(problematicLocations.map(e => ({
+                        patronyme: e.patronyme,
+                        lieu_examen: e.lieu_examen,
+                        date_examen: e.date_examen
+                    })), null, 2) + '</pre>';
+                    resultsDiv.innerHTML += `<p class="info">Trouvé ${problematicLocations.length} expertise(s) avec des lieux à corriger.</p>`;
+                } else {
+                    resultsDiv.innerHTML = '<p class="success">✅ Aucun lieu problématique trouvé dans la base de données !</p>';
+                }
+                
+                // Afficher un résumé des lieux uniques
+                const uniqueLocations = [...new Set(app.database.expertises.map(e => e.lieu_examen).filter(Boolean))];
+                resultsDiv.innerHTML += '<h3>Tous les lieux uniques dans la base :</h3>';
+                resultsDiv.innerHTML += '<pre>' + JSON.stringify(uniqueLocations.sort(), null, 2) + '</pre>';
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Erreur : ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
