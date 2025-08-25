@@ -3,6 +3,10 @@ crimitrack.db
 crimitrack.db-shm
 crimitrack.db-wal
 
+# Base de données JSON de production (NE JAMAIS PUBLIER)
+crimitrack-database-*.json
+!database.json
+
 # Fichiers système
 .DS_Store
 .vscode/

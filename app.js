@@ -433,7 +433,7 @@ class CrimiTrackApp {
           expertises = expertises.filter(exp => exp.statut === 'programmee');
           break;
         case 'attente':
-          expertises = expertises.filter(exp => exp.statut === 'attente' || !exp.statut);
+          expertises = expertises.filter(exp => exp.statut === 'en_attente' || !exp.statut);
           break;
       }
     }
@@ -520,9 +520,9 @@ class CrimiTrackApp {
         return false;
       });
     } else {
-      // En attente = pas de statut ou statut "attente" ou pas de date d'examen
+      // En attente = pas de statut ou statut "en_attente" ou pas de date d'examen
       expertises = expertises.filter(exp => {
-        return exp.statut === 'attente' || 
+        return exp.statut === 'en_attente' || 
                (!exp.statut && exp.statut !== 'realisee' && exp.statut !== 'programmee') ||
                (!exp.date_examen && exp.statut !== 'realisee');
       });
@@ -1633,7 +1633,7 @@ class CrimiTrackApp {
     
     // Filtrer les expertises programmées ou en attente avec date future
     expertises = expertises.filter(exp => {
-      // L'expertise doit avoir le statut "programmee" ou "attente" (ou pas de statut = attente par défaut)
+      // L'expertise doit avoir le statut "programmee" ou "en_attente" (ou pas de statut = en_attente par défaut)
       if (exp.statut === 'realisee') return false;
       
       // L'expertise doit avoir une date d'examen
