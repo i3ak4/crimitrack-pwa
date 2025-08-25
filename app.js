@@ -1440,12 +1440,14 @@ class CrimiTrackApp {
 
   showEntryModal(expertiseId = null) {
     const modal = document.getElementById('entry-modal');
+    const modalTitle = document.getElementById('modal-title');
     if (!modal) return;
     
     modal.classList.add('active');
     
     if (expertiseId) {
       // Mode édition
+      if (modalTitle) modalTitle.textContent = "Édition de l'expertise";
       const expertise = this.database.expertises.find(exp => exp._uniqueId === expertiseId);
       if (expertise) {
         const form = document.getElementById('entry-form');
@@ -1458,6 +1460,7 @@ class CrimiTrackApp {
       }
     } else {
       // Mode création
+      if (modalTitle) modalTitle.textContent = "Nouvelle Expertise";
       document.getElementById('entry-form')?.reset();
     }
   }
