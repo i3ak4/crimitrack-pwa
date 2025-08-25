@@ -1627,8 +1627,23 @@ class CrimiTrackApp {
     
     let expertises = [...this.database.expertises];
     
-    // Filtrer uniquement les expertises en attente (non réalisées)
-    expertises = expertises.filter(exp => exp.statut !== 'realisee');
+    // Obtenir la date du jour (minuit) pour comparaison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Filtrer uniquement les expertises programmées avec date future
+    expertises = expertises.filter(exp => {
+      // L'expertise doit avoir le statut "programmee"
+      if (exp.statut !== 'programmee') return false;
+      
+      // L'expertise doit avoir une date d'examen
+      if (!exp.date_examen) return false;
+      
+      // La date d'examen doit être strictement supérieure à aujourd'hui
+      const examDate = new Date(exp.date_examen);
+      examDate.setHours(0, 0, 0, 0);
+      return examDate > today;
+    });
     
     // Grouper par lieu_examen
     const locationGroups = {};
@@ -1641,10 +1656,10 @@ class CrimiTrackApp {
         };
       }
       
-      // Ajouter l'expertise avec son statut
+      // Ajouter l'expertise (toutes sont programmées maintenant)
       locationGroups[location].expertises.push({
         ...exp,
-        isProgrammee: exp.statut === 'programmee' || (exp.date_examen && exp.statut !== 'realisee')
+        isProgrammee: true // Toutes sont programmées après le filtre
       });
     });
     
@@ -1656,37 +1671,25 @@ class CrimiTrackApp {
       );
     }
     
-    // Filtrer par type
-    if (filter === 'programmees') {
-      filteredLocations = filteredLocations.filter(location => 
-        location.expertises.some(exp => exp.isProgrammee)
-      );
-    } else if (filter === 'attente') {
-      filteredLocations = filteredLocations.filter(location => 
-        location.expertises.some(exp => !exp.isProgrammee)
-      );
-    }
+    // Note: Le filtre par type n'est plus nécessaire car on n'affiche que les programmées
+    // Mais on garde la structure au cas où pour une évolution future
     
     // Trier les lieux par nom
     filteredLocations.sort((a, b) => a.name.localeCompare(b.name));
     
-    // Pour chaque lieu, trier les expertises : programmées en tête, puis par limite_oce
+    // Pour chaque lieu, trier les expertises par date d'examen (les plus proches en premier)
     filteredLocations.forEach(location => {
       location.expertises.sort((a, b) => {
-        // D'abord par statut (programmées en tête)
-        if (a.isProgrammee && !b.isProgrammee) return -1;
-        if (!a.isProgrammee && b.isProgrammee) return 1;
-        
-        // Puis par limite_oce (les plus urgentes en premier)
-        const dateA = new Date(a.limite_oce || '2099-12-31');
-        const dateB = new Date(b.limite_oce || '2099-12-31');
+        // Trier par date d'examen
+        const dateA = new Date(a.date_examen || '2099-12-31');
+        const dateB = new Date(b.date_examen || '2099-12-31');
         return dateA - dateB;
       });
     });
     
     // Afficher
     if (filteredLocations.length === 0) {
-      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucun lieu trouvé</p>';
+      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucune expertise programmée à venir</p>';
     } else {
       container.innerHTML = filteredLocations.map(location => this.createPrisonCard(location)).join('');
     }
@@ -1694,8 +1697,8 @@ class CrimiTrackApp {
   
   createPrisonCard(location) {
     const totalCount = location.expertises.length;
-    const programmees = location.expertises.filter(exp => exp.isProgrammee);
-    const enAttente = location.expertises.filter(exp => !exp.isProgrammee);
+    // Toutes les expertises sont programmées maintenant
+    const programmees = location.expertises;
     const cardId = `prison-${this.generateUniqueId()}`;
     
     // Choisir une couleur basée sur le nom du lieu (cohérente)
@@ -1730,15 +1733,15 @@ class CrimiTrackApp {
         <div class="prison-card-content" id="${cardId}">
           <div class="prison-expertises-list">
             ${location.expertises.map(exp => `
-              <div class="prison-expertise-item ${exp.isProgrammee ? 'programmee' : 'attente'}" 
-                   onclick="app.showExpertiseDetails('${exp.id || this.generateUniqueId()}', ${JSON.stringify(exp).replace(/"/g, '&quot;')})">
+              <div class="prison-expertise-item programmee" 
+                   onclick="app.showExpertiseDetails('${exp._uniqueId || this.generateUniqueId()}')">
                 <div class="expertise-item-header">
-                  <span class="expertise-status">${exp.isProgrammee ? '✅' : '⏳'}</span>
+                  <span class="expertise-status">✅</span>
                   <span class="expertise-name">${exp.patronyme || 'Sans nom'}</span>
                 </div>
                 <div class="expertise-item-details">
-                  ${exp.limite_oce ? `<span class="expertise-limit">⚠️ ${this.formatDate(exp.limite_oce)}</span>` : ''}
-                  ${exp.date_examen ? `<span class="expertise-date">📅 ${this.formatDate(exp.date_examen)}</span>` : ''}
+                  <span class="expertise-date">📅 ${this.formatDate(exp.date_examen)}</span>
+                  ${exp.limite_oce ? `<span class="expertise-limit">⚠️ Limite: ${this.formatDate(exp.limite_oce)}</span>` : ''}
                 </div>
               </div>
             `).join('')}
