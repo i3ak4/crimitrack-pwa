@@ -482,8 +482,8 @@ class CrimiTrackApp {
           lastDisplayedDate = expDate;
         }
         
-        // Ajouter la carte d'expertise
-        html += this.createExpertiseCard(exp, false, true);
+        // Ajouter la carte d'expertise avec les actions (modifier/supprimer)
+        html += this.createExpertiseCard(exp, true, true);
       });
       
       container.innerHTML = html;
@@ -535,9 +535,9 @@ class CrimiTrackApp {
       return dateA - dateB;
     });
     
-    // Afficher les expertises
+    // Afficher les expertises avec clickable = true pour permettre l'affichage des détails
     container.innerHTML = expertises.length ? 
-      expertises.map(exp => this.createExpertiseCard(exp, true)).join('') :
+      expertises.map(exp => this.createExpertiseCard(exp, true, true)).join('') :
       '<p style="text-align: center; color: var(--text-secondary);">Aucune expertise trouvée</p>';
   }
 
@@ -1299,8 +1299,8 @@ class CrimiTrackApp {
         </div>
         ${showActions ? `
           <div class="card-actions" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; gap: 0.5rem;">
-            <button class="btn btn-sm" onclick="app.editExpertise('${expertise._uniqueId}')">Modifier</button>
-            <button class="btn btn-sm btn-secondary" onclick="app.deleteExpertise('${expertise._uniqueId}')">Supprimer</button>
+            <button class="btn btn-sm" onclick="event.stopPropagation(); app.editExpertise('${expertise._uniqueId}')">Modifier</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); app.deleteExpertise('${expertise._uniqueId}')">Supprimer</button>
           </div>
         ` : ''}
       </div>
@@ -1315,21 +1315,16 @@ class CrimiTrackApp {
     const modal = document.createElement('div');
     modal.className = 'modal active';
     modal.innerHTML = `
-      <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
-          <h2>Détails de l'expertise</h2>
+          <h2>Détails complets de l'expertise</h2>
           <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
         </div>
         <div class="modal-body" style="padding: 1.5rem;">
+          <h3 style="color: var(--primary-color); margin-bottom: 1rem;">Informations personnelles</h3>
           <div class="details-grid">
             <div class="detail-row">
               <strong>Patronyme:</strong> ${expertise.patronyme || 'N/A'}
-            </div>
-            <div class="detail-row">
-              <strong>Date d'examen:</strong> ${this.formatDate(expertise.date_examen)}
-            </div>
-            <div class="detail-row">
-              <strong>Lieu d'examen:</strong> ${expertise.lieu_examen || 'N/A'}
             </div>
             <div class="detail-row">
               <strong>Date de naissance:</strong> ${this.formatDate(expertise.date_naissance)}
@@ -1343,6 +1338,35 @@ class CrimiTrackApp {
             <div class="detail-row">
               <strong>Domicile:</strong> ${expertise.domicile || 'N/A'}
             </div>
+            <div class="detail-row">
+              <strong>Téléphone:</strong> ${expertise.telephone || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Email:</strong> ${expertise.email || 'N/A'}
+            </div>
+          </div>
+          
+          <h3 style="color: var(--primary-color); margin-top: 1.5rem; margin-bottom: 1rem;">Informations de l'examen</h3>
+          <div class="details-grid">
+            <div class="detail-row">
+              <strong>Date d'examen:</strong> ${this.formatDate(expertise.date_examen)}
+            </div>
+            <div class="detail-row">
+              <strong>Heure d'examen:</strong> ${expertise.heure_examen || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Lieu d'examen:</strong> ${expertise.lieu_examen || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Type de mission:</strong> ${expertise.type_mission || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Statut:</strong> <span class="card-badge badge-${expertise.statut || 'attente'}">${expertise.statut || 'attente'}</span>
+            </div>
+          </div>
+          
+          <h3 style="color: var(--primary-color); margin-top: 1.5rem; margin-bottom: 1rem;">Informations judiciaires</h3>
+          <div class="details-grid">
             <div class="detail-row">
               <strong>Magistrat:</strong> ${expertise.magistrat || 'N/A'}
             </div>
@@ -1361,6 +1385,10 @@ class CrimiTrackApp {
             <div class="detail-row">
               <strong>Chefs d'accusation:</strong> ${expertise.chefs_accusation || 'N/A'}
             </div>
+          </div>
+          
+          <h3 style="color: var(--primary-color); margin-top: 1.5rem; margin-bottom: 1rem;">Dates importantes</h3>
+          <div class="details-grid">
             <div class="detail-row">
               <strong>Date OCE:</strong> ${this.formatDate(expertise.date_oce)}
             </div>
@@ -1368,16 +1396,39 @@ class CrimiTrackApp {
               <strong>Limite OCE:</strong> ${this.formatDate(expertise.limite_oce)}
             </div>
             <div class="detail-row">
-              <strong>Type de mission:</strong> ${expertise.type_mission || 'N/A'}
+              <strong>Date rapport:</strong> ${this.formatDate(expertise.date_rapport)}
+            </div>
+            <div class="detail-row">
+              <strong>Date envoi:</strong> ${this.formatDate(expertise.date_envoi)}
+            </div>
+          </div>
+          
+          <h3 style="color: var(--primary-color); margin-top: 1.5rem; margin-bottom: 1rem;">Informations complémentaires</h3>
+          <div class="details-grid">
+            <div class="detail-row">
+              <strong>Interprète:</strong> ${expertise.interprete || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Langue:</strong> ${expertise.langue || 'N/A'}
             </div>
             <div class="detail-row">
               <strong>Kilomètres:</strong> ${expertise.kilometres || 'N/A'}
             </div>
             <div class="detail-row">
-              <strong>Statut:</strong> <span class="card-badge badge-${expertise.statut || 'attente'}">${expertise.statut || 'attente'}</span>
+              <strong>Créance:</strong> ${expertise.creance || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Date paiement:</strong> ${this.formatDate(expertise.date_paiement)}
+            </div>
+            <div class="detail-row">
+              <strong>Montant payé:</strong> ${expertise.montant_paye || 'N/A'}
+            </div>
+            <div class="detail-row">
+              <strong>Observations:</strong> ${expertise.observations || 'N/A'}
             </div>
           </div>
-          <div class="modal-actions" style="margin-top: 2rem;">
+          
+          <div class="modal-actions" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
             <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Fermer</button>
             <button class="btn btn-primary" onclick="app.editExpertise('${expertise._uniqueId}'); this.closest('.modal').remove()">Modifier</button>
           </div>
