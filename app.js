@@ -1631,10 +1631,10 @@ class CrimiTrackApp {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Filtrer uniquement les expertises programmées avec date future
+    // Filtrer les expertises programmées ou en attente avec date future
     expertises = expertises.filter(exp => {
-      // L'expertise doit avoir le statut "programmee"
-      if (exp.statut !== 'programmee') return false;
+      // L'expertise doit avoir le statut "programmee" ou "attente" (ou pas de statut = attente par défaut)
+      if (exp.statut === 'realisee') return false;
       
       // L'expertise doit avoir une date d'examen
       if (!exp.date_examen) return false;
@@ -1656,10 +1656,10 @@ class CrimiTrackApp {
         };
       }
       
-      // Ajouter l'expertise (toutes sont programmées maintenant)
+      // Ajouter l'expertise avec son statut réel
       locationGroups[location].expertises.push({
         ...exp,
-        isProgrammee: true // Toutes sont programmées après le filtre
+        isProgrammee: exp.statut === 'programmee'
       });
     });
     
@@ -1689,7 +1689,7 @@ class CrimiTrackApp {
     
     // Afficher
     if (filteredLocations.length === 0) {
-      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucune expertise programmée à venir</p>';
+      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucune expertise avec date future</p>';
     } else {
       container.innerHTML = filteredLocations.map(location => this.createPrisonCard(location)).join('');
     }
@@ -1697,8 +1697,8 @@ class CrimiTrackApp {
   
   createPrisonCard(location) {
     const totalCount = location.expertises.length;
-    // Toutes les expertises sont programmées maintenant
-    const programmees = location.expertises;
+    const programmees = location.expertises.filter(exp => exp.isProgrammee);
+    const enAttente = location.expertises.filter(exp => !exp.isProgrammee);
     const cardId = `prison-${this.generateUniqueId()}`;
     
     // Choisir une couleur basée sur le nom du lieu (cohérente)
@@ -1733,10 +1733,10 @@ class CrimiTrackApp {
         <div class="prison-card-content" id="${cardId}">
           <div class="prison-expertises-list">
             ${location.expertises.map(exp => `
-              <div class="prison-expertise-item programmee" 
+              <div class="prison-expertise-item ${exp.isProgrammee ? 'programmee' : 'attente'}" 
                    onclick="app.showExpertiseDetails('${exp._uniqueId || this.generateUniqueId()}')">
                 <div class="expertise-item-header">
-                  <span class="expertise-status">✅</span>
+                  <span class="expertise-status">${exp.isProgrammee ? '✅' : '⏳'}</span>
                   <span class="expertise-name">${exp.patronyme || 'Sans nom'}</span>
                 </div>
                 <div class="expertise-item-details">
