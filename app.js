@@ -1631,18 +1631,22 @@ class CrimiTrackApp {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Filtrer les expertises programmées ou en attente avec date future
+    // Filtrer les expertises non réalisées
     expertises = expertises.filter(exp => {
-      // L'expertise doit avoir le statut "programmee" ou "en_attente" (ou pas de statut = en_attente par défaut)
+      // Exclure les expertises réalisées
       if (exp.statut === 'realisee') return false;
       
-      // L'expertise doit avoir une date d'examen
-      if (!exp.date_examen) return false;
+      // Inclure toutes les expertises en_attente (même sans date car elles sont en attente de programmation)
+      if (exp.statut === 'en_attente' || !exp.statut) return true;
       
-      // La date d'examen doit être strictement supérieure à aujourd'hui
-      const examDate = new Date(exp.date_examen);
-      examDate.setHours(0, 0, 0, 0);
-      return examDate > today;
+      // Pour les expertises programmées, vérifier qu'elles ont une date future
+      if (exp.statut === 'programmee' && exp.date_examen) {
+        const examDate = new Date(exp.date_examen);
+        examDate.setHours(0, 0, 0, 0);
+        return examDate > today;
+      }
+      
+      return false;
     });
     
     // Grouper par lieu_examen
@@ -1677,19 +1681,31 @@ class CrimiTrackApp {
     // Trier les lieux par nom
     filteredLocations.sort((a, b) => a.name.localeCompare(b.name));
     
-    // Pour chaque lieu, trier les expertises par date d'examen (les plus proches en premier)
+    // Pour chaque lieu, trier les expertises
     filteredLocations.forEach(location => {
       location.expertises.sort((a, b) => {
-        // Trier par date d'examen
-        const dateA = new Date(a.date_examen || '2099-12-31');
-        const dateB = new Date(b.date_examen || '2099-12-31');
-        return dateA - dateB;
+        // D'abord par statut (programmées avec date en premier)
+        if (a.isProgrammee && a.date_examen && (!b.isProgrammee || !b.date_examen)) return -1;
+        if ((!a.isProgrammee || !a.date_examen) && b.isProgrammee && b.date_examen) return 1;
+        
+        // Puis par date d'examen pour celles qui en ont une
+        if (a.date_examen && b.date_examen) {
+          const dateA = new Date(a.date_examen);
+          const dateB = new Date(b.date_examen);
+          return dateA - dateB;
+        }
+        
+        // Les expertises sans date à la fin
+        if (a.date_examen && !b.date_examen) return -1;
+        if (!a.date_examen && b.date_examen) return 1;
+        
+        return 0;
       });
     });
     
     // Afficher
     if (filteredLocations.length === 0) {
-      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucune expertise avec date future</p>';
+      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Aucune expertise en attente ou programmée</p>';
     } else {
       container.innerHTML = filteredLocations.map(location => this.createPrisonCard(location)).join('');
     }
@@ -1740,7 +1756,7 @@ class CrimiTrackApp {
                   <span class="expertise-name">${exp.patronyme || 'Sans nom'}</span>
                 </div>
                 <div class="expertise-item-details">
-                  <span class="expertise-date">📅 ${this.formatDate(exp.date_examen)}</span>
+                  ${exp.date_examen ? `<span class="expertise-date">📅 ${this.formatDate(exp.date_examen)}</span>` : '<span class="expertise-date">📅 À programmer</span>'}
                   ${exp.limite_oce ? `<span class="expertise-limit">⚠️ Limite: ${this.formatDate(exp.limite_oce)}</span>` : ''}
                 </div>
               </div>
