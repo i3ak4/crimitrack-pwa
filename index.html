@@ -418,13 +418,39 @@
                             <input type="text" name="type_mission">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Statut</label>
-                        <select name="statut">
-                            <option value="attente">En attente</option>
-                            <option value="programmee">Programmée</option>
-                            <option value="realisee">Réalisée</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date OCE</label>
+                            <input type="date" name="date_oce">
+                        </div>
+                        <div class="form-group">
+                            <label>Limite OCE</label>
+                            <input type="date" name="limite_oce">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Interprète</label>
+                            <input type="text" name="interprete">
+                        </div>
+                        <div class="form-group">
+                            <label>Langue</label>
+                            <input type="text" name="langue">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Kilomètres</label>
+                            <input type="number" name="kilometres">
+                        </div>
+                        <div class="form-group">
+                            <label>Statut</label>
+                            <select name="statut">
+                                <option value="attente">En attente</option>
+                                <option value="programmee">Programmée</option>
+                                <option value="realisee">Réalisée</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary" id="cancel-entry">Annuler</button>

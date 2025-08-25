@@ -796,6 +796,8 @@ body {
 
 .modal-form {
   padding: 1.5rem;
+  max-height: calc(90vh - 120px);
+  overflow-y: auto;
 }
 
 .form-row {
